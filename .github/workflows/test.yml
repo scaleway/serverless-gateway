@@ -28,8 +28,9 @@ jobs:
           python-version: '3.10'
       - uses: snok/install-poetry@v1
         with:
-          version: 1.3.2
-            virtualenvs-create: true
-            virtualenvs-in-project: true
+          version: 1.2.2
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+          installer-parallel: true
       - run: make lint
         working-directory: scw-gateway
