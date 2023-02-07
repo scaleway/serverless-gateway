@@ -32,5 +32,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: false
           installer-parallel: true
+      - run: poetry install
+        working-directory: scw-gateway
       - run: make lint
         working-directory: scw-gateway
