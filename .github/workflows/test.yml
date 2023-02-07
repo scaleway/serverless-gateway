@@ -2,9 +2,9 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    branches: [nginx-poc]
   pull_request:
-    branches: [main]
+    branches: [nginx-poc]
     types: [opened, synchronize, reopened, ready_for_review]
 
 defaults:
