@@ -26,7 +26,7 @@ def cli(debug):
 
 
 @cli.command()
-def container(region, deleted):
+def container():
     """Builds and pushes the gateway container"""
     build()
     push()

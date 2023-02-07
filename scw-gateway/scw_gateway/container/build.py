@@ -11,7 +11,7 @@ DOCKER_TAG = "scw-gw"
 
 
 def build():
-    cmd = ["docker", "build", f"-t {DOCKER_TAG}"]
+    cmd = ["docker", "build", f"-t {DOCKER_TAG}", "."]
 
     run(" ".join(cmd), shell=True, check=True, cwd=CONTAINER_ROOT)
 
