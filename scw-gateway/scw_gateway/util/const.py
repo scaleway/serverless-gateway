@@ -1,4 +1,4 @@
-from os.path import expanduser, join, realpath, dirname
+from os.path import dirname, expanduser, join, realpath
 
 USER_HOME = expanduser("~")
 PROJ_ROOT = dirname(dirname(dirname(dirname(realpath(__file__)))))
