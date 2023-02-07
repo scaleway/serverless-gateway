@@ -21,8 +21,6 @@ jobs:
   formatting:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    container:
-      image:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
