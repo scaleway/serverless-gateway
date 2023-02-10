@@ -1,0 +1,36 @@
+version: '3.1'
+services:
+  gw:
+    build:
+      context: .
+    environment:
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+    ports:
+      - 8080:8080
+      - 8000:8000
+      - 8443:8443
+      - 8001:8001
+      - 8444:8444
+    volumes:
+      - ./:/app
+
+  ping:
+    build:
+      context: ./ping/
+    ports:
+      - 8003:80
+
+  func-a:
+    build:
+      context: ./func-a/
+    ports:
+      - 8004:80
+
+  func-b:
+    build:
+      context: ./func-b/
+    ports:
+      - 8005:80

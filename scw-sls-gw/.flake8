@@ -1,0 +1,13 @@
+[flake8]
+per-file-ignores =
+    # ignore type hints returns in test
+    tests/*: ANN201
+extend-ignore =
+    # See: https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html
+    E203,
+    # Type Annotations
+    ANN002, ANN003, ANN101, ANN102, ANN202, ANN204, ANN206
+max-line-length = 88
+exclude =
+    __pycache__
+    venv

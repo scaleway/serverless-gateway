@@ -1,0 +1,28 @@
+_format_version: '2.1'
+_transform: true
+
+routes:
+- name: scw
+  paths:
+  - /scw
+  service: scw
+
+- name: ping
+  paths:
+  - /ping
+  service: ping
+
+services:
+- name: ping
+  host: localhost
+  url: http://ping/ping
+
+- name: scw
+  host: localhost
+  url: http://ping/ping
+  plugins:
+  - name: scw-sls-gw
+    config:
+      admin_url: http://localhost:8001
+
+
