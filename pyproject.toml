@@ -6,3 +6,9 @@ addopts = [
   "--import-mode=importlib",
 ]
 testpaths = ["tests"]
+
+[tool.mypy]
+exclude = ["venv", "endpoints"]
+# TODO - enable mypy checking properly and fix issue with kong_pdk
+ignore_missing_imports = true
+
