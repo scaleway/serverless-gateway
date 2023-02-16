@@ -1,22 +1,28 @@
+# Default API for the gateway
+
 _format_version: '2.1'
 _transform: true
 
 routes:
+# Scaleway admin route
 - name: scw
   paths:
   - /scw
   service: scw
 
+# Ping route to act as default
 - name: ping
   paths:
   - /ping
   service: ping
 
 services:
+# Default ping backend
 - name: ping
   host: localhost
   url: http://ping/ping
 
+# Scaleway admin plugin backend
 - name: scw
   host: localhost
   url: http://ping/ping
@@ -24,5 +30,4 @@ services:
   - name: scw-sls-gw
     config:
       admin_url: http://localhost:8001
-
 

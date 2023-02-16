@@ -1,3 +1,5 @@
+VERSION := $(shell cat VERSION)
+
 .PHONY: test-int
 test-int:
 	pytest
@@ -15,6 +17,10 @@ tidy:
 	black .
 	isort .
 
-.PHONY: build-docker
-build-docker:
-	docker build . -t 'scw-sls-gw'
+.PHONY: build-image
+build-image:
+	docker build . -t 'scaleway/scw-sls-gw:${VERSION}'
+
+.PHONY: push-image
+push-image:
+	docker push 'scaleway/scw-sls-gw:${VERSION}'

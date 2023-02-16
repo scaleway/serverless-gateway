@@ -19,18 +19,18 @@ services:
 
   ping:
     build:
-      context: ./ping/
+      context: ./endpoints/ping/
     ports:
       - 8003:80
 
   func-a:
     build:
-      context: ./func-a/
+      context: ./endpoints/func-a/
     ports:
       - 8004:80
 
   func-b:
     build:
-      context: ./func-b/
+      context: ./endpoints/func-b/
     ports:
       - 8005:80

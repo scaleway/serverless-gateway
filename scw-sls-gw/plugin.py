@@ -7,24 +7,27 @@ import requests
 import yaml
 from loguru import logger
 
+# Plugin config according to the Kong PDK:
+# https://github.com/Kong/kong-python-pdk
 PLUGIN_CONF_ADMIN_URL = "admin_url"
 Schema = ({PLUGIN_CONF_ADMIN_URL: {"type": "string"}},)
-
 VERSION = "0.1.0"
-
 PRIORITY = 0
-
 PLUGIN_NAME = "scw-sls-gw"
 
+# Config file constants
 ROUTES_CONFIG_SECTION = "routes"
 SERVICES_CONFIG_SECTION = "services"
 
 
+# Class wrapping functionality around Kong configuration
 class KongConfig(object):
     def __init__(self, admin_url):
+        # Set up URLs
         self.admin_url = admin_url
         self.config_url = f"{self.admin_url}/config"
 
+        # Load current config from Kong admin
         logger.debug(f"Loading config from {self.config_url}")
         response = requests.get(self.config_url)
         if response.status_code != requests.codes.ok:
@@ -33,18 +36,24 @@ class KongConfig(object):
             )
             raise RuntimeError()
 
+        # Parse response and extract YAML
         config_yaml = response.json().get("config")
         if len(config_yaml) == 0:
             logger.warn("Got no config back from admin API")
 
+        # Cache config YAML object
         self._conf = yaml.safe_load(config_yaml)
-        pprint.pprint(self._conf, indent=2, compact=False)
 
     def get_endpoints(self):
+        """
+        Returns list of existing endpoints
+        """
+
         response = {
             "endpoints": list(),
         }
 
+        # Iterate through contents of config file to extract endpoints
         routes = self.get_section("routes")
         for route in routes:
             service = self.get_element("services", route.get("name"))
@@ -74,7 +83,10 @@ class KongConfig(object):
 
         return response
 
-    def set_config(self):
+    def update_config(self):
+        """
+        Updates the config in Kong
+        """
         response = requests.post(
             self.config_url,
             json={"config": yaml.dump(self._conf)},
@@ -87,6 +99,9 @@ class KongConfig(object):
             raise RuntimeError()
 
     def get_section(self, section):
+        """
+        Gets the given section from the config file
+        """
         section_data = self._conf.get(section)
         if not section_data:
             logger.error(f"Section {section} not found in config")
@@ -95,6 +110,9 @@ class KongConfig(object):
         return section_data
 
     def get_element(self, section, name):
+        """
+        Gets a specific element from the given section in the config file
+        """
         section_data = self.get_section(section)
         matches = [s for s in section_data if s.get("name") == name]
         if len(matches) == 0:
@@ -103,6 +121,9 @@ class KongConfig(object):
         return matches[0]
 
     def create_element(self, section, elem):
+        """
+        Creates a new element in the given section in the config file
+        """
         # Delete if exists
         self.delete_element(section, elem)
 
@@ -110,6 +131,9 @@ class KongConfig(object):
         self._conf[section].append(elem)
 
     def delete_element(self, section, elem):
+        """
+        Deletes an element in the given section in the config file
+        """
         name = elem.get("name")
         section_data = self.get_section(section)
 
@@ -118,9 +142,13 @@ class KongConfig(object):
         self._conf[section] = section_data
 
 
+# Class representing a function/container endpoint
 class Endpoint(object):
     @staticmethod
     def from_json(json_body):
+        """
+        Parses an endpoint from a JSON input
+        """
         endpoint = Endpoint()
         endpoint.http_method = json_body.get("http_method")
         endpoint.target = json_body.get("target")
@@ -134,10 +162,16 @@ class Endpoint(object):
         return endpoint
 
     def validate(self):
+        """
+        Validates the endpoint configuration
+        """
         # TODO - validate operation and return error message
         pass
 
     def build_route(self):
+        """
+        Builds the Kong route definition for this endpoint
+        """
         return {
             "name": self.name,
             "paths": [
@@ -147,6 +181,9 @@ class Endpoint(object):
         }
 
     def build_service(self):
+        """
+        Builds the Kong service definition for this endpoint
+        """
         return {
             "name": self.name,
             "host": "localhost",
@@ -154,37 +191,51 @@ class Endpoint(object):
         }
 
     def create(self, kong_conf):
+        """
+        Creates this endpoint in the config, and updates Kong
+        """
         kong_conf.create_element(SERVICES_CONFIG_SECTION, self.service)
         kong_conf.create_element(ROUTES_CONFIG_SECTION, self.route)
 
-        kong_conf.set_config()
+        kong_conf.update_config()
 
     def delete(self, kong_conf):
+        """
+        Deletes this endpoint from the config, and updates Kong
+        """
         kong_conf.delete_element(ROUTES_CONFIG_SECTION, self.route)
         kong_conf.delete_element(SERVICES_CONFIG_SECTION, self.service)
 
-        kong_conf.set_config()
+        kong_conf.update_config()
 
 
+# Main plugin object needed for the Kong PDK
 class Plugin(object):
     def __init__(self, config):
         self.admin_url = config.get(PLUGIN_CONF_ADMIN_URL)
         self.kong_conf = KongConfig(self.admin_url)
 
     def access(self, kong: kong.kong):
+        """
+        Called whenever an endpoint bound to this plugin is accessed
+        """
         method = kong.request.get_method()
 
         kong.response.set_header("Content-Type", "application/json")
 
+        # Take action based on the HTTP method
         if method == "GET":
+            # Return list of configured endpoints
             endpoints = self.kong_conf.get_endpoints()
             kong.response.exit(requests.codes.ok, json.dumps(endpoints))
             return
 
         elif method in ("POST", "DELETE"):
+            # Extract body from request
             body_data = kong.request.get_body()
             logger.info(f"SCW plugin got payload: {body_data}")
 
+            # Construct and validate an endpoint
             endpoint = Endpoint.from_json(body_data)
             err_msg = endpoint.validate()
             if err_msg:
@@ -194,10 +245,11 @@ class Plugin(object):
                 )
                 return
 
-            if method == "POST":
-                err_msg = endpoint.create(self.kong_conf)
-            else:
+            # Delete or create endpoint depending on HTTP method
+            if method == "DELETE":
                 err_msg = endpoint.delete(self.kong_conf)
+            else:
+                err_msg = endpoint.create(self.kong_conf)
 
             if err_msg:
                 kong.response.exit(
@@ -207,6 +259,7 @@ class Plugin(object):
                 return
 
         else:
+            # Handle unexpected HTTP method
             logger.error(f"Unsupported HTTP method {method}")
             kong.response.exit(
                 requests.codes.bad_request,
@@ -214,10 +267,12 @@ class Plugin(object):
             )
             return
 
+        # Exit successfully
         kong.response.exit(requests.codes.ok, json.dumps({"message": "Success"}))
 
 
 if __name__ == "__main__":
+    # Start server using Kong PDK
     from kong_pdk.cli import start_dedicated_server
 
     start_dedicated_server(PLUGIN_NAME, Plugin, VERSION, PRIORITY, Schema)

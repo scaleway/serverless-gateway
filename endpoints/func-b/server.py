@@ -12,5 +12,4 @@ def hello():
 def goodbye():
     return "Goodbye from function B"
 
-
 app.run(host="0.0.0.0", port=80)
