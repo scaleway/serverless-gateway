@@ -1,5 +1,6 @@
-import requests
 import time
+
+import requests
 
 GW_HOST = "localhost"
 GW_PORT = 8000

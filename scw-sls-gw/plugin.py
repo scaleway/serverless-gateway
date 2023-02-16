@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import json
+import pprint
+
 import kong_pdk.pdk.kong as kong
 import requests
-import pprint
 import yaml
-import json
 from loguru import logger
 
 PLUGIN_CONF_ADMIN_URL = "admin_url"
