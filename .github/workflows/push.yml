@@ -1,11 +1,8 @@
-name: build
+name: push
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   image-build:
@@ -24,8 +21,8 @@ jobs:
       - name: "Get image tag"
         id: get_tag
         run: echo "::set-output name=tag::shillaker/scw-sls-gw:$(cat VERSION)"
-      - name: "Build"
+      - name: "Build and push"
         uses: docker/build-push-action@v4
         with:
-          push: false
+          push: true
           tags: "${{steps.get_tag.outputs.tag}}"
