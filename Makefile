@@ -1,5 +1,10 @@
 VERSION := $(shell cat VERSION)
 
+# TODO - update to use SCW
+IMAGE_ORG := shillakerscw
+IMAGE_NAME := scw-sls-gw
+IMAGE_TAG := ${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
+
 .PHONY: test-int
 test-int:
 	pytest
@@ -19,8 +24,8 @@ tidy:
 
 .PHONY: build-image
 build-image:
-	docker build . -t 'scaleway/scw-sls-gw:${VERSION}'
+	docker build . -t ${IMAGE_TAG}
 
 .PHONY: push-image
 push-image:
-	docker push 'scaleway/scw-sls-gw:${VERSION}'
+	docker push ${IMAGE_TAG}
