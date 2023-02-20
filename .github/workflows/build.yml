@@ -8,7 +8,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
-  TAG_BASE: shillaker/scw-sls-gw
+  TAG_BASE: shillakerscw/scw-sls-gw
 
 jobs:
   image-build:
@@ -38,4 +38,3 @@ jobs:
         with:
           push: true
           tags: "${{ env.tag }}"
-        if: github.event_name != 'pull_request'
