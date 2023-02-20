@@ -1,8 +1,12 @@
 VERSION := $(shell cat VERSION)
 
+.PHONY: test
+test:
+	python -m pytest tests/unit
+
 .PHONY: test-int
 test-int:
-	pytest
+	python -m pytest tests/integration
 
 .PHONY: lint
 lint:
@@ -13,7 +17,7 @@ lint:
 
 .PHONY: tidy
 tidy:
-	cd scw-sls-gw
+	cd gateway
 	black .
 	isort .
 
