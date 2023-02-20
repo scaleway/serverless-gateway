@@ -1,10 +1,7 @@
-import time
-
-import pytest
-import requests
 import responses
 from kong_pdk.pdk import kong
-from gateway.plugin import Plugin, PLUGIN_CONF_ADMIN_URL
+
+from gateway.plugin import PLUGIN_CONF_ADMIN_URL, Plugin
 
 DUMMY_ADMIN_URL = "http://foobar"
 PLUGIN_CONF = {PLUGIN_CONF_ADMIN_URL: DUMMY_ADMIN_URL}
