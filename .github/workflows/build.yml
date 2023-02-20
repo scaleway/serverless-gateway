@@ -7,6 +7,9 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
 
+env:
+  TAG_BASE: shillaker/scw-sls-gw
+
 jobs:
   image-build:
     if: github.event.pull_request.draft == false
@@ -24,9 +27,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: "Get image tag"
         id: get_tag
-        run: echo "::set-output name=tag::shillaker/scw-sls-gw:$(cat VERSION)"
+        run: echo "tag=$TAG_BASE:$(cat VERSION)" >> $GITHUB_ENV
       - name: "Build"
         uses: docker/build-push-action@v4
         with:
           push: false
-          tags: "${{steps.get_tag.outputs.tag}}"
+          tags: "${{ env.tag }}"
+      - name: "Push"
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: "${{ env.tag }}"
+        if: github.event_name != 'pull_request'
