@@ -38,10 +38,10 @@ class KongConfig(object):
         # Parse response and extract YAML
         config_yaml = response.json().get("config")
         if len(config_yaml) == 0:
-            logger.warn("Got no config back from admin API")
-
-        # Cache config YAML object
-        self._conf = yaml.safe_load(config_yaml)
+            logger.warning("Got no config back from admin API")
+        else:
+            # Cache config YAML object
+            self._conf = yaml.safe_load(config_yaml)
 
     def get_endpoints(self):
         """
@@ -226,7 +226,7 @@ class Plugin(object):
         if method == "GET":
             # Return list of configured endpoints
             endpoints = self.kong_conf.get_endpoints()
-            kong.response.exit(requests.codes.ok, json.dumps(endpoints))
+            kong.response.exit(requests.codes.ok, json.dumps(endpoints), None)
             return
 
         elif method in ("POST", "DELETE"):

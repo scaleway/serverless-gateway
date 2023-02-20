@@ -17,12 +17,10 @@ HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 class TestPlugin(object):
     def test_create_endpoint(self):
         # Call target directly
-        print("Calling func A direct")
         resp_direct = requests.get(HOST_FUNC_A_HELLO)
         assert resp_direct.status_code == 200
         assert resp_direct.content == b"Hello from function A"
 
-        print("Requesting func A creation")
         req = {
             "target": GW_FUNC_A_URL,
             "relative_url": "/func-a",

@@ -5,9 +5,13 @@ IMAGE_ORG := shillakerscw
 IMAGE_NAME := scw-sls-gw
 IMAGE_TAG := ${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 
+.PHONY: test
+test:
+	python -m pytest tests/unit
+
 .PHONY: test-int
 test-int:
-	pytest
+	python -m pytest tests/integration
 
 .PHONY: lint
 lint:
@@ -18,7 +22,7 @@ lint:
 
 .PHONY: tidy
 tidy:
-	cd scw-sls-gw
+	cd gateway
 	black .
 	isort .
 
