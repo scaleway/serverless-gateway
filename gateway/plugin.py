@@ -143,15 +143,14 @@ class KongConfig(object):
 
 # Class representing a function/container endpoint
 class Endpoint(object):
-
     def __init__(self):
-        self.http_method  = ""
+        self.http_method = ""
         self.target = ""
         self.relative_url = ""
         self.name = ""
         self.service = {}
         self.route = {}
-    
+
     @staticmethod
     def from_json(json_body):
         """
@@ -235,7 +234,9 @@ class Plugin(object):
         if method == "GET":
             # Return list of configured endpoints
             endpoints = self.kong_conf.get_endpoints()
-            kong.response.exit(requests.codes.ok, bytes(json.dumps(endpoints), 'utf-8'), None)
+            kong.response.exit(
+                requests.codes.ok, bytes(json.dumps(endpoints), "utf-8"), None
+            )
             return
 
         elif method in ("POST", "DELETE"):
@@ -248,9 +249,11 @@ class Plugin(object):
             err_msg = endpoint.validate()
             if err_msg:
                 kong.response.exit(
-                    status=requests.codes.bad_request, 
-                    body=bytes(json.dumps({"message": f"Invalid request: {err_msg}"}), 'utf-8'),
-                    headers=None
+                    status=requests.codes.bad_request,
+                    body=bytes(
+                        json.dumps({"message": f"Invalid request: {err_msg}"}), "utf-8"
+                    ),
+                    headers=None,
                 )
                 return
 
@@ -263,8 +266,10 @@ class Plugin(object):
             if err_msg:
                 kong.response.exit(
                     status=requests.codes.server_error,
-                    body=bytes(json.dumps({"message": f"Request failed: {err_msg}"}), 'utf-8'),
-                    headers=None
+                    body=bytes(
+                        json.dumps({"message": f"Request failed: {err_msg}"}), "utf-8"
+                    ),
+                    headers=None,
                 )
                 return
 
@@ -273,16 +278,16 @@ class Plugin(object):
             logger.error(f"Unsupported HTTP method {method}")
             kong.response.exit(
                 status=requests.codes.bad_request,
-                body=bytes(json.dumps({"message": "Unsupported HTTP method"}), 'utf-8'),
-                headers=None
+                body=bytes(json.dumps({"message": "Unsupported HTTP method"}), "utf-8"),
+                headers=None,
             )
             return
 
         # Exit successfully
         kong.response.exit(
             status=requests.codes.ok,
-            body=bytes(json.dumps({"message": "Success"}), 'utf-8'), 
-            headers=None
+            body=bytes(json.dumps({"message": "Success"}), "utf-8"),
+            headers=None,
         )
 
 
