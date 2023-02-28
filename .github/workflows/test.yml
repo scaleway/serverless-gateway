@@ -34,3 +34,15 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: make test
+  local-int-test:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install -r requirements-dev.txt
+      - run: docker compose up -d
+      - run: docker compose ps -a
+      - run: make test-int
