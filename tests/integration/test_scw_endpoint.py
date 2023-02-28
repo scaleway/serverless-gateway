@@ -38,8 +38,8 @@ class TestEndpoint(object):
         }
 
         response = requests.post(GW_ADMIN_URL, json=request)
-        #assert response.status_code == 200
-        #assert response.content == b'{"message": "Success"}'
+        # assert response.status_code == 200
+        # assert response.content == b'{"message": "Success"}'
 
         response_endpoints = requests.get(GW_ADMIN_URL)
         print(response_endpoints.content)
@@ -70,7 +70,7 @@ class TestEndpoint(object):
         requests.post(GW_ADMIN_URL, json=request)
 
         response = requests.delete(GW_ADMIN_URL, json=request)
-        #assert response.status_code == 200
+        # assert response.status_code == 200
 
         # Retry until we get a valid response
         retries = 0

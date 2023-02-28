@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 import json
-# import os
-# import sys
 
 import kong_pdk.pdk.kong as kong
 import requests
 from loguru import logger
 
-# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(os.path.dirname(SCRIPT_DIR))
-
 from .config import KongConfig
 from .endpoint import Endpoint
+
+
 
 # Plugin config according to the Kong PDK:
 # https://github.com/Kong/kong-python-pdk
