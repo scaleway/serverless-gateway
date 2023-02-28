@@ -7,11 +7,11 @@ IMAGE_TAG := ${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 
 .PHONY: test
 test:
-	python -m pytest tests/unit
+	python -m pytest tests/unit -v
 
 .PHONY: test-int
 test-int:
-	python -m pytest tests/integration
+	python -m pytest tests/integration -v
 
 .PHONY: lint
 lint:
