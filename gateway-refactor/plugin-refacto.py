@@ -8,8 +8,6 @@ from loguru import logger
 from .config import KongConfig
 from .endpoint import Endpoint
 
-
-
 # Plugin config according to the Kong PDK:
 # https://github.com/Kong/kong-python-pdk
 PLUGIN_CONF_ADMIN_URL = "admin_url"
