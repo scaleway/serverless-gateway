@@ -2,7 +2,9 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    branches:
+      - 'main'
+      - 'SRVLESS**'
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
