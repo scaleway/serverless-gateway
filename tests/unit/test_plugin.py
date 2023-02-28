@@ -16,10 +16,10 @@ class DummyKongRequest(object):
 
     def set_method(self, method_in):
         self.method = method_in
-    
+
     def get_body(self):
         return self.body
-    
+
     def set_body(self, newBody):
         self.body = newBody
 
@@ -27,7 +27,6 @@ class DummyKongRequest(object):
 class TestPlugin(object):
     @responses.activate
     def test_get_config(self):
-        
         kongGW = kong.kong()
         dummyRequest = DummyKongRequest()
         dummyRequest.set_method("GET")
@@ -59,11 +58,10 @@ class TestPlugin(object):
 
     @responses.activate
     def test_add_config(self):
-        
         kongGW = kong.kong()
         dummyRequest = DummyKongRequest()
         dummyRequest.set_method("POST")
-        body = { "http_method": "POST", "relative_url": "/test"}
+        body = {"http_method": "POST", "relative_url": "/test"}
         dummyRequest.set_body(body)
         kongGW.request = dummyRequest
 
@@ -80,9 +78,7 @@ class TestPlugin(object):
         """
         }
 
-        newConfig = {
-                "_format_version": "3.0"
-        }
+        newConfig = {"_format_version": "3.0"}
 
         getConfigResponse = responses.Response(
             method="GET",
@@ -92,10 +88,7 @@ class TestPlugin(object):
         responses.add(getConfigResponse)
 
         postConfigResponse = responses.Response(
-            method="POST",
-            url=config_url,
-            json=newConfig
-
+            method="POST", url=config_url, json=newConfig
         )
         responses.add(postConfigResponse)
 
