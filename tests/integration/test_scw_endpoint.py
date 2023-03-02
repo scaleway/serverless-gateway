@@ -81,8 +81,11 @@ class TestEndpoint(object):
         }
 
         requests.post(GW_ADMIN_URL, json=request)
+        time.sleep(60)
 
         requests.delete(GW_ADMIN_URL, json=request)
+        time.sleep(60)
+        
         # assert response.status_code == 200
 
         # Retry until we get a valid response
