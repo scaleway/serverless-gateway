@@ -34,7 +34,7 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: make test
-  local-int-test:
+  int-test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -44,8 +44,5 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: docker compose up -d
-      - run: sleep 60
       - run: docker compose ps -a
-      - run: docker ps -a
-      - run: docker compose logs gw
       - run: make test-int
