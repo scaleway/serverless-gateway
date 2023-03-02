@@ -33,7 +33,7 @@ DEFAULT_ENDPOINTS = [
 class TestEndpoint(object):
     def _call_endpoint_until_response_code(self, url, code):
         max_retries = 20
-        sleep_time = 3
+        sleep_time = 2
         resp = None
 
         for r in range(max_retries):

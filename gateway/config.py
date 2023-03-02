@@ -3,14 +3,20 @@ import yaml
 from loguru import logger
 
 
-# Class wrapping functionality around Kong configuration
 class KongConfig(object):
+    """
+    Wraps the Kong configuration.
+
+    Uses the Kong admin API to load the config file from the running Kong instance,
+    modify the config file in memory, then sent it back for Kong to hot reload.
+    """
+
     def __init__(self, admin_url):
-        # Set up URLs
+        # Set up URLs using plugin config passed in conf file
         self.admin_url = admin_url
         self.config_url = f"{self.admin_url}/config"
 
-        # Load current config from Kong admin
+        # Load current config file from the Kong admin
         logger.debug(f"Loading config from {self.config_url}")
         response = requests.get(self.config_url)
         if response.status_code != requests.codes.ok:
@@ -31,7 +37,6 @@ class KongConfig(object):
         """
         Returns list of existing endpoints
         """
-
         response = {
             "endpoints": list(),
         }
@@ -68,7 +73,7 @@ class KongConfig(object):
 
     def update_config(self):
         """
-        Updates the config in Kong
+        Sends the updated config to Kong for hot reload
         """
         response = requests.post(
             self.config_url,

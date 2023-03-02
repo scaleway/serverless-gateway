@@ -30,6 +30,7 @@ class TestPlugin(object):
         kongGW = kong.kong()
         dummyRequest = DummyKongRequest()
         dummyRequest.set_method("GET")
+
         kongGW.request = dummyRequest
 
         config_url = f"{DUMMY_ADMIN_URL}/config"

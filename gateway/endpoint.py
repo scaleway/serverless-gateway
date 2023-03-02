@@ -3,8 +3,11 @@ ROUTES_CONFIG_SECTION = "routes"
 SERVICES_CONFIG_SECTION = "services"
 
 
-# Class representing a function/container endpoint
 class Endpoint(object):
+    """
+    Represents a function/container endpoint
+    """
+
     def __init__(self):
         self.http_method = ""
         self.target = ""
