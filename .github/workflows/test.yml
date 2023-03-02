@@ -2,9 +2,7 @@ name: tests
 
 on:
   push:
-    branches:
-      - 'main'
-      - 'SRVLESS**'
+    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -45,6 +43,5 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: docker compose up -d
       - name: API gateway health check
-        run: until curl http://localhost:8000/ping; do sleep 5; done
-      - run: docker compose ps -a
+        run: until curl http://localhost:8000/ping; do sleep 3; done
       - run: make test-int
