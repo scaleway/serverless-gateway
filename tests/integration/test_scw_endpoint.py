@@ -1,5 +1,6 @@
-import time
 import json
+import time
+
 import requests
 
 GW_HOST = "localhost"
@@ -16,20 +17,32 @@ HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 
 class TestEndpoint(object):
     def test_default_list_of_endpoints(self):
-
         response = requests.get(GW_ADMIN_URL)
 
         expected_status_code = 200
-        expected_endpoints = [{'http_methods': None, 'target': 'http://ping:80/ping', 'relative_url': '/ping'}, {'http_methods': None, 'target': 'http://ping:80/ping', 'relative_url': '/scw'}]
+        expected_endpoints = [
+            {
+                "http_methods": None,
+                "target": "http://ping:80/ping",
+                "relative_url": "/ping",
+            },
+            {
+                "http_methods": None,
+                "target": "http://ping:80/ping",
+                "relative_url": "/scw",
+            },
+        ]
 
         actual_endpoints = json.loads(response.content)["endpoints"]
-        actual_endpoints_sorted_list = sorted(actual_endpoints, key=lambda endpoint: (endpoint['relative_url'], endpoint['http_methods']))
+        actual_endpoints_sorted_list = sorted(
+            actual_endpoints,
+            key=lambda endpoint: (endpoint["relative_url"], endpoint["http_methods"]),
+        )
 
         assert response.status_code == expected_status_code
         assert actual_endpoints_sorted_list == expected_endpoints
 
     def test_direct_call_to_target(self):
-        
         response = requests.get(HOST_FUNC_A_HELLO)
 
         expected_status_code = 200
@@ -39,7 +52,6 @@ class TestEndpoint(object):
         assert response.content == expected_content
 
     def test_create_endpoint(self):
-
         request = {
             "target": GW_FUNC_A_URL,
             "relative_url": "/func-a",
@@ -52,10 +64,29 @@ class TestEndpoint(object):
         response_endpoints = requests.get(GW_ADMIN_URL)
 
         expected_status_code = 200
-        expected_endpoints = [{"http_methods": None, "target": "http://func-a:80", "relative_url": "/func-a"}, {"http_methods": None, "target": "http://ping:80/ping", "relative_url": "/ping"}, {"http_methods": None, "target": "http://ping:80/ping", "relative_url": "/scw"}]
+        expected_endpoints = [
+            {
+                "http_methods": None,
+                "target": "http://func-a:80",
+                "relative_url": "/func-a",
+            },
+            {
+                "http_methods": None,
+                "target": "http://ping:80/ping",
+                "relative_url": "/ping",
+            },
+            {
+                "http_methods": None,
+                "target": "http://ping:80/ping",
+                "relative_url": "/scw",
+            },
+        ]
 
         actual_endpoints = json.loads(response_endpoints.content)["endpoints"]
-        actual_endpoints_sorted_list = sorted(actual_endpoints, key=lambda endpoint: (endpoint['relative_url'], endpoint['http_methods']))
+        actual_endpoints_sorted_list = sorted(
+            actual_endpoints,
+            key=lambda endpoint: (endpoint["relative_url"], endpoint["http_methods"]),
+        )
 
         assert response_endpoints.status_code == expected_status_code
         assert actual_endpoints_sorted_list == expected_endpoints
@@ -68,8 +99,8 @@ class TestEndpoint(object):
                 break
             time.sleep(10)
             retries += 1
-        
-        expected_func_message = b'Hello from function A'
+
+        expected_func_message = b"Hello from function A"
 
         assert response_gw.status_code == expected_status_code
         assert response_gw.content == expected_func_message
@@ -85,7 +116,7 @@ class TestEndpoint(object):
 
         requests.delete(GW_ADMIN_URL, json=request)
         time.sleep(60)
-        
+
         # assert response.status_code == 200
 
         # Retry until we get a valid response
