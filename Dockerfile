@@ -1,5 +1,4 @@
-FROM kong:alpine
-
+FROM kong:3.0.2-alpine
 USER root
 
 RUN apk update
