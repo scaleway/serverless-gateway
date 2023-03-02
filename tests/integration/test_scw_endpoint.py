@@ -58,8 +58,7 @@ class TestEndpoint(object):
         }
 
         requests.post(GW_ADMIN_URL, json=request)
-        # assert response.status_code == 200
-        # assert response.content == b'{"message": "Success"}'
+        time.sleep(60)
 
         response_endpoints = requests.get(GW_ADMIN_URL)
 
@@ -97,7 +96,7 @@ class TestEndpoint(object):
             response_gw = requests.get(HOST_GW_FUNC_A_HELLO)
             if response_gw.status_code == 200:
                 break
-            time.sleep(10)
+            time.sleep(3)
             retries += 1
 
         expected_func_message = b"Hello from function A"
@@ -117,18 +116,14 @@ class TestEndpoint(object):
         requests.delete(GW_ADMIN_URL, json=request)
         time.sleep(60)
 
-        # assert response.status_code == 200
-
-        # Retry until we get a valid response
         retries = 0
         response_gw = None
         while retries < 5:
-            # Invoke relative URL via gateway
             response_gw = requests.get(HOST_GW_FUNC_A_HELLO)
             if response_gw.status_code == 404:
                 break
 
-            time.sleep(10)
+            time.sleep(3)
             retries += 1
 
         assert response_gw.status_code == 404
