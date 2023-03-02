@@ -3,6 +3,10 @@ services:
   gw:
     build:
       context: .
+    depends_on:
+      - ping
+      - func-a
+      - func-b
     environment:
       - KONG_PROXY_ACCESS_LOG=/dev/stdout
       - KONG_ADMIN_ACCESS_LOG=/dev/stdout

@@ -1,6 +1,8 @@
 import json
 import time
 
+from loguru import logger
+
 import requests
 
 GW_HOST = "localhost"
@@ -15,23 +17,40 @@ GW_FUNC_A_URL = "http://func-a"
 HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 
 
+DEFAULT_ENDPOINTS = [
+    {
+        "http_methods": None,
+        "target": "http://ping:80/ping",
+        "relative_url": "/ping",
+    },
+    {
+        "http_methods": None,
+        "target": "http://ping:80/ping",
+        "relative_url": "/scw",
+    },
+]
+
+
 class TestEndpoint(object):
+    def _call_endpoint_until_response_code(url, code):
+        retries = 0
+        resp = None
+        while retries < 20:
+            resp = requests.get(url)
+            if resp.status_code == code:
+                logger.info(f"Got {resp.status_code} from {url}")
+                break
+
+            logger.info(f"Got {resp.status_code} from {url}, retrying")
+            time.sleep(3)
+            retries += 1
+
+        return resp
+
     def test_default_list_of_endpoints(self):
         response = requests.get(GW_ADMIN_URL)
 
         expected_status_code = 200
-        expected_endpoints = [
-            {
-                "http_methods": None,
-                "target": "http://ping:80/ping",
-                "relative_url": "/ping",
-            },
-            {
-                "http_methods": None,
-                "target": "http://ping:80/ping",
-                "relative_url": "/scw",
-            },
-        ]
 
         actual_endpoints = json.loads(response.content)["endpoints"]
         actual_endpoints_sorted_list = sorted(
@@ -40,7 +59,7 @@ class TestEndpoint(object):
         )
 
         assert response.status_code == expected_status_code
-        assert actual_endpoints_sorted_list == expected_endpoints
+        assert actual_endpoints_sorted_list == DEFAULT_ENDPOINTS
 
     def test_direct_call_to_target(self):
         response = requests.get(HOST_FUNC_A_HELLO)
@@ -51,18 +70,26 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
-    def test_create_endpoint(self):
+    def test_create_delete_endpoint(self):
+        expected_status_code = 200
+        expected_func_message = b"Hello from function A"
+
         request = {
             "target": GW_FUNC_A_URL,
             "relative_url": "/func-a",
         }
 
+        # Create the endpoint and keep calling until it's up
         requests.post(GW_ADMIN_URL, json=request)
-        time.sleep(60)
+        response_gw = self._call_endpoint_until_response_code(
+            HOST_GW_FUNC_A_HELLO, expected_status_code
+        )
+        assert response_gw.status_code == expected_status_code
+        assert response_gw.content == expected_func_message
 
+        # Check the endpoint is in the list
         response_endpoints = requests.get(GW_ADMIN_URL)
 
-        expected_status_code = 200
         expected_endpoints = [
             {
                 "http_methods": None,
@@ -90,41 +117,11 @@ class TestEndpoint(object):
         assert response_endpoints.status_code == expected_status_code
         assert actual_endpoints_sorted_list == expected_endpoints
 
-        retries = 0
-        response_gw = None
-        while retries < 5:
-            response_gw = requests.get(HOST_GW_FUNC_A_HELLO)
-            if response_gw.status_code == 200:
-                break
-            time.sleep(3)
-            retries += 1
-
-        expected_func_message = b"Hello from function A"
-
-        assert response_gw.status_code == expected_status_code
-        assert response_gw.content == expected_func_message
-
-    def test_delete_endpoint(self):
-        request = {
-            "target": GW_FUNC_A_URL,
-            "relative_url": "/func-a",
-        }
-
-        requests.post(GW_ADMIN_URL, json=request)
-        time.sleep(60)
-
+        # Now delete the endpoint
         requests.delete(GW_ADMIN_URL, json=request)
-        time.sleep(60)
 
-        retries = 0
-        response_gw = None
-        while retries < 5:
-            response_gw = requests.get(HOST_GW_FUNC_A_HELLO)
-            if response_gw.status_code == 404:
-                break
-
-            time.sleep(3)
-            retries += 1
+        # Keep calling until we get a 404
+        response_gw = self._call_endpoint_until_response_code(HOST_GW_FUNC_A_HELLO, 404)
 
         assert response_gw.status_code == 404
         assert (
