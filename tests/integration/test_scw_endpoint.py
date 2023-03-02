@@ -66,7 +66,7 @@ class TestEndpoint(object):
             response_gw = requests.get(HOST_GW_FUNC_A_HELLO)
             if response_gw.status_code == 200:
                 break
-            time.sleep(3)
+            time.sleep(10)
             retries += 1
         
         expected_func_message = b'Hello from function A'
@@ -94,7 +94,7 @@ class TestEndpoint(object):
             if response_gw.status_code == 404:
                 break
 
-            time.sleep(3)
+            time.sleep(10)
             retries += 1
 
         assert response_gw.status_code == 404
