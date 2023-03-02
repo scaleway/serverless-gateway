@@ -11,7 +11,7 @@ test:
 
 .PHONY: test-int
 test-int:
-	python -m pytest tests/integration
+	python -m pytest tests/integration -v
 
 .PHONY: lint
 lint:
