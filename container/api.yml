@@ -1,4 +1,4 @@
- #Default API for the gateway
+# Default Kong config for the gateway
 
 _format_version: '2.1'
 _transform: true

@@ -32,19 +32,21 @@ DEFAULT_ENDPOINTS = [
 
 class TestEndpoint(object):
     def _call_endpoint_until_response_code(self, url, code):
-        retries = 0
+        max_retries = 20
+        sleep_time = 3
         resp = None
-        while retries < 20:
+
+        for r in range(max_retries):
             resp = requests.get(url)
             if resp.status_code == code:
                 logger.info(f"Got {resp.status_code} from {url}")
-                break
+                return resp
 
             logger.info(f"Got {resp.status_code} from {url}, retrying")
-            time.sleep(3)
-            retries += 1
+            time.sleep(sleep_time)
 
-        return resp
+        # Here we have failed
+        raise RuntimeError(f"Did not get {code} from {url} in {max_retries} tries")
 
     def test_default_list_of_endpoints(self):
         response = requests.get(GW_ADMIN_URL)
@@ -54,7 +56,7 @@ class TestEndpoint(object):
         actual_endpoints = json.loads(response.content)["endpoints"]
         actual_endpoints_sorted_list = sorted(
             actual_endpoints,
-            key=lambda endpoint: (endpoint["relative_url"], endpoint["http_methods"]),
+            key=lambda e: (e["relative_url"]),
         )
 
         assert response.status_code == expected_status_code
@@ -70,7 +72,6 @@ class TestEndpoint(object):
         assert response.content == expected_content
 
     def test_create_delete_endpoint(self):
-        expected_status_code = 200
         expected_func_message = b"Hello from function A"
 
         request = {
@@ -79,16 +80,16 @@ class TestEndpoint(object):
         }
 
         # Create the endpoint and keep calling until it's up
+        logger.info(f"Creating new endpoint {request}")
         requests.post(GW_ADMIN_URL, json=request)
+
         response_gw = self._call_endpoint_until_response_code(
-            HOST_GW_FUNC_A_HELLO, expected_status_code
+            HOST_GW_FUNC_A_HELLO, 200
         )
-        assert response_gw.status_code == expected_status_code
+
         assert response_gw.content == expected_func_message
 
-        # Check the endpoint is in the list
-        response_endpoints = requests.get(GW_ADMIN_URL)
-
+        # Build the expected list of endpoints after adding the new one
         expected_endpoints = [
             {
                 "http_methods": None,
@@ -107,13 +108,19 @@ class TestEndpoint(object):
             },
         ]
 
-        actual_endpoints = json.loads(response_endpoints.content)["endpoints"]
+        # Make the request to the SCW plugin
+        response_endpoints = requests.get(GW_ADMIN_URL)
+        assert response_endpoints.status_code == 200
+
+        # Parse JSON and check
+        actual_endpoints_json = json.loads(response_endpoints.content)
+        actual_endpoints = actual_endpoints_json.get("endpoints")
+
         actual_endpoints_sorted_list = sorted(
             actual_endpoints,
-            key=lambda endpoint: (endpoint["relative_url"], endpoint["http_methods"]),
+            key=lambda e: (e["relative_url"]),
         )
 
-        assert response_endpoints.status_code == expected_status_code
         assert actual_endpoints_sorted_list == expected_endpoints
 
         # Now delete the endpoint
@@ -121,8 +128,6 @@ class TestEndpoint(object):
 
         # Keep calling until we get a 404
         response_gw = self._call_endpoint_until_response_code(HOST_GW_FUNC_A_HELLO, 404)
-
-        assert response_gw.status_code == 404
         assert (
             response_gw.content == b'{"message":"no Route matched with those values"}'
         )
