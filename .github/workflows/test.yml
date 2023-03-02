@@ -45,6 +45,6 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: docker compose up -d
       - name: API gateway health check
-        run: until curl ://localhost:8000/ping; do sleep 5; done
+        run: until curl http://localhost:8000/ping; do sleep 5; done
       - run: docker compose ps -a
       - run: make test-int
