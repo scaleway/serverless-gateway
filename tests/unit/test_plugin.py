@@ -3,7 +3,7 @@ from kong_pdk.pdk import kong
 
 from gateway.plugin import PLUGIN_CONF_ADMIN_URL, Plugin
 
-DUMMY_ADMIN_URL = "http://foobar"
+DUMMY_ADMIN_URL = "http://dummy-admin-url"
 PLUGIN_CONF = {PLUGIN_CONF_ADMIN_URL: DUMMY_ADMIN_URL}
 
 
@@ -17,28 +17,32 @@ class DummyKongRequest(object):
     def set_method(self, method_in):
         self.method = method_in
 
+    def get_body(self):
+        return self.body
+
+    def set_body(self, newBody):
+        self.body = newBody
+
 
 class TestPlugin(object):
     @responses.activate
-    def test_create_endpoint(self):
-        kng = kong.kong()
+    def test_get_config(self):
+        kongGW = kong.kong()
+        dummyRequest = DummyKongRequest()
+        dummyRequest.set_method("GET")
 
-        req = DummyKongRequest()
-        req.set_method("GET")
-        kng.request = req
+        kongGW.request = dummyRequest
 
-        clusters_url = f"{DUMMY_ADMIN_URL}/clusters"
         config_url = f"{DUMMY_ADMIN_URL}/config"
 
-        # Set up request to get config
         config_resp = {
             "config": """
         routes:
-          - name: alpha
-          - name: beta
+          - name: route_1
+          - name: route_2
         services:
-          - name: gamma
-          - name: delta
+          - name: service_1
+          - name: service_2
         """
         }
 
@@ -49,16 +53,46 @@ class TestPlugin(object):
         )
         responses.add(resp)
 
-        # Set up request to list clusters
-        clusters_resp = {}
+        # Create a plugin instance
+        plug = Plugin(PLUGIN_CONF)
+        plug.access(kongGW)
 
-        resp = responses.Response(
+    @responses.activate
+    def test_add_config(self):
+        kongGW = kong.kong()
+        dummyRequest = DummyKongRequest()
+        dummyRequest.set_method("POST")
+        body = {"http_method": "POST", "relative_url": "/test"}
+        dummyRequest.set_body(body)
+        kongGW.request = dummyRequest
+
+        config_url = f"{DUMMY_ADMIN_URL}/config"
+
+        config_resp = {
+            "config": """
+        routes:
+          - name: route_1
+          - name: route_2
+        services:
+          - name: service_1
+          - name: service_2
+        """
+        }
+
+        newConfig = {"_format_version": "3.0"}
+
+        getConfigResponse = responses.Response(
             method="GET",
-            url=clusters_url,
-            json=clusters_resp,
+            url=config_url,
+            json=config_resp,
         )
-        responses.add(resp)
+        responses.add(getConfigResponse)
+
+        postConfigResponse = responses.Response(
+            method="POST", url=config_url, json=newConfig
+        )
+        responses.add(postConfigResponse)
 
         # Create a plugin instance
         plug = Plugin(PLUGIN_CONF)
-        plug.access(kng)
+        plug.access(kongGW)

@@ -1,4 +1,4 @@
-# Default API for the gateway
+# Default Kong config for the gateway
 
 _format_version: '2.1'
 _transform: true
@@ -28,4 +28,3 @@ services:
   - name: scw-sls-gw
     config:
       admin_url: http://localhost:8001
-

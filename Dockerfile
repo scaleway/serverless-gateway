@@ -8,8 +8,6 @@ RUN apk add python3 \
       py3-pip \
       python3-dev
 
-RUN pip3 install kong-pdk
-
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt
 

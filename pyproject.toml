@@ -2,17 +2,11 @@
 profile = "black"
 
 [tool.pytest.ini_options]
-addopts = [
-  "--import-mode=importlib",
-]
 log_cli = true
 log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 testpaths = ["tests"]
 
 [tool.mypy]
 exclude = ["venv", "endpoints"]
 # TODO - enable mypy checking properly and fix issue with kong_pdk
 ignore_missing_imports = true
-
