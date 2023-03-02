@@ -44,5 +44,6 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: docker compose up -d
+      - run: sleep 60
       - run: docker compose ps -a
       - run: make test-int
