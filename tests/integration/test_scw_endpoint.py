@@ -1,12 +1,11 @@
 import json
 import time
 
+import requests
 from loguru import logger
 
-import requests
-
 GW_HOST = "localhost"
-GW_PORT = 8000
+GW_PORT = "8000"
 GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"
@@ -20,12 +19,12 @@ HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
-        "target": "http://ping:80/ping",
+        "target": "http://ping-checker:80/ping",
         "relative_url": "/ping",
     },
     {
         "http_methods": None,
-        "target": "http://ping:80/ping",
+        "target": "http://ping-checker:80/ping",
         "relative_url": "/scw",
     },
 ]
@@ -98,12 +97,12 @@ class TestEndpoint(object):
             },
             {
                 "http_methods": None,
-                "target": "http://ping:80/ping",
+                "target": "http://ping-checker:80/ping",
                 "relative_url": "/ping",
             },
             {
                 "http_methods": None,
-                "target": "http://ping:80/ping",
+                "target": "http://ping-checker:80/ping",
                 "relative_url": "/scw",
             },
         ]

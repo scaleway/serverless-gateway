@@ -44,6 +44,7 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: docker compose up -d
-      - run: sleep 60
+      - name: API gateway health check
+        run: until curl http://localhost:8000/ping; do sleep 5; done
       - run: docker compose ps -a
       - run: make test-int
