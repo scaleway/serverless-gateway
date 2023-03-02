@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import json
-
+import sys
 import kong_pdk.pdk.kong as kong
 import requests
 import yaml
@@ -17,6 +17,16 @@ PLUGIN_NAME = "scw-sls-gw"
 # Config file constants
 ROUTES_CONFIG_SECTION = "routes"
 SERVICES_CONFIG_SECTION = "services"
+
+
+def init_logging(debug=False):
+    logger.remove()
+    logger.add(
+        sys.stdout,
+        colorize=True,
+        format="<green>{time}</green> <level>{message}</level>",
+        level="DEBUG" if debug else "INFO",
+    )
 
 
 # Class wrapping functionality around Kong configuration
@@ -249,11 +259,11 @@ class Plugin(object):
             err_msg = endpoint.validate()
             if err_msg:
                 kong.response.exit(
-                    status=requests.codes.bad_request,
-                    body=bytes(
+                    requests.codes.bad_request,
+                    bytes(
                         json.dumps({"message": f"Invalid request: {err_msg}"}), "utf-8"
                     ),
-                    headers=None,
+                    None,
                 )
                 return
 
@@ -265,11 +275,11 @@ class Plugin(object):
 
             if err_msg:
                 kong.response.exit(
-                    status=requests.codes.server_error,
-                    body=bytes(
+                    requests.codes.server_error,
+                    bytes(
                         json.dumps({"message": f"Request failed: {err_msg}"}), "utf-8"
                     ),
-                    headers=None,
+                    None,
                 )
                 return
 
@@ -277,21 +287,23 @@ class Plugin(object):
             # Handle unexpected HTTP method
             logger.error(f"Unsupported HTTP method {method}")
             kong.response.exit(
-                status=requests.codes.bad_request,
-                body=bytes(json.dumps({"message": "Unsupported HTTP method"}), "utf-8"),
-                headers=None,
+                requests.codes.bad_request,
+                bytes(json.dumps({"message": "Unsupported HTTP method"}), "utf-8"),
+                None,
             )
             return
 
         # Exit successfully
         kong.response.exit(
-            status=requests.codes.ok,
-            body=bytes(json.dumps({"message": "Success"}), "utf-8"),
-            headers=None,
+            requests.codes.ok,
+            bytes(json.dumps({"message": "Success"}), "utf-8"),
+            None,
         )
 
 
 if __name__ == "__main__":
+    init_logging()
+
     # Start server using Kong PDK
     from kong_pdk.cli import start_dedicated_server
 
