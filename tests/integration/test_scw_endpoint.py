@@ -51,7 +51,7 @@ class TestEndpoint(object):
     def test_default_list_of_endpoints(self):
         response = requests.get(GW_ADMIN_URL)
 
-        expected_status_code = 200
+        expected_status_code = requests.codes.ok
 
         actual_endpoints = json.loads(response.content)["endpoints"]
         actual_endpoints_sorted_list = sorted(
@@ -65,7 +65,7 @@ class TestEndpoint(object):
     def test_direct_call_to_target(self):
         response = requests.get(HOST_FUNC_A_HELLO)
 
-        expected_status_code = 200
+        expected_status_code = requests.codes.ok
         expected_content = b"Hello from function A"
 
         assert response.status_code == expected_status_code
@@ -83,7 +83,9 @@ class TestEndpoint(object):
         logger.info(f"Creating new endpoint {request}")
         requests.post(GW_ADMIN_URL, json=request)
 
-        response_gw = self._call_endpoint_until_response_code(HOST_GW_FUNC_A_HELLO, 200)
+        response_gw = self._call_endpoint_until_response_code(
+            HOST_GW_FUNC_A_HELLO, requests.codes.ok
+        )
 
         assert response_gw.content == expected_func_message
 
@@ -94,21 +96,12 @@ class TestEndpoint(object):
                 "target": "http://func-a:80",
                 "relative_url": "/func-a",
             },
-            {
-                "http_methods": None,
-                "target": "http://ping-checker:80/ping",
-                "relative_url": "/ping",
-            },
-            {
-                "http_methods": None,
-                "target": "http://ping-checker:80/ping",
-                "relative_url": "/scw",
-            },
         ]
+        expected_endpoints.extend(DEFAULT_ENDPOINTS)
 
         # Make the request to the SCW plugin
         response_endpoints = requests.get(GW_ADMIN_URL)
-        assert response_endpoints.status_code == 200
+        assert response_endpoints.status_code == requests.codes.ok
 
         # Parse JSON and check
         actual_endpoints_json = json.loads(response_endpoints.content)
@@ -124,8 +117,10 @@ class TestEndpoint(object):
         # Now delete the endpoint
         requests.delete(GW_ADMIN_URL, json=request)
 
-        # Keep calling until we get a 404
-        response_gw = self._call_endpoint_until_response_code(HOST_GW_FUNC_A_HELLO, 404)
+        # Keep calling until we get a requests.codes.not_found
+        response_gw = self._call_endpoint_until_response_code(
+            HOST_GW_FUNC_A_HELLO, requests.codes.not_found
+        )
         assert (
             response_gw.content == b'{"message":"no Route matched with those values"}'
         )

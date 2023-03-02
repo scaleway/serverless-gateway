@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 
-import kong_pdk.pdk.kong as kng
+import kong_pdk.pdk.kong as kng  # Avoid clashes with name kong
 import requests
 from loguru import logger
 
@@ -23,7 +23,7 @@ class Plugin(object):
     Main plugin object needed for the Kong PDK
     """
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         self.admin_url = config.get(PLUGIN_CONF_ADMIN_URL)
         self.kong_conf = KongConfig(self.admin_url)
 
