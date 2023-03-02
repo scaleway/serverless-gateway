@@ -83,9 +83,7 @@ class TestEndpoint(object):
         logger.info(f"Creating new endpoint {request}")
         requests.post(GW_ADMIN_URL, json=request)
 
-        response_gw = self._call_endpoint_until_response_code(
-            HOST_GW_FUNC_A_HELLO, 200
-        )
+        response_gw = self._call_endpoint_until_response_code(HOST_GW_FUNC_A_HELLO, 200)
 
         assert response_gw.content == expected_func_message
 
