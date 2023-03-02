@@ -3,6 +3,8 @@ services:
   gw:
     build:
       context: .
+    networks:
+      - scw-sls-gw
     environment:
       - KONG_PROXY_ACCESS_LOG=/dev/stdout
       - KONG_ADMIN_ACCESS_LOG=/dev/stdout
@@ -17,20 +19,30 @@ services:
     volumes:
       - ./:/app
 
-  ping:
+  ping-checker:
+    networks:
+      - scw-sls-gw
     build:
       context: ./endpoints/ping/
     ports:
       - 8003:80
 
   func-a:
+    networks:
+      - scw-sls-gw
     build:
       context: ./endpoints/func-a/
     ports:
       - 8004:80
 
   func-b:
+    networks:
+      - scw-sls-gw
     build:
       context: ./endpoints/func-b/
     ports:
       - 8005:80
+
+networks:
+ scw-sls-gw:
+   driver: bridge
