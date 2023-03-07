@@ -2,7 +2,26 @@
 
 This is a self-hosted gateway for use in building larger serverless applications.
 
-Features:
+## Quick-start
+
+To get started with the gateway, you must do the following:
+
+- Install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli)
+- Install [`jq`](https://stedolan.github.io/jq/download/)
+
+You can then run the following from the root of the project to deploy the gateway in your Scaleway account:
+
+```
+# Create a namespace, check it's ready
+make create-namespace
+make check-namespace
+
+# Create the gateway container, check it's ready
+make create-container
+make check-container
+```
+
+## Features
 
 - Access multiple functions and containers via relative URLs on a single base URL
 - Direct traffic to different functions and containers based on HTTP method
