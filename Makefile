@@ -5,11 +5,10 @@ IMAGE_ORG := shillakerscw
 IMAGE_NAME := scw-sls-gw
 IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 
-SCW_PROJECT_ID := dummy-project-id
-SCW_CONTAINER_REGION := fr-par
+SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
-SCW_CONTAINER_NAMESPACE := scw-sls-gw-test
 SCW_CONTAINER_MIN_SCALE := 1
+SCW_CONTAINER_REGION := fr-par
 
 GW_PROXY_PORT := 8000
 
@@ -44,12 +43,29 @@ push-image:
 
 .PHONY: create-namespace
 create-namespace:
-	scw container namespace create name=$(SCW_CONTAINER_NAMESPACE) project-id=${SCW_PROJECT_ID} region=${SCW_CONTAINER_REGION}
+	scw container namespace \
+		create \
+		name=$(SCW_CONTAINER_NAMESPACE) \
+		region=${SCW_CONTAINER_REGION}
+
+.PHONY: check-namespace
+check-namespace:
+	scw container namespace \
+		list \
+		region=${SCW_CONTAINER_REGION} -o json | \
+		jq -r '.[] | select(.name=="${SCW_CONTAINER_NAMESPACE}")'
 
 .PHONY: create-container
 create-container:
 	$(eval SCW_CONTAINER_NAMESPACE_ID=$(shell scw container namespace list region=${SCW_CONTAINER_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id'))
-	scw container container create namespace-id=${SCW_CONTAINER_NAMESPACE_ID} name=$(SCW_CONTAINER_NAME) min-scale=${SCW_CONTAINER_MIN_SCALE} port=${GW_PROXY_PORT} registry-image=${IMAGE_TAG} region=${SCW_CONTAINER_REGION}
+	scw container container create namespace-id=${SCW_CONTAINER_NAMESPACE_ID} name=$(SCW_CONTAINER_NAME) min-scale=${SCW_CONTAINER_MIN_SCALE} registry-image=${IMAGE_TAG}
+
+.PHONY: check-container
+check-container:
+	scw container container \
+		list \
+		region=${SCW_CONTAINER_REGION} -o json | \
+		jq -r '.[] | select(.name=="${SCW_CONTAINER_NAME}")'
 
 .PHONY: test-int-container
 test-int-container:
