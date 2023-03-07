@@ -10,6 +10,23 @@ SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 SCW_CONTAINER_REGION := fr-par
 
+# Function to get the container ID
+define container_id
+	ns_id=$(shell scw container container \
+		  list region=${SCW_CONTAINER_REGION} -o json | \
+		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id')
+
+	$(1) := $$(ns_id)
+endef
+
+# Function to get the namespace ID
+define namespace_id
+	ns_id=$(shell scw container namespace \
+		  list region=${SCW_CONTAINER_REGION} -o json | \
+		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id')
+	$(1) := $$(ns_id)
+endef
+
 .PHONY: test
 test:
 	pytest tests/unit
@@ -48,22 +65,29 @@ create-namespace:
 
 .PHONY: check-namespace
 check-namespace:
-	scw container namespace \
-		list \
-		region=${SCW_CONTAINER_REGION} -o json | \
-		jq -r '.[] | select(.name=="${SCW_CONTAINER_NAMESPACE}")'
+	$(eval $(call namespace_id,_id))
+	scw container namespace get ${_id}
 
 .PHONY: create-container
 create-container:
-	$(eval SCW_CONTAINER_NAMESPACE_ID=$(shell scw container namespace list region=${SCW_CONTAINER_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id'))
-	scw container container create namespace-id=${SCW_CONTAINER_NAMESPACE_ID} name=$(SCW_CONTAINER_NAME) min-scale=${SCW_CONTAINER_MIN_SCALE} registry-image=${IMAGE_TAG}
+	$(eval $(call namespace_id,_id))
+	scw container container create \
+		namespace-id=${_id} \
+		name=$(SCW_CONTAINER_NAME) \
+		min-scale=${SCW_CONTAINER_MIN_SCALE} \
+		registry-image=${IMAGE_TAG}
+
+.PHONY: update-container
+update-container:
+	$(eval $(call container_id,_id))
+	scw container container update ${_id} \
+		min-scale=${SCW_CONTAINER_MIN_SCALE} \
+		registry-image=${IMAGE_TAG}
 
 .PHONY: check-container
 check-container:
-	scw container container \
-		list \
-		region=${SCW_CONTAINER_REGION} -o json | \
-		jq -r '.[] | select(.name=="${SCW_CONTAINER_NAME}")'
+	$(eval $(call container_id,_id))
+	scw container container get ${_id}
 
 .PHONY: test-int-container
 test-int-container:
