@@ -1,9 +1,18 @@
 VERSION := $(shell cat VERSION)
 
-# TODO - update to use SCW
+IMAGE_REGISTRY := registry.hub.docker.com
 IMAGE_ORG := shillakerscw
 IMAGE_NAME := scw-sls-gw
-IMAGE_TAG := ${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
+IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
+
+SECRET_KEY := 71d84495-5a3e-48a6-8589-b697fd180600
+SCW_PROJECT_ID := 7eb3dec3-4d59-4be5-a946-ae2a6417c417
+SCW_CONTAINER_REGION := fr-par
+SCW_CONTAINER_NAME := scw-sls-gw
+SCW_CONTAINER_NAMESPACE := scw-sls-gw
+SCW_CONTAINER_MIN_SCALE := 1
+
+GW_PROXY_PORT := 8000
 
 .PHONY: test
 test:
@@ -33,3 +42,18 @@ build-image:
 .PHONY: push-image
 push-image:
 	docker push ${IMAGE_TAG}
+
+.PHONY: create-namespace
+create-namespace:
+	scw container namespace create name=$(SCW_CONTAINER_NAMESPACE) project-id=${SCW_PROJECT_ID} region=${SCW_CONTAINER_REGION}
+
+.PHONY: create-container
+create-container:
+	$(eval SCW_CONTAINER_NAMESPACE_ID=$(shell scw container namespace list region=${SCW_CONTAINER_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id'))
+	scw container container create namespace-id=${SCW_CONTAINER_NAMESPACE_ID} name=$(SCW_CONTAINER_NAME) min-scale=${SCW_CONTAINER_MIN_SCALE} port=${GW_PROXY_PORT} registry-image=${IMAGE_TAG} region=${SCW_CONTAINER_REGION}
+
+.PHONY: test-int-container
+test-int-container:
+	$(eval SCW_CONTAINER_ID=$(shell scw container container list region=${SCW_CONTAINER_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id'))
+	$(eval  GW_HOST_URL=${shell scw container container get $(SCW_CONTAINER_ID) -o json | jq -r '.domain_name'})
+	pytest tests/integration -GW_HOST=$(GW_HOST_URL)
