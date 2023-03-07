@@ -5,6 +5,7 @@ IMAGE_ORG := shillakerscw
 IMAGE_NAME := scw-sls-gw
 IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 
+SCW_PROJECT_ID := dummy-project-id
 SCW_CONTAINER_REGION := fr-par
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_NAMESPACE := scw-sls-gw-test
