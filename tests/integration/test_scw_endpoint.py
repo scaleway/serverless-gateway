@@ -6,9 +6,7 @@ import requests
 from loguru import logger
 
 GW_HOST = os.getenv("GW_HOST", default="localhost")
-GW_PORT = ""
-if GW_HOST == "localhost":
-    GW_PORT = "8000"
+GW_PORT = "8080"
 GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"

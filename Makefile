@@ -10,8 +10,6 @@ SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 SCW_CONTAINER_REGION := fr-par
 
-GW_PROXY_PORT := 8000
-
 .PHONY: test
 test:
 	pytest tests/unit
