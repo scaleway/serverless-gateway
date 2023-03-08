@@ -36,6 +36,7 @@ DEFAULT_ENDPOINTS = [
     },
 ]
 
+
 class TestEndpoint(object):
     def _call_endpoint_until_response_code(self, url, code):
         max_retries = 20
@@ -49,12 +50,14 @@ class TestEndpoint(object):
                 return resp
 
             message = json.loads(resp.content)["message"]
-            logger.info(f"Got {resp.status_code} from {url}, retrying, message is {message}")
+            logger.info(
+                f"Got {resp.status_code} from {url}, retrying, message is {message}"
+            )
             time.sleep(sleep_time)
 
         # Here we have failed
         raise RuntimeError(f"Did not get {code} from {url} in {max_retries} tries")
-    
+
     def _call_endpoint_until_gw_message(self, url, message):
         max_retries = 20
         sleep_time = 2
@@ -124,7 +127,7 @@ class TestEndpoint(object):
             },
         ]
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
-        expected_endpoints =  sorted(
+        expected_endpoints = sorted(
             expected_endpoints,
             key=lambda e: (e["relative_url"]),
         )
@@ -150,6 +153,4 @@ class TestEndpoint(object):
         response_gw = self._call_endpoint_until_gw_message(
             HOST_GW_FUNC_A_HELLO, "Hello from GW!"
         )
-        assert (
-            response_gw.content == b'{"message":"Hello from GW!"}'
-       )
+        assert response_gw.content == b'{"message":"Hello from GW!"}'
