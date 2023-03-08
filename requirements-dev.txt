@@ -9,3 +9,4 @@ responses==0.22.0
 
 types-requests==2.28.11.13
 types-PyYAML==6.0.12.7
+scw-serverless==0.0.4
