@@ -2,8 +2,9 @@ from scw_serverless import Serverless
 
 app = Serverless("function-int-tests")
 
+
 @app.func()
-def handle(_event, _content):    
+def handle(_event, _content):
     return "Hello from function"
 
 
