@@ -1,9 +1,11 @@
-name: push to registry
+name: build and push to registry
 
 on:
   push:
-    branches: 
-      - 'SRVLESS**'
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 env:
   TAG_BASE: ${{ secrets.SCW_REGISTRY }}/scw-sls-gw
@@ -37,3 +39,4 @@ jobs:
         with:
           push: true
           tags: "${{ env.tag }}"
+        if: github.event_name != 'pull_request'
