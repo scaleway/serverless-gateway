@@ -5,8 +5,9 @@ import time
 import requests
 from loguru import logger
 
-GW_HOST = os.getenv("GW_HOST", default="localhost")
+GW_HOST = "localhost"
 GW_PORT = "8080"
+
 GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"
@@ -20,6 +21,11 @@ HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
+        "target": "http://www.google.com:80",
+        "relative_url": "/",
+    },
+    {
+        "http_methods": None,
         "target": "http://ping-checker:80/ping",
         "relative_url": "/ping",
     },
@@ -29,7 +35,6 @@ DEFAULT_ENDPOINTS = [
         "relative_url": "/scw",
     },
 ]
-
 
 class TestEndpoint(object):
     def _call_endpoint_until_response_code(self, url, code):
@@ -124,4 +129,4 @@ class TestEndpoint(object):
         )
         assert (
             response_gw.content == b'{"message":"no Route matched with those values"}'
-        )
+       )

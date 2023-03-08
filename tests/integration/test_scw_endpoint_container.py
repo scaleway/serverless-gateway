@@ -1,0 +1,122 @@
+import json
+import os
+import time
+
+import requests
+from loguru import logger
+
+GW_HOST = os.getenv("GW_HOST")
+
+GW_ADMIN_URL = f"http://{GW_HOST}/scw"
+
+FUNC_BASE_URL = "<function_base_url>"
+
+FUNC_ENDPOINT = "hello"
+
+FUNC_RELATIVE_URL = f"http://{FUNC_BASE_URL}/{FUNC_ENDPOINT}"
+
+
+DEFAULT_ENDPOINTS = [
+    {
+        "http_methods": None,
+        "target": "http://www.google.com:80",
+        "relative_url": "/",
+    },
+    {
+        "http_methods": None,
+        "target": "http://ping-checker:80/ping",
+        "relative_url": "/ping",
+    },
+    {
+        "http_methods": None,
+        "target": "http://ping-checker:80/ping",
+        "relative_url": "/scw",
+    },
+]
+
+
+class TestEndpoint(object):
+    def _call_endpoint_until_response_code(self, url, code):
+        max_retries = 20
+        sleep_time = 2
+        resp = None
+
+        for r in range(max_retries):
+            resp = requests.get(url)
+            if resp.status_code == code:
+                logger.info(f"Got {resp.status_code} from {url}")
+                return resp
+
+            logger.info(f"Got {resp.status_code} from {url}, retrying")
+            time.sleep(sleep_time)
+
+        # Here we have failed
+        raise RuntimeError(f"Did not get {code} from {url} in {max_retries} tries")
+
+    def test_default_list_of_endpoints(self):
+        response = requests.get(GW_ADMIN_URL)
+
+        expected_status_code = requests.codes.ok
+
+        actual_endpoints = json.loads(response.content)["endpoints"]
+        actual_endpoints_sorted_list = sorted(
+            actual_endpoints,
+            key=lambda e: (e["relative_url"]),
+        )
+
+        assert response.status_code == expected_status_code
+        assert actual_endpoints_sorted_list == DEFAULT_ENDPOINTS
+
+    def test_create_delete_endpoint(self):
+        expected_func_message = b"Hello from function"
+
+        request = {
+            "target": FUNC_BASE_URL,
+            "relative_url": "/func-a",
+        }
+
+        # Create the endpoint and keep calling until it's up
+        logger.info(f"Creating new endpoint {request}")
+        requests.post(GW_ADMIN_URL, json=request)
+
+        response_gw = self._call_endpoint_until_response_code(
+            FUNC_RELATIVE_URL, requests.codes.ok
+        )
+
+        assert response_gw.content == expected_func_message
+
+        # Build the expected list of endpoints after adding the new one
+        expected_endpoints = [
+            {
+                "http_methods": None,
+                "target": "http://func-a:80",
+                "relative_url": "/func-a",
+            },
+        ]
+        expected_endpoints.extend(DEFAULT_ENDPOINTS)
+
+        # Make the request to the SCW plugin
+        response_endpoints = requests.get(GW_ADMIN_URL)
+        assert response_endpoints.status_code == requests.codes.ok
+
+        # Parse JSON and check
+        actual_endpoints_json = json.loads(response_endpoints.content)
+        actual_endpoints = actual_endpoints_json.get("endpoints")
+
+        actual_endpoints_sorted_list = sorted(
+            actual_endpoints,
+            key=lambda e: (e["relative_url"]),
+        )
+
+        assert actual_endpoints_sorted_list == expected_endpoints
+
+        # Now delete the endpoint
+        requests.delete(GW_ADMIN_URL, json=request)
+
+        # Keep calling until we get a requests.codes.not_found
+        response_gw = self._call_endpoint_until_response_code(
+            FUNC_RELATIVE_URL, requests.codes.not_found
+        )
+        assert (
+            response_gw.content == b'{"message":"no Route matched with those values"}'
+       )
