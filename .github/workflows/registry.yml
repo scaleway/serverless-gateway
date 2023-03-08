@@ -6,7 +6,7 @@ on:
       - 'SRVLESS**'
 
 env:
-  TAG_BASE: ${{ secrets.SCW_REGISTRY }}scw-sls-gw
+  TAG_BASE: ${{ secrets.SCW_REGISTRY }}/scw-sls-gw
 
 jobs:
   image-build:
