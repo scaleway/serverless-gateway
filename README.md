@@ -36,7 +36,7 @@ Get the domain name of yout container when it is ready.
 ### Deploy your function
 You can use the functions in the handler at `endpoints/func-example` and deploy using Scaleway's Serverless API framework using:
 ```
-scw-serverless endpoints/func-example/handler.py
+scw-serverless deploy endpoints/func-example/handler.py
 ```
 
 You will get two URLs, one for `hello` function and the other one `goodbye` function.
@@ -45,7 +45,7 @@ You will get two URLs, one for `hello` function and the other one `goodbye` func
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
-curl -X POST <your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
+curl -X POST <your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
 You can add as many endpoints as you want.
 
