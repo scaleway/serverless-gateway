@@ -20,7 +20,7 @@ HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
-        "target": "http://www.google.com:80",
+        "target": "http://ping-checker:80/ping",
         "relative_url": "/",
     },
     {
