@@ -4,6 +4,11 @@ _format_version: '2.1'
 _transform: true
 
 routes:
+# Scaleway base route
+- name: base
+  paths:
+  - /
+  service: base
 # Scaleway admin route
 - name: scw
   paths:
@@ -28,3 +33,12 @@ services:
   - name: scw-sls-gw
     config:
       admin_url: http://localhost:8001
+
+# Scaleway base 
+- name: base
+  url: http://ping-checker/ping
+  plugins:
+  - name: request-termination
+    config: 
+      status_code: 200
+      message: Hello from GW!
