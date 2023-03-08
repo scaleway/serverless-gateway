@@ -6,7 +6,7 @@ on:
       - 'SRVLESS**'
 
 env:
-  TAG_BASE: shillakerscw/scw-sls-gw
+  TAG_BASE: scaleway/scw-sls-gw
 
 jobs:
   image-build:
