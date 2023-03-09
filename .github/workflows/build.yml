@@ -2,9 +2,7 @@ name: build and push to registry
 
 on:
   push:
-    branches:
-      - "main"
-      - "SRVLESS**"
+    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -41,4 +39,4 @@ jobs:
         with:
           push: true
           tags: "${{ env.tag }}"
-        if: github.event_name != 'pull_request'
+        #if: github.event_name != 'pull_request'
