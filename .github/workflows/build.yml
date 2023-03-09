@@ -8,7 +8,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
-  TAG_BASE: ${{ vars.SCW_REGISTRY }}/serverless-gateway
+  TAG_BASE: ${{ vars.SCW_REGISTRY }}/scw-sls-gw
 
 jobs:
   image-build:
@@ -25,7 +25,7 @@ jobs:
         with:
           registry: ${{ vars.SCW_REGISTRY }}
           username: nologin
-          password: ${{ secrets.SCW_REGISTRY_KEY }}
+          password: ${{ secrets.SCW_SECRET_KEY }}
       - name: "Get image tag"
         id: get_tag
         run: echo "tag=$TAG_BASE:$(cat VERSION)" >> $GITHUB_ENV
