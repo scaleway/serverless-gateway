@@ -20,18 +20,19 @@ make create-namespace
 make check-namespace
 ```
 
-### Create a container
+### Create and deploy a container
 ```
 make create-container
+make deploy-container
 make check-container
 ```
 
-In case you want to update your container your can use:
+In case you want to update your container you can use:
 ```
 make update-container
 ```
 
-Get the domain name of yout container when it is ready.
+Get the domain name of your container when it is ready.
 
 ### Deploy your function
 You can use the functions in the handler at `endpoints/func-example` and deploy using Scaleway's Serverless API framework using:

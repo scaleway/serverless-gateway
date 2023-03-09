@@ -8,7 +8,10 @@ IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
-SCW_CONTAINER_REGION := fr-par
+SCW_CONTAINER_DEFAULT_REGION := fr-par
+
+# SCW_CONTAINER_REGION will be equal to SCW_API_REGION env var if set, else it will be equal to the default region
+SCW_CONTAINER_REGION = $(if $(SCW_API_REGION),$(SCW_API_REGION),$(SCW_CONTAINER_DEFAULT_REGION))
 
 # Function to get the container ID
 define container_id
@@ -66,7 +69,8 @@ create-namespace:
 .PHONY: check-namespace
 check-namespace:
 	$(eval $(call namespace_id,_id))
-	scw container namespace get ${_id}
+	scw container namespace get ${_id} \
+	region=${SCW_CONTAINER_REGION}
 
 .PHONY: create-container
 create-container:
@@ -75,19 +79,28 @@ create-container:
 		namespace-id=${_id} \
 		name=$(SCW_CONTAINER_NAME) \
 		min-scale=${SCW_CONTAINER_MIN_SCALE} \
-		registry-image=${IMAGE_TAG}
+		registry-image=${IMAGE_TAG} \
+		region=${SCW_CONTAINER_REGION}
+
+.PHONY: deploy-container
+deploy-container:
+	$(eval $(call container_id,_id))
+	scw container container deploy ${_id} \
+	region=${SCW_CONTAINER_REGION}
 
 .PHONY: update-container
 update-container:
 	$(eval $(call container_id,_id))
 	scw container container update ${_id} \
 		min-scale=${SCW_CONTAINER_MIN_SCALE} \
-		registry-image=${IMAGE_TAG}
+		registry-image=${IMAGE_TAG} \
+		region=${SCW_CONTAINER_REGION}
 
 .PHONY: check-container
 check-container:
 	$(eval $(call container_id,_id))
-	scw container container get ${_id}
+	scw container container get ${_id} \
+	region=${SCW_CONTAINER_REGION}
 
 .PHONY: test-int-container
 test-int-container:
