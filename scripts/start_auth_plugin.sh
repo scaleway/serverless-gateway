@@ -6,6 +6,6 @@ PROJ_ROOT=${THIS_DIR}/..
 
 pushd ${PROJ_ROOT} > /dev/null
 
-python3 -m gateway.plugin --no-lua-style "$@"
+python3 -m gateway.plugins.auth --no-lua-style "$@"
 
 popd > /dev/null

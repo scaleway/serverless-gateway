@@ -8,6 +8,16 @@ IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
+SCW_CONTAINER_MEMORY_LIMIT := 2048
+
+# Scaleway account credentials
+SCW_ACCESS_KEY ?= ""
+SCW_SECRET_KEY ?= ""
+
+# Bucket configuration where all authentication keys will be uploaded
+S3_BUCKET_NAME ?= ""
+S3_ENDPOINT ?= https://s3.fr-par.scw.cloud
+S3_REGION ?= fr-par
 
 # Set SCW_API_REGION to fr-par if the env var SCW_API_REGION is not already set
 SCW_API_REGION ?= fr-par
@@ -78,8 +88,19 @@ create-container:
 		namespace-id=${_id} \
 		name=$(SCW_CONTAINER_NAME) \
 		min-scale=${SCW_CONTAINER_MIN_SCALE} \
+		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
 		registry-image=${IMAGE_TAG} \
-		region=${SCW_API_REGION}
+		region=${SCW_API_REGION} \
+		secret-environment-variables.0.key=SCW_ACCESS_KEY \
+		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
+		secret-environment-variables.1.key=SCW_SECRET_KEY \
+		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
+		secret-environment-variables.2.key=S3_ENDPOINT \
+		secret-environment-variables.2.value=${S3_ENDPOINT} \
+		secret-environment-variables.3.key=S3_REGION \
+		secret-environment-variables.3.value=${S3_REGION} \
+		secret-environment-variables.4.key=S3_BUCKET_NAME \
+		secret-environment-variables.4.value=${S3_BUCKET_NAME}
 
 .PHONY: deploy-container
 deploy-container:
@@ -87,19 +108,78 @@ deploy-container:
 	scw container container deploy ${_id} \
 	region=${SCW_API_REGION}
 
+.PHONY: delete-container
+delete-container:
+	$(eval $(call container_id,_id))
+	scw container container delete ${_id} \
+	region=${SCW_API_REGION}
+
 .PHONY: update-container
 update-container:
 	$(eval $(call container_id,_id))
 	scw container container update ${_id} \
 		min-scale=${SCW_CONTAINER_MIN_SCALE} \
+		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
 		registry-image=${IMAGE_TAG} \
-		region=${SCW_API_REGION}
+		region=${SCW_API_REGION} \
+		secret-environment-variables.0.key=SCW_ACCESS_KEY \
+		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
+		secret-environment-variables.1.key=SCW_SECRET_KEY \
+		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
+		secret-environment-variables.2.key=S3_ENDPOINT \
+		secret-environment-variables.2.value=${S3_ENDPOINT} \
+		secret-environment-variables.3.key=S3_REGION \
+		secret-environment-variables.3.value=${S3_REGION} \
+		secret-environment-variables.4.key=S3_BUCKET_NAME \
+		secret-environment-variables.4.value=${S3_BUCKET_NAME}
+
+.PHONY: update-container-without-deploy
+update-container-without-deploy:
+	$(eval $(call container_id,_id))
+	scw container container update ${_id} \
+		min-scale=${SCW_CONTAINER_MIN_SCALE} \
+		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
+		registry-image=${IMAGE_TAG} \
+		region=${SCW_API_REGION} \
+		secret-environment-variables.0.key=SCW_ACCESS_KEY \
+		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
+		secret-environment-variables.1.key=SCW_SECRET_KEY \
+		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
+		secret-environment-variables.2.key=S3_ENDPOINT \
+		secret-environment-variables.2.value=${S3_ENDPOINT} \
+		secret-environment-variables.3.key=S3_REGION \
+		secret-environment-variables.3.value=${S3_REGION} \
+		secret-environment-variables.4.key=S3_BUCKET_NAME \
+		secret-environment-variables.4.value=${S3_BUCKET_NAME} \
+		redeploy=false
 
 .PHONY: check-container
 check-container:
 	$(eval $(call container_id,_id))
 	scw container container get ${_id} \
 	region=${SCW_API_REGION}
+
+.PHONY: generate-object-config
+generate-object-config:
+	scw object config install type=s3cmd
+
+.PHONY: create-s3-bucket
+create-s3-bucket:
+	s3cmd mb s3://${S3_BUCKET_NAME}
+
+.PHONY: list-auth-keys
+list-auth-keys:
+	@s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}'
+
+.PHONY: clean-namespace
+clean-namespace:
+	$(eval $(call namespace_id,_id))
+	scw container namespace delete ${_id} \
+	region=${SCW_API_REGION}
+
+.PHONY: clean-bucket
+clean-bucket:
+	s3cmd rb s3://${S3_BUCKET_NAME}
 
 .PHONY: test-int-container
 test-int-container:

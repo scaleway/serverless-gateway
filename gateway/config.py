@@ -108,17 +108,18 @@ class KongConfig(object):
 
         return matches[0]
 
-    def create_element(self, section, elem):
+    def create_element(self, section: str, elem: dict, delete_if_exist: bool):
         """
         Creates a new element in the given section in the config file
         """
         # Delete if exists
-        self.delete_element(section, elem)
+        if delete_if_exist:
+            self.delete_element(section, elem)
 
         # Add and write
         self._conf[section].append(elem)
 
-    def delete_element(self, section, elem):
+    def delete_element(self, section: str, elem: dict):
         """
         Deletes an element in the given section in the config file
         """

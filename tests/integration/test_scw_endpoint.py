@@ -1,12 +1,14 @@
 import json
 import time
 
+import boto3
 import requests
 from loguru import logger
 
 GW_HOST = "localhost"
 GW_PORT = "8080"
 
+AUTH_URL = f"http://{GW_HOST}:{GW_PORT}/auth"
 GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"
@@ -16,12 +18,23 @@ HOST_FUNC_A_HELLO = f"{HOST_FUNC_A_URL}/hello"
 GW_FUNC_A_URL = "http://func-a"
 HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 
+MINIO_BUCKET = "auth-keys"
+MINIO_ENDPOINT = "http://localhost:9000"
+MINIO_ACCESS_KEY = "minioadmin"
+MINIO_SECRET_KEY = "minioadmin"
+MINIO_REGION = "whatever"
+
 
 DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
         "target": "http://ping-checker:80/ping",
         "relative_url": "/",
+    },
+    {
+        "http_methods": None,
+        "target": "http://ping-checker:80/ping",
+        "relative_url": "/auth",
     },
     {
         "http_methods": None,
@@ -37,10 +50,26 @@ DEFAULT_ENDPOINTS = [
 
 
 class TestEndpoint(object):
-    def _call_endpoint_until_response_code(self, url, code):
+    @staticmethod
+    def _generate_auth_key(url) -> int:
+        response = requests.post(url)
+        assert response.status_code == requests.codes.ok
+
+        client = boto3.client(
+            "s3",
+            region_name=MINIO_REGION,
+            endpoint_url=MINIO_ENDPOINT,
+            aws_access_key_id=MINIO_ACCESS_KEY,
+            aws_secret_access_key=MINIO_SECRET_KEY,
+        )
+
+        res = client.list_objects_v2(Bucket=MINIO_BUCKET)
+        return res["Contents"][0]["Key"]
+
+    @staticmethod
+    def _call_endpoint_until_response_code(url, code):
         max_retries = 20
         sleep_time = 2
-        resp = None
 
         for _ in range(max_retries):
             resp = requests.get(url)
@@ -57,10 +86,10 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {code} from {url} in {max_retries} tries")
 
-    def _call_endpoint_until_gw_message(self, url, message):
+    @staticmethod
+    def _call_endpoint_until_gw_message(url, message):
         max_retries = 20
         sleep_time = 2
-        resp = None
 
         for _ in range(max_retries):
             resp = requests.get(url)
@@ -77,9 +106,13 @@ class TestEndpoint(object):
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
     def test_default_list_of_endpoints(self):
-        response = requests.get(GW_ADMIN_URL)
+        auth_key = self._generate_auth_key(AUTH_URL)
+        headers = {"X-Auth-Token": auth_key}
 
+        response = requests.get(GW_ADMIN_URL, headers=headers)
         expected_status_code = requests.codes.ok
+
+        assert response.status_code == expected_status_code
 
         actual_endpoints = json.loads(response.content)["endpoints"]
         actual_endpoints_sorted_list = sorted(
@@ -87,7 +120,6 @@ class TestEndpoint(object):
             key=lambda e: (e["relative_url"]),
         )
 
-        assert response.status_code == expected_status_code
         assert actual_endpoints_sorted_list == DEFAULT_ENDPOINTS
 
     def test_direct_call_to_target(self):
@@ -107,9 +139,12 @@ class TestEndpoint(object):
             "relative_url": "/func-a",
         }
 
+        auth_key = self._generate_auth_key(AUTH_URL)
+        headers = {"X-Auth-Token": auth_key}
+
         # Create the endpoint and keep calling until it's up
         logger.info(f"Creating new endpoint {request}")
-        requests.post(GW_ADMIN_URL, json=request)
+        requests.post(GW_ADMIN_URL, headers=headers, json=request)
 
         response_gw = self._call_endpoint_until_response_code(
             HOST_GW_FUNC_A_HELLO, requests.codes.ok
@@ -132,7 +167,7 @@ class TestEndpoint(object):
         )
 
         # Make the request to the SCW plugin
-        response_endpoints = requests.get(GW_ADMIN_URL)
+        response_endpoints = requests.get(GW_ADMIN_URL, headers=headers)
         assert response_endpoints.status_code == requests.codes.ok
 
         # Parse JSON and check
@@ -147,7 +182,7 @@ class TestEndpoint(object):
         assert actual_endpoints_sorted_list == expected_endpoints
 
         # Now delete the endpoint
-        requests.delete(GW_ADMIN_URL, json=request)
+        requests.delete(GW_ADMIN_URL, headers=headers, json=request)
         # Keep calling until we get a requests.codes.not_found
         response_gw = self._call_endpoint_until_gw_message(
             HOST_GW_FUNC_A_HELLO, "Hello from GW!"

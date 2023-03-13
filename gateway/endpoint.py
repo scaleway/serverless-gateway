@@ -66,8 +66,8 @@ class Endpoint(object):
         """
         Creates this endpoint in the config, and updates Kong
         """
-        kong_conf.create_element(SERVICES_CONFIG_SECTION, self.service)
-        kong_conf.create_element(ROUTES_CONFIG_SECTION, self.route)
+        kong_conf.create_element(SERVICES_CONFIG_SECTION, self.service, True)
+        kong_conf.create_element(ROUTES_CONFIG_SECTION, self.route, True)
 
         kong_conf.update_config()
 

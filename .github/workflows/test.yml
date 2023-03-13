@@ -41,7 +41,14 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install -r requirements-dev.txt
-      - run: docker compose up -d
+      - name: Start the stack
+        run: |
+          export SCW_ACCESS_KEY=minioadmin
+          export SCW_SECRET_KEY=minioadmin
+          export S3_REGION=whatever
+          export S3_ENDPOINT=http://minio:9000
+          export S3_BUCKET_NAME=auth-keys
+          docker compose up -d
       - name: API gateway health check
         run: until curl http://localhost:8080/ping; do sleep 3; done
       - run: make test-int

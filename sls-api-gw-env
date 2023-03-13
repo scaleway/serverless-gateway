@@ -1,0 +1,5 @@
+export SCW_ACCESS_KEY='<access_key>'
+export SCW_SECRET_KEY='<secret_key>'
+export S3_REGION='<region>'
+export S3_ENDPOINT='<endpoint>'
+export S3_BUCKET_NAME='<bucket_name>'

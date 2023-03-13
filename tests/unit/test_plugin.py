@@ -1,7 +1,7 @@
 import responses
 from kong_pdk.pdk import kong
 
-from gateway.plugin import PLUGIN_CONF_ADMIN_URL, Plugin
+from gateway.plugins.scw import PLUGIN_CONF_ADMIN_URL, Plugin
 
 DUMMY_ADMIN_URL = "http://dummy-admin-url"
 PLUGIN_CONF = {PLUGIN_CONF_ADMIN_URL: DUMMY_ADMIN_URL}

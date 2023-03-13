@@ -5,9 +5,9 @@ import kong_pdk.pdk.kong as kng  # Avoid clashes with name kong
 import requests
 from loguru import logger
 
-from .config import KongConfig
-from .endpoint import Endpoint
-from .log_config import init_logging
+from gateway.config import KongConfig
+from gateway.endpoint import Endpoint
+from gateway.log_config import init_logging
 
 # Plugin config according to the Kong PDK:
 # https://github.com/Kong/kong-python-pdk
@@ -20,14 +20,15 @@ PLUGIN_NAME = "scw-sls-gw"
 
 class Plugin(object):
     """
-    Main plugin object needed for the Kong PDK
+    Main Scaleway plugin object needed for the Kong PDK
     """
 
     def __init__(self, config: dict):
         self.admin_url = config.get(PLUGIN_CONF_ADMIN_URL)
         self.kong_conf = KongConfig(self.admin_url)
 
-    def _return_kong_response(self, kong: kng.kong, status: int, body_data: dict):
+    @staticmethod
+    def _return_kong_response(kong: kng.kong, status: int, body_data: dict):
         kong.response.exit(
             status,
             bytes(json.dumps(body_data), "utf-8"),

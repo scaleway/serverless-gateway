@@ -14,6 +14,11 @@ routes:
   paths:
   - /scw
   service: scw
+# Scaleway auth route
+- name: auth
+  paths:
+    - /auth
+  service: auth
 
 # Ping route to act as default
 - name: ping-checker
@@ -33,6 +38,18 @@ services:
   - name: scw-sls-gw
     config:
       admin_url: http://localhost:8001
+  - name: key-auth
+    config:
+      key_names:
+        - X-Auth-Token
+
+# Scaleway auth plugin backend
+- name: auth
+  url: http://ping-checker/ping
+  plugins:
+  - name: scw-sls-auth
+    config:
+      admin_url: http://localhost:8001
 
 # Scaleway base 
 - name: base
@@ -42,3 +59,12 @@ services:
     config: 
       status_code: 200
       message: Hello from GW!
+
+# Consumers
+consumers:
+- username: "admin"
+
+# Authentication
+keyauth_credentials:
+- consumer: "admin"
+  key: "admin"
