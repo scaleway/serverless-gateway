@@ -2,6 +2,22 @@
 
 Serverless Gateway is a self-hosted gateway for use in building larger serverless applications. It enables you manage different function and container URLs in a handy and intuitive manner.
 
+## Summary
+
+- [Quick-start](#quick-start)
+    - [Create a namespace for your container](#create-a-namespace)
+    - [Create and deploy your serverless gateway](#create-and-deploy-your-serverless-gateway)
+    - [Deploy your function](#deploy-your-function)
+    - [Add a function as a target in your gateway](#add-a-function-as-a-target-in-your-gateway)
+    - [List the endpoints of your gateway](#list-the-endpoints-of-your-gateway)
+    - [Call your function using gateway base URL](#call-your-function-using-gateway-base-url)
+    - [Delete a target in your gateway](#delete-a-target-in-your-gateway)
+- [Features](#features)
+- [Architecture](#architecture)
+    - [Configuring routes](#configuring-routes)
+- [Contributing](#contributing)
+- [Reach Us](#reach-us)
+
 ## Quick-start
 
 To get started with the gateway, you must do the following:
@@ -12,8 +28,8 @@ To get started with the gateway, you must do the following:
 
 You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](link-to-public-gw-image).
 
-### Create a namespace for your container 
-You can use:
+### Create a namespace 
+You can deploy your serverless gateway using a serverless container. Create a namespace for your container using:
 ```
 make create-namespace
 ```
@@ -23,7 +39,7 @@ To check the status of your namespace, use the following:
 make check-namespace
 ```
 
-### Create and deploy a container to host your serverless gateway
+### Create and deploy your serverless gateway
 You can use:
 ```
 make create-container
@@ -97,13 +113,13 @@ Each route has the following fields:
 - `target_url`: the URL of the target function or container.
 - `http_method` (optional): the HTTP methods to accept on this endpoint.
 
-## 🎓 Contributing
+## Contributing
 
 We welcome all contributions to our open-source projects, please see our [contributing guidelines](./.github/CONTRIBUTING.md).
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
 
-## 📭 Reach Us
+## Reach Us
 
 We love feedback. Feel free to:
 
