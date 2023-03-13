@@ -102,3 +102,10 @@ Each route has the following fields:
 We welcome all contributions to our open-source projects, please see our [contributing guidelines](./.github/CONTRIBUTING.md).
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
+
+## 📭 Reach Us
+
+We love feedback. Feel free to:
+
+- Open a [Github issue](https://github.com/scaleway/serverless-functions-python/issues/new)
+- Send us a message on the [Scaleway Slack community](https://slack.scaleway.com/), in the [#serverless-functions](https://scaleway-community.slack.com/app_redirect?channel=serverless-functions) channel.
