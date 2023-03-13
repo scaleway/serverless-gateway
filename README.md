@@ -96,3 +96,9 @@ Each route has the following fields:
 - `relative_url`: the relative URL on the gateway.
 - `target_url`: the URL of the target function or container.
 - `http_method` (optional): the HTTP methods to accept on this endpoint.
+
+## 🎓 Contributing
+
+We welcome all contributions to our open-source projects, please see our [contributing guidelines](./.github/CONTRIBUTING.md).
+
+Do not hesitate to raise issues and pull requests we will have a look at them.
