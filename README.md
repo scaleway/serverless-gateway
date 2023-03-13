@@ -1,4 +1,4 @@
-# Scaleway Serverless API Gateway
+# Scaleway Serverless Gateway
 
 This is a self-hosted gateway for use in building larger serverless applications.
 
