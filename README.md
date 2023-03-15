@@ -1,8 +1,8 @@
-# Scaleway Serverless Gateway
+# Scaleway Serverless Gateway :door:
 
 Serverless Gateway is a self-hosted gateway for use in building larger serverless applications. It enables you manage different function and container URLs in a handy and intuitive manner.
 
-## Summary
+## :page_with_curl: Summary
 
 - [Quick-start](#quick-start)
     - [Create a namespace for your container](#create-a-namespace)
@@ -18,7 +18,7 @@ Serverless Gateway is a self-hosted gateway for use in building larger serverles
 - [Contributing](#contributing)
 - [Reach Us](#reach-us)
 
-## Quick-start
+## :computer: Quick-start
 
 To get started with the gateway, you must do the following:
 
@@ -86,18 +86,18 @@ You can remove `hello` function as a target from your gateway using:
 curl -X DELETE http://<your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
 ```
 
-## Features
+## :rocket: Features
 
 Serverless Gateway is engineered to provide our clients with a better experience when using functions and containers:
 * It provides you with access to multiple functions and containers via relative URLs on a single base URL. 
 * It enables you direct traffic to different functions and containers based on HTTP method.
-* (WIP) It allows CORS handling to make functions and containers accessible from the browser
+* :soon: (WIP) It allows CORS handling to make functions and containers accessible from the browser
 
 It uses [Kong](https://konghq.com/) under the hood and is deployed as a [Serverless Container](https://www.scaleway.com/en/serverless-containers/), which acts as the proxy for other containers and functions.
 
 It integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project).
 
-## Architecture
+## :hammer: Architecture
 
 The gateway image is held in Docker Hub [here](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
 
@@ -116,13 +116,13 @@ Each route has the following fields:
 - `target_url`: the URL of the target function or container.
 - `http_method` (optional): the HTTP methods to accept on this endpoint.
 
-## Contributing
+## :mortar_board: Contributing
 
 We welcome all contributions to our open-source projects, please see our [contributing guidelines](./.github/CONTRIBUTING.md).
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
 
-## Reach Us
+## :mailbox: Reach Us
 
 We love feedback. Feel free to:
 
