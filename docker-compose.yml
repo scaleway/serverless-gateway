@@ -6,6 +6,9 @@ services:
     networks:
       - scw-sls-gw
     environment:
+      - SCW_ACCESS_KEY=some-key
+      - SCW_S3_TOKEN=some-token
+      - SCW_S3_BUCKET_NAME=some-bucket
       - KONG_PROXY_ACCESS_LOG=/dev/stdout
       - KONG_ADMIN_ACCESS_LOG=/dev/stdout
       - KONG_PROXY_ERROR_LOG=/dev/stderr

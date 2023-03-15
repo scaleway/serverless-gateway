@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 
 import kong_pdk.pdk.kong as kng  # Avoid clashes with name kong
 import requests
@@ -27,6 +28,10 @@ class Plugin(object):
         self.admin_url = config.get(PLUGIN_CONF_ADMIN_URL)
         self.kong_conf = KongConfig(self.admin_url)
 
+        self.scw_access_key = os.environ.get("SCW_ACCESS_KEY")
+        self.s3_token = os.environ.get("SCW_S3_TOKEN")
+        self.s3_bucket = os.environ.get("SCW_S3_BUCKET_NAME")
+
     def _return_kong_response(self, kong: kng.kong, status: int, body_data: dict):
         kong.response.exit(
             status,
@@ -41,6 +46,8 @@ class Plugin(object):
         method = kong.request.get_method()
 
         kong.response.set_header("Content-Type", "application/json")
+
+        logger.info(f"Using S3 bucket {self.s3_bucket}")
 
         # Take action based on the HTTP method
         if method == "GET":
