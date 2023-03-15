@@ -26,7 +26,7 @@ To get started with the gateway, you must do the following:
 - Install [`jq`](https://stedolan.github.io/jq/download/) system tool.
 - Install [`Scaleway's Serverless API Framework`](https://github.com/scaleway/serverless-api-project).
 
-You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](link-to-public-gw-image).
+You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
 
 ### Create a namespace 
 You can deploy your serverless gateway using a serverless container. Create a namespace for your container using:
