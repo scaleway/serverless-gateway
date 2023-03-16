@@ -66,6 +66,17 @@ You can remove `hello` function as a target from your gateway using:
 curl -X DELETE <your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
 ```
 
+### Bonus
+You can add a custom domain name of your choice as an endpoint to your serverless gateway container. Take a look at how to register a domain name using Scaleway's `Domains and DNS` [here](https://www.scaleway.com/en/docs/network/domains-and-dns/quickstart/).
+Then, you can add your domain name as global variable to the makefile:
+```
+CONTAINER_CUSTOM_DOMAIN := your-custom-domain-name
+```
+You can add your domain name to your container's endpoints using the command:
+```
+make add-container-endpoint
+```
+
 ## Features
 
 - Access multiple functions and containers via relative URLs on a single base URL
@@ -103,4 +114,3 @@ curl -X POST \
   -d '{"relative_url":"/foo/bar","target_url":"https://<function url>"}' \
   http://<gateway host>/scw
 ```
-

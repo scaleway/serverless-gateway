@@ -9,7 +9,7 @@ SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 
-CONTAINER_CUSTOM_DOMAIN := your-custom-dns-name
+CONTAINER_CUSTOM_DOMAIN := your-custom-domain-name
 
 # Set SCW_API_REGION to fr-par if the env var SCW_API_REGION is not already set
 SCW_API_REGION ?= fr-par
@@ -103,8 +103,8 @@ check-container:
 	scw container container get ${_id} \
 	region=${SCW_API_REGION}
 
-.PHONY:
-add-container-domain:
+.PHONY: add-container-endpoint
+add-container-endpoint:
 	$(eval $(call container_id,_id))
 	scw container domain create \
 		container_id=${_id} \
