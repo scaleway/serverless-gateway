@@ -10,14 +10,8 @@ SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 SCW_CONTAINER_MEMORY_LIMIT := 2048
 
-# Scaleway account credentials
-SCW_ACCESS_KEY ?= ""
-SCW_SECRET_KEY ?= ""
-
-# Bucket configuration where all authentication keys will be uploaded
-S3_BUCKET_NAME ?= ""
-S3_ENDPOINT ?= https://s3.fr-par.scw.cloud
-S3_REGION ?= fr-par
+# Include s3 configuration
+include gateway.env
 
 # Set SCW_API_REGION to fr-par if the env var SCW_API_REGION is not already set
 SCW_API_REGION ?= fr-par
@@ -39,14 +33,9 @@ define namespace_id
 	$(1) := $$(ns_id)
 endef
 
-.PHONY: test
-test:
-	pytest tests/unit
-
-.PHONY: test-int
-test-int:
-	pytest tests/integration
-
+#-------------------------
+# Format
+#-------------------------
 .PHONY: lint
 lint:
 	isort . --check-only
@@ -60,6 +49,10 @@ tidy:
 	black .
 	isort .
 
+#-------------------------
+# Container image
+#-------------------------
+
 .PHONY: build-image
 build-image:
 	docker build . -t ${IMAGE_TAG}
@@ -68,6 +61,9 @@ build-image:
 push-image:
 	docker push ${IMAGE_TAG}
 
+#--------------------------
+# Serverless namespace
+#--------------------------
 .PHONY: create-namespace
 create-namespace:
 	scw container namespace \
@@ -81,6 +77,9 @@ check-namespace:
 	scw container namespace get ${_id} \
 	region=${SCW_API_REGION}
 
+#--------------------------
+# Container deploy
+#--------------------------
 .PHONY: create-container
 create-container:
 	$(eval $(call namespace_id,_id))
@@ -108,12 +107,9 @@ deploy-container:
 	scw container container deploy ${_id} \
 	region=${SCW_API_REGION}
 
-.PHONY: delete-container
-delete-container:
-	$(eval $(call container_id,_id))
-	scw container container delete ${_id} \
-	region=${SCW_API_REGION}
-
+#--------------------------
+# Container update
+#--------------------------
 .PHONY: update-container
 update-container:
 	$(eval $(call container_id,_id))
@@ -141,6 +137,7 @@ update-container-without-deploy:
 		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
 		registry-image=${IMAGE_TAG} \
 		region=${SCW_API_REGION} \
+		redeploy=false \
 		secret-environment-variables.0.key=SCW_ACCESS_KEY \
 		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
 		secret-environment-variables.1.key=SCW_SECRET_KEY \
@@ -151,35 +148,64 @@ update-container-without-deploy:
 		secret-environment-variables.3.value=${S3_REGION} \
 		secret-environment-variables.4.key=S3_BUCKET_NAME \
 		secret-environment-variables.4.value=${S3_BUCKET_NAME} \
-		redeploy=false
 
+
+#--------------------------
+# Container check
+#--------------------------
 .PHONY: check-container
 check-container:
 	$(eval $(call container_id,_id))
 	scw container container get ${_id} \
 	region=${SCW_API_REGION}
 
-.PHONY: generate-object-config
-generate-object-config:
+#--------------------------
+# S3
+#--------------------------
+.PHONY: set-up-s3-cli
+set-up-s3-cli:
 	scw object config install type=s3cmd
 
 .PHONY: create-s3-bucket
 create-s3-bucket:
 	s3cmd mb s3://${S3_BUCKET_NAME}
 
-.PHONY: list-auth-keys
-list-auth-keys:
-	@s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}'
+#--------------------------
+# Cleanup
+#--------------------------
+.PHONY: delete-container
+delete-container:
+	$(eval $(call container_id,_id))
+	scw container container delete ${_id} \
+	region=${SCW_API_REGION}
 
-.PHONY: clean-namespace
-clean-namespace:
+.PHONY: delete-namespace
+delete-namespace:
 	$(eval $(call namespace_id,_id))
 	scw container namespace delete ${_id} \
 	region=${SCW_API_REGION}
 
-.PHONY: clean-bucket
-clean-bucket:
+.PHONY: delete-bucket
+delete-bucket:
 	s3cmd rb s3://${S3_BUCKET_NAME}
+
+#--------------------------
+# Tokens
+#--------------------------
+.PHONY: list-tokens
+list-tokens:
+	@s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}'
+
+#--------------------------
+# Tests
+#--------------------------
+.PHONY: test
+test:
+	pytest tests/unit
+
+.PHONY: test-int
+test-int:
+	pytest tests/integration
 
 .PHONY: test-int-container
 test-int-container:

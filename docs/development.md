@@ -9,14 +9,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements-dev.txt
 ```
-Export required environment variables
-```
-export SCW_ACCESS_KEY=minioadmin
-export SCW_SECRET_KEY=minioadmin
-export S3_REGION=whatever
-export S3_ENDPOINT=http://minio:9000
-export S3_BUCKET_NAME=auth-keys
-```
+
 Then you can try running the gateway and integration test:
 ```
 # Start the gateway

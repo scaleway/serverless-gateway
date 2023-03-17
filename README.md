@@ -5,18 +5,18 @@ Serverless Gateway is a self-hosted gateway for use in building larger serverles
 ## :page_with_curl: Summary
 
 - [Quick-start](#quick-start)
-    - [Export required environment variables](#Export-required-environment-variables)
-    - [Create a namespace for your container](#Create-a-namespace)
-    - [Create a bucket where authentication keys will be uploaded](#Create-a-bucket)
+    - [Export required environment variables](#export-required-environment-variables)
+    - [Create a namespace for your container](#create-a-namespace)
+    - [Create a bucket where tokens will be uploaded](#create-a-bucket)
     - [Create and deploy your serverless gateway](#create-and-deploy-your-serverless-gateway)
     - [Deploy your function](#deploy-your-function)
-    - [Generate an authentication key](#Generate-an-authentication-key)
-    - [List generated authentication keys](#List-generated-authentication-keys)
+    - [Generate a token](#generate-a-token)
+    - [List generated tokens](#list-generated-tokens)
     - [Add a function as a target in your gateway](#add-a-function-as-a-target-in-your-gateway)
     - [List the endpoints of your gateway](#list-the-endpoints-of-your-gateway)
     - [Call your function using gateway base URL](#call-your-function-using-gateway-base-url)
     - [Delete a target in your gateway](#delete-a-target-in-your-gateway)
-    - [Cleanup](#Cleanup)
+    - [Cleanup](#cleanup)
 - [Features](#features)
 - [Architecture](#architecture)
     - [Configuring routes](#configuring-routes)
@@ -35,9 +35,9 @@ To get started with the gateway, you must do the following:
 You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
 
 ### Export required environment variables
+You need to provide the gateway with your S3 bucket configuration
 ```
-vi sls-api-gw-env
-source sls-api-gw-env
+vi gateway.env
 ```
 
 ### Create a namespace 
@@ -53,7 +53,7 @@ make check-namespace
 
 ### Create a bucket
 ```
-make generate-object-config
+make set-up-s3-cli
 make create-s3-bucket
 ```
 
@@ -86,23 +86,25 @@ scw-serverless deploy endpoints/func-example/handler.py
 ```
 You will get two URLs, one for `hello` function and the other one for `goodbye` function.
 
-### Generate an authentication key
+### Generate a token
 ```
-curl -X POST http://<your container domain name>/auth
+curl -X POST http://<your container domain name>/token
 ```
 The generated key will be uploaded to your bucket.
 
-You will need this key to authenticate against all `/scw` calls
+You will need this token to authenticate against all `/scw` calls
 
-### List generated authentication keys
+### List generated tokens
 ```
-make list-auth-keys
+make list-tokens
 ```
 
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
-curl -X POST http://<your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
+curl -X POST http://<your container domain name>/scw \
+             -H 'Content-Type: application/json' \
+             -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
 You can add as many endpoints as you want to your serverless gateway.
 
@@ -119,13 +121,16 @@ curl http://<your container domain name>/hello
 ### Delete a target in your gateway
 You can remove `hello` function as a target from your gateway using:
 ```
-curl -X DELETE http://<your container domain name>/scw -H 'X-Auth-Token: <generated_key>' -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
+curl -X DELETE http://<your container domain name>/scw \
+               -H 'X-Auth-Token: <generated_key>' \
+               -H 'Content-Type: application/json' \
+               -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
 ```
 
 ### Cleanup
 ```
-make clean-namespace
-make clean-bucket
+make delete-namespace
+make delete-bucket
 ```
 
 ## :rocket: Features
@@ -146,11 +151,11 @@ The gateway image is held in Docker Hub [here](https://hub.docker.com/r/shillake
 This image contains:
 
 - The Kong gateway running in DB-less mode.
-- A plugin exposing an `/auth` endpoint for authentication
+- A plugin exposing an `/token` endpoint for generating tokens
 - A plugin exposing an `/scw` endpoint for configuring routes to functions and containers as shown in the quick-start.
 
 ### Authentication
-Via the `/auth` endpoint on the container, we can generate authentication key(s) to authenticate against `/scw` calls.
+Via the `/token` endpoint on the container, we can generate tokens to authenticate against `/scw` calls.
 
 The generated key(s) will be uploaded into a bucket which its configuration is provided as secrets environment variables to the container:
 ```

@@ -8,7 +8,7 @@ from loguru import logger
 GW_HOST = "localhost"
 GW_PORT = "8080"
 
-AUTH_URL = f"http://{GW_HOST}:{GW_PORT}/auth"
+AUTH_URL = f"http://{GW_HOST}:{GW_PORT}/token"
 GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"
@@ -18,7 +18,7 @@ HOST_FUNC_A_HELLO = f"{HOST_FUNC_A_URL}/hello"
 GW_FUNC_A_URL = "http://func-a"
 HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
 
-MINIO_BUCKET = "auth-keys"
+MINIO_BUCKET = "tokens"
 MINIO_ENDPOINT = "http://localhost:9000"
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
@@ -34,17 +34,17 @@ DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
         "target": "http://ping-checker:80/ping",
-        "relative_url": "/auth",
-    },
-    {
-        "http_methods": None,
-        "target": "http://ping-checker:80/ping",
         "relative_url": "/ping",
     },
     {
         "http_methods": None,
         "target": "http://ping-checker:80/ping",
         "relative_url": "/scw",
+    },
+    {
+        "http_methods": None,
+        "target": "http://ping-checker:80/ping",
+        "relative_url": "/token",
     },
 ]
 

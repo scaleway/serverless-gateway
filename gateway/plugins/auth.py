@@ -1,40 +1,21 @@
 #!/usr/bin/env python3
-import json
-
 import kong_pdk.pdk.kong as kng  # Avoid clashes with name kong
 import requests
 from loguru import logger
 
 from gateway.authentication import Auth
-from gateway.config import KongConfig
 from gateway.log_config import init_logging
+from gateway.plugins import plugin_config
+from gateway.plugins.plugin_gw import ScwPlugin
 from gateway.s3 import Bucket
 
-# Plugin config according to the Kong PDK:
-# https://github.com/Kong/kong-python-pdk
-PLUGIN_CONF_ADMIN_URL = "admin_url"
-Schema = ({PLUGIN_CONF_ADMIN_URL: {"type": "string"}},)
-VERSION = "0.1.0"
-PRIORITY = 0
 PLUGIN_NAME = "scw-sls-auth"
 
 
-class Plugin(object):
+class Plugin(ScwPlugin):
     """
     Main Auth plugin object needed for the Kong PDK
     """
-
-    def __init__(self, config: dict):
-        self.admin_url = config.get(PLUGIN_CONF_ADMIN_URL)
-        self.kong_conf = KongConfig(self.admin_url)
-
-    @staticmethod
-    def _return_kong_response(kong: kng.kong, status: int, body_data: dict):
-        kong.response.exit(
-            status,
-            bytes(json.dumps(body_data), "utf-8"),
-            None,
-        )
 
     @staticmethod
     def _return_generated_key(key_url):
@@ -118,4 +99,10 @@ if __name__ == "__main__":
     # Start server using Kong PDK
     from kong_pdk.cli import start_dedicated_server
 
-    start_dedicated_server(PLUGIN_NAME, Plugin, VERSION, PRIORITY, Schema)
+    start_dedicated_server(
+        PLUGIN_NAME,
+        Plugin,
+        plugin_config.VERSION,
+        plugin_config.PRIORITY,
+        plugin_config.SCHEMA,
+    )

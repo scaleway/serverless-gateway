@@ -17,7 +17,7 @@ routes:
 # Scaleway auth route
 - name: auth
   paths:
-    - /auth
+    - /token
   service: auth
 
 # Ping route to act as default
@@ -67,4 +67,3 @@ consumers:
 # Authentication
 keyauth_credentials:
 - consumer: "admin"
-  key: "admin"
