@@ -3,7 +3,7 @@ import kong_pdk.pdk.kong as kng  # Avoid clashes with name kong
 import requests
 from loguru import logger
 
-from gateway.authentication import Auth
+from gateway.authentication import KeyAuthManager
 from gateway.log_config import init_logging
 from gateway.plugins import plugin_config
 from gateway.plugins.plugin_gw import ScwPlugin
@@ -50,7 +50,7 @@ class Plugin(ScwPlugin):
             return
 
         # Generate an API KEY
-        auth = Auth()
+        auth = KeyAuthManager()
         auth.from_request()
         err_msg = auth.create(self.kong_conf)
 

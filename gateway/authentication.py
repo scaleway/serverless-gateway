@@ -5,9 +5,9 @@ CONSUMER_CONFIG_SECTION = "consumers"
 KEY_AUTH_CONFIG_SECTION = "keyauth_credentials"
 
 
-class Auth(object):
+class KeyAuthManager(object):
     """
-    Managing authentication
+    Adds and removes key-auth configuration to support adding and removing tokens
     """
 
     def __init__(self):
