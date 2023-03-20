@@ -9,6 +9,7 @@ SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 SCW_CONTAINER_MEMORY_LIMIT := 2048
+CONTAINER_CUSTOM_DOMAIN := your-custom-domain-name
 
 # Include s3 configuration
 include gateway.env
@@ -108,6 +109,13 @@ deploy-container:
 	$(eval $(call container_id,_id))
 	scw container container deploy ${_id} \
 	region=${SCW_API_REGION}
+
+.PHONY: add-container-endpoint
+add-container-endpoint:
+	$(eval $(call container_id,_id))
+	scw container domain create \
+		container_id=${_id} \
+		hostname=${CONTAINER_CUSTOM_DOMAIN}
 
 #--------------------------
 # Container update
