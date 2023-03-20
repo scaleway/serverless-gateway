@@ -16,24 +16,12 @@ class KeyAuthManager(object):
         self._credential = {}
 
     def from_request(self):
-        self._consumer = self._build_consumer()
-        self._credential = self._build_credential()
-
-    def _build_consumer(self):
-        """
-        Build the Kong consumer definition
-        """
-        return {"username": self.consumer_username}
-
-    def _build_credential(self):
-        """
-        Build the Kong keyauth_credentials definition
-        """
-        return {"consumer": self.consumer_username}
+        self._consumer = {"username": self.consumer_username}
+        self._credential = {"consumer": self.consumer_username}
 
     def create(self, kong_conf):
         """
-        Create this consumer/keyauth_credentials mapping in the config, and updates Kong
+        Create a consumer/keyauth_credentials mapping in the config, and updates Kong
         """
         kong_conf.create_element(CONSUMER_CONFIG_SECTION, self._consumer, False)
         kong_conf.create_element(KEY_AUTH_CONFIG_SECTION, self._credential, False)
@@ -42,7 +30,7 @@ class KeyAuthManager(object):
 
     def remove(self, kong_conf):
         """
-        Remove this consumer/keyauth_credentials mapping in the config, and updates Kong
+        Remove a consumer/keyauth_credentials mapping in the config, and updates Kong
         """
         # TODO
         pass

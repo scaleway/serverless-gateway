@@ -33,6 +33,17 @@ define namespace_id
 	$(1) := $$(ns_id)
 endef
 
+SECRET_ENV_CMD_OPTIONS := secret-environment-variables.0.key=SCW_ACCESS_KEY \
+		                  secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
+		                  secret-environment-variables.1.key=SCW_SECRET_KEY \
+		                  secret-environment-variables.1.value=${SCW_SECRET_KEY} \
+		                  secret-environment-variables.2.key=S3_ENDPOINT \
+		                  secret-environment-variables.2.value=${S3_ENDPOINT} \
+		                  secret-environment-variables.3.key=S3_REGION \
+		                  secret-environment-variables.3.value=${S3_REGION} \
+		                  secret-environment-variables.4.key=S3_BUCKET_NAME \
+		                  secret-environment-variables.4.value=${S3_BUCKET_NAME}
+
 #-------------------------
 # Format
 #-------------------------
@@ -90,16 +101,7 @@ create-container:
 		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
 		registry-image=${IMAGE_TAG} \
 		region=${SCW_API_REGION} \
-		secret-environment-variables.0.key=SCW_ACCESS_KEY \
-		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
-		secret-environment-variables.1.key=SCW_SECRET_KEY \
-		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
-		secret-environment-variables.2.key=S3_ENDPOINT \
-		secret-environment-variables.2.value=${S3_ENDPOINT} \
-		secret-environment-variables.3.key=S3_REGION \
-		secret-environment-variables.3.value=${S3_REGION} \
-		secret-environment-variables.4.key=S3_BUCKET_NAME \
-		secret-environment-variables.4.value=${S3_BUCKET_NAME}
+		${SECRET_ENV_CMD_OPTIONS}
 
 .PHONY: deploy-container
 deploy-container:
@@ -118,16 +120,7 @@ update-container:
 		memory-limit=${SCW_CONTAINER_MEMORY_LIMIT} \
 		registry-image=${IMAGE_TAG} \
 		region=${SCW_API_REGION} \
-		secret-environment-variables.0.key=SCW_ACCESS_KEY \
-		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
-		secret-environment-variables.1.key=SCW_SECRET_KEY \
-		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
-		secret-environment-variables.2.key=S3_ENDPOINT \
-		secret-environment-variables.2.value=${S3_ENDPOINT} \
-		secret-environment-variables.3.key=S3_REGION \
-		secret-environment-variables.3.value=${S3_REGION} \
-		secret-environment-variables.4.key=S3_BUCKET_NAME \
-		secret-environment-variables.4.value=${S3_BUCKET_NAME}
+		${SECRET_ENV_CMD_OPTIONS}
 
 .PHONY: update-container-without-deploy
 update-container-without-deploy:
@@ -138,16 +131,7 @@ update-container-without-deploy:
 		registry-image=${IMAGE_TAG} \
 		region=${SCW_API_REGION} \
 		redeploy=false \
-		secret-environment-variables.0.key=SCW_ACCESS_KEY \
-		secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
-		secret-environment-variables.1.key=SCW_SECRET_KEY \
-		secret-environment-variables.1.value=${SCW_SECRET_KEY} \
-		secret-environment-variables.2.key=S3_ENDPOINT \
-		secret-environment-variables.2.value=${S3_ENDPOINT} \
-		secret-environment-variables.3.key=S3_REGION \
-		secret-environment-variables.3.value=${S3_REGION} \
-		secret-environment-variables.4.key=S3_BUCKET_NAME \
-		secret-environment-variables.4.value=${S3_BUCKET_NAME} \
+		${SECRET_ENV_CMD_OPTIONS}
 
 
 #--------------------------
