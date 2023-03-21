@@ -8,3 +8,4 @@ __pycache__/
 *$py.class
 
 .mypy_cache
+.pytest_cache

@@ -5,13 +5,18 @@ Serverless Gateway is a self-hosted gateway for use in building larger serverles
 ## :page_with_curl: Summary
 
 - [Quick-start](#quick-start)
+    - [Export required environment variables](#export-required-environment-variables)
     - [Create a namespace for your container](#create-a-namespace)
+    - [Create a bucket where tokens will be uploaded](#create-a-bucket)
     - [Create and deploy your serverless gateway](#create-and-deploy-your-serverless-gateway)
     - [Deploy your function](#deploy-your-function)
+    - [Generate a token](#generate-a-token)
+    - [List generated tokens](#list-generated-tokens)
     - [Add a function as a target in your gateway](#add-a-function-as-a-target-in-your-gateway)
     - [List the endpoints of your gateway](#list-the-endpoints-of-your-gateway)
     - [Call your function using gateway base URL](#call-your-function-using-gateway-base-url)
     - [Delete a target in your gateway](#delete-a-target-in-your-gateway)
+    - [Cleanup](#cleanup)
 - [Features](#features)
 - [Architecture](#architecture)
     - [Configuring routes](#configuring-routes)
@@ -22,11 +27,18 @@ Serverless Gateway is a self-hosted gateway for use in building larger serverles
 
 To get started with the gateway, you must do the following:
 
-- Install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli).
-- Install [`jq`](https://stedolan.github.io/jq/download/) system tool.
-- Install [`Scaleway's Serverless API Framework`](https://github.com/scaleway/serverless-api-project).
+- Install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli)
+- Install [`jq`](https://stedolan.github.io/jq/download/)
+- Install [`Scaleway's Serverless API Framework`](https://github.com/scaleway/serverless-api-project)
+- Install [`s3cmd`](https://github.com/s3tools/s3cmd/blob/master/INSTALL.md)
 
 You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
+
+### Export required environment variables
+You need to provide the gateway with your S3 bucket configuration
+```
+vi gateway.env
+```
 
 ### Create a namespace 
 You can deploy your serverless gateway using a serverless container. Create a namespace for your container using:
@@ -37,6 +49,12 @@ make create-namespace
 To check the status of your namespace, use the following:
 ```
 make check-namespace
+```
+
+### Create a bucket
+```
+make set-up-s3-cli
+make create-s3-bucket
 ```
 
 ### Create and deploy your serverless gateway
@@ -51,6 +69,11 @@ make check-container
 ```
 Get the domain name of your container form container description when it is ready. It is the base URL of your serverless gateway.
 
+In case you want to update your container without deploying it you can use:
+```
+make update-container-without-deploy
+```
+
 In case you want to update your container, you can use:
 ```
 make update-container
@@ -63,27 +86,51 @@ scw-serverless deploy endpoints/func-example/handler.py
 ```
 You will get two URLs, one for `hello` function and the other one for `goodbye` function.
 
+### Generate a token
+```
+curl -X POST http://<your container domain name>/token
+```
+The generated key will be uploaded to your bucket.
+
+You will need this token to authenticate against all `/scw` calls
+
+### List generated tokens
+```
+make list-tokens
+```
+
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
-curl -X POST http://<your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
+curl -X POST http://<your container domain name>/scw \
+             -H 'Content-Type: application/json' \
+             -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
 You can add as many endpoints as you want to your serverless gateway.
 
 ### List the endpoints of your gateway
 ```
-curl <your container domain name>/scw | jq
+curl http://<your container domain name>/scw -H 'X-Auth-Token: <generated_key>' | jq
 ```
 
 ### Call your function using gateway base URL
 ```
-curl <your container domain name>/hello
+curl http://<your container domain name>/hello
 ```
 
 ### Delete a target in your gateway
 You can remove `hello` function as a target from your gateway using:
 ```
-curl -X DELETE http://<your container domain name>/scw -H 'Content-Type: application/json' -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
+curl -X DELETE http://<your container domain name>/scw \
+               -H 'X-Auth-Token: <generated_key>' \
+               -H 'Content-Type: application/json' \
+               -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
+```
+
+### Cleanup
+```
+make delete-namespace
+make delete-bucket
 ```
 
 ### Add custom domain name to gateway
@@ -115,7 +162,20 @@ The gateway image is held in Docker Hub [here](https://hub.docker.com/r/shillake
 This image contains:
 
 - The Kong gateway running in DB-less mode.
+- A plugin exposing an `/token` endpoint for generating tokens
 - A plugin exposing an `/scw` endpoint for configuring routes to functions and containers as shown in the quick-start.
+
+### Authentication
+Via the `/token` endpoint on the container, we can generate tokens to authenticate against `/scw` calls.
+
+The generated key(s) will be uploaded into a bucket which its configuration is provided as secrets environment variables to the container:
+```
+SCW_ACCESS_KEY: <scaleway_access_key>
+SCW_SECRET_KEY: <scaleway secret key>
+S3_REGION:      <s3 bucket region>
+S3_ENDPOINT:    <s3 endpoint url>
+S3_BUCKET_NAME: <s3 bucket name>
+```
 
 ### Configuring routes
 
