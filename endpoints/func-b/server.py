@@ -1,16 +1,23 @@
-from flask import Flask
+from typing import TYPE_CHECKING
 
-app = Flask(__name__)
+from scaleway_functions_python import local
 
-
-@app.route("/hello")
-def hello():
-    return "Hello from function B"
+if TYPE_CHECKING:
+    from scaleway_functions_python.framework.v1.hints import Context, Event, Response
 
 
-@app.route("/goodbye")
-def goodbye():
-    return "Goodbye from function B"
+def handler(event: "Event", context: "Context") -> "Response":
+    match event["path"]:
+        case "/hello":
+            return "Hello from function B"
+        case "/goodbye":
+            return "Goodbye from function B"
+        case path:
+            return {
+                "statusCode": 404,
+                "body": f"Path {path} not found for function B",
+            }
 
 
-app.run(host="0.0.0.0", port=80)
+if __name__ == "__main__":
+    local.serve_handler(handler, host="0.0.0.0", port=80, debug=False)

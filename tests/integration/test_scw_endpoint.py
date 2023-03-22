@@ -2,6 +2,7 @@ import json
 import time
 
 import boto3
+import pytest
 import requests
 from loguru import logger
 
@@ -27,54 +28,63 @@ MINIO_REGION = "whatever"
 
 DEFAULT_ENDPOINTS = [
     {
-        "http_methods": None,
+        "http_methods": [],
         "target": "http://ping-checker:80/ping",
         "relative_url": "/ping",
     },
     {
-        "http_methods": None,
+        "http_methods": [],
         "target": "http://ping-checker:80/ping",
         "relative_url": "/scw",
     },
     {
-        "http_methods": None,
+        "http_methods": [],
         "target": "http://ping-checker:80/ping",
         "relative_url": "/token",
     },
 ]
 
 
+@pytest.fixture(scope="module")
+def auth_session() -> requests.Session:
+    response = requests.post(AUTH_URL)
+    assert response.status_code == requests.codes.ok
+
+    s3 = boto3.resource(
+        "s3",
+        region_name=MINIO_REGION,
+        endpoint_url=MINIO_ENDPOINT,
+        aws_access_key_id=MINIO_ACCESS_KEY,
+        aws_secret_access_key=MINIO_SECRET_KEY,
+    )
+
+    objects = sorted(
+        s3.Bucket(MINIO_BUCKET).objects.all(),
+        key=lambda obj: obj.last_modified,
+        reverse=True,
+    )
+    auth_key = objects[0].key
+
+    session = requests.Session()
+    session.headers["X-Auth-Token"] = auth_key
+
+    return session
+
+
 class TestEndpoint(object):
     @staticmethod
-    def _generate_auth_key(url) -> int:
-        response = requests.post(url)
-        assert response.status_code == requests.codes.ok
-
-        client = boto3.client(
-            "s3",
-            region_name=MINIO_REGION,
-            endpoint_url=MINIO_ENDPOINT,
-            aws_access_key_id=MINIO_ACCESS_KEY,
-            aws_secret_access_key=MINIO_SECRET_KEY,
-        )
-
-        res = client.list_objects_v2(Bucket=MINIO_BUCKET)
-        return res["Contents"][0]["Key"]
-
-    @staticmethod
-    def _call_endpoint_until_response_code(url, code):
-        max_retries = 20
+    def _call_endpoint_until_response_code(url, code, method: str = "GET"):
+        max_retries = 5
         sleep_time = 2
 
         for _ in range(max_retries):
-            resp = requests.get(url)
+            resp = requests.request(method=method, url=url)
             if resp.status_code == code:
                 logger.info(f"Got {resp.status_code} from {url}")
                 return resp
 
-            message = json.loads(resp.content).get("message") or resp.content
             logger.info(
-                f"Got {resp.status_code} from {url}, retrying, message is {message}"
+                f"Got {resp.status_code} from {url}, retrying, message: {resp.content}"
             )
             time.sleep(sleep_time)
 
@@ -83,7 +93,7 @@ class TestEndpoint(object):
 
     @staticmethod
     def _call_endpoint_until_gw_message(url, message):
-        max_retries = 20
+        max_retries = 5
         sleep_time = 2
 
         for _ in range(max_retries):
@@ -100,11 +110,8 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
-    def test_default_list_of_endpoints(self):
-        auth_key = self._generate_auth_key(AUTH_URL)
-        headers = {"X-Auth-Token": auth_key}
-
-        response = requests.get(GW_ADMIN_URL, headers=headers)
+    def test_default_list_of_endpoints(self, auth_session: requests.Session):
+        response = auth_session.get(GW_ADMIN_URL)
         expected_status_code = requests.codes.ok
 
         assert response.status_code == expected_status_code
@@ -126,7 +133,7 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
-    def test_create_delete_endpoint(self):
+    def test_create_delete_endpoint(self, auth_session: requests.Session):
         expected_func_message = b"Hello from function A"
 
         request = {
@@ -134,12 +141,9 @@ class TestEndpoint(object):
             "relative_url": "/func-a",
         }
 
-        auth_key = self._generate_auth_key(AUTH_URL)
-        headers = {"X-Auth-Token": auth_key}
-
         # Create the endpoint and keep calling until it's up
         logger.info(f"Creating new endpoint {request}")
-        requests.post(GW_ADMIN_URL, headers=headers, json=request)
+        auth_session.post(GW_ADMIN_URL, json=request)
 
         response_gw = self._call_endpoint_until_response_code(
             HOST_GW_FUNC_A_HELLO, requests.codes.ok
@@ -150,7 +154,7 @@ class TestEndpoint(object):
         # Build the expected list of endpoints after adding the new one
         expected_endpoints = [
             {
-                "http_methods": None,
+                "http_methods": [],
                 "target": "http://func-a:80",
                 "relative_url": "/func-a",
             },
@@ -162,7 +166,7 @@ class TestEndpoint(object):
         )
 
         # Make the request to the SCW plugin
-        response_endpoints = requests.get(GW_ADMIN_URL, headers=headers)
+        response_endpoints = auth_session.get(GW_ADMIN_URL)
         assert response_endpoints.status_code == requests.codes.ok
 
         # Parse JSON and check
@@ -177,8 +181,36 @@ class TestEndpoint(object):
         assert actual_endpoints_sorted_list == expected_endpoints
 
         # Now delete the endpoint
-        requests.delete(GW_ADMIN_URL, headers=headers, json=request)
+        auth_session.delete(GW_ADMIN_URL, json=request)
         # Keep calling until we get a requests.codes.not_found
         response_gw = self._call_endpoint_until_response_code(
             HOST_GW_FUNC_A_HELLO, requests.codes.not_found
         )
+
+    def test_endpoint_with_http_methods(self, auth_session: requests.Session):
+        request = {
+            "http_methods": ["PATCH", "PUT"],
+            "target": GW_FUNC_A_URL,
+            "relative_url": "/func-a",
+        }
+
+        try:
+            resp = auth_session.post(GW_ADMIN_URL, json=request)
+            resp.raise_for_status()
+
+            self._call_endpoint_until_response_code(
+                HOST_GW_FUNC_A_HELLO, requests.codes.not_found, "GET"
+            )
+
+            self._call_endpoint_until_response_code(
+                HOST_GW_FUNC_A_HELLO, requests.codes.ok, "PUT"
+            )
+
+            self._call_endpoint_until_response_code(
+                HOST_GW_FUNC_A_HELLO, requests.codes.ok, "PATCH"
+            )
+        finally:
+            auth_session.delete(GW_ADMIN_URL, json=request)
+            self._call_endpoint_until_response_code(
+                HOST_GW_FUNC_A_HELLO, requests.codes.not_found, "PUT"
+            )

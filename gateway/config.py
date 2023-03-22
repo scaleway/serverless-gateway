@@ -63,7 +63,7 @@ class KongConfig(object):
 
             response["endpoints"].append(
                 {
-                    "http_methods": route.get("methods"),
+                    "http_methods": route.get("methods") or [],
                     "target": target,
                     "relative_url": route["paths"][0],
                 }

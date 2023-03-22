@@ -9,7 +9,7 @@ class Endpoint(object):
     """
 
     def __init__(self):
-        self.http_method = ""
+        self.http_methods: list[str] = []
         self.target = ""
         self.relative_url = ""
         self.name = ""
@@ -22,10 +22,10 @@ class Endpoint(object):
         Parses an endpoint from a JSON input
         """
         endpoint = Endpoint()
-        endpoint.http_method = json_body.get("http_method")
-        endpoint.target = json_body.get("target")
+        endpoint.http_methods = json_body.get("http_methods") or []
+        endpoint.target = json_body.get("target") or ""
 
-        endpoint.relative_url = json_body.get("relative_url")
+        endpoint.relative_url = json_body.get("relative_url") or ""
         endpoint.name = endpoint.relative_url.replace("/", "_")
 
         endpoint.service = endpoint.build_service()
@@ -44,13 +44,16 @@ class Endpoint(object):
         """
         Builds the Kong route definition for this endpoint
         """
-        return {
+        route = {
             "name": self.name,
             "paths": [
                 self.relative_url,
             ],
             "service": self.name,
         }
+        if self.http_methods:
+            route["methods"] = self.http_methods
+        return route
 
     def build_service(self):
         """
