@@ -84,7 +84,7 @@ class TestEndpoint(object):
                 return resp
 
             logger.info(
-                f"Got {resp.status_code} from {url}, retrying, message: {resp.content}"
+                f"Got {resp.status_code} from {url}, retrying, message: {resp.text}"
             )
             time.sleep(sleep_time)
 
@@ -162,7 +162,7 @@ class TestEndpoint(object):
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
         expected_endpoints = sorted(
             expected_endpoints,
-            key=lambda e: (e["relative_url"]),
+            key=lambda e: (e["relative_url"]), # type: ignore
         )
 
         # Make the request to the SCW plugin
