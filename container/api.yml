@@ -60,3 +60,26 @@ consumers:
 # Authentication
 keyauth_credentials:
 - consumer: "admin"
+
+# Globally enabled plugins
+plugins:
+- name: cors
+  config: 
+    origins:
+    - "*"
+    methods:
+    - GET
+    - POST
+    - DELETE
+    headers:
+    - Accept
+    - Accept-Version
+    - Content-Length
+    - Content-MD5
+    - Content-Type
+    - Date
+    - X-Auth-Token
+    exposed_headers:
+    - X-Auth-Token
+    credentials: true
+    max_age: 3600
