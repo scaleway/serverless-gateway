@@ -118,6 +118,7 @@ class TestEndpoint(object):
         response = auth_session.get(GW_ADMIN_URL)
         expected_status_code = requests.codes.ok
 
+        assert response_gw.headers["Access-Control-Allow-Origin"] == "*"
         assert response.status_code == expected_status_code
 
         actual_endpoints = json.loads(response.content)["endpoints"]
@@ -153,6 +154,7 @@ class TestEndpoint(object):
             HOST_GW_FUNC_A_HELLO, requests.codes.ok
         )
 
+        assert response_gw.headers["Access-Control-Allow-Origin"] == "*"
         assert response_gw.content == expected_func_message
 
         # Build the expected list of endpoints after adding the new one
