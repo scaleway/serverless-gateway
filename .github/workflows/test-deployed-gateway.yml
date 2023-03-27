@@ -38,6 +38,7 @@ jobs:
           scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
           scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
           scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          scw-organization-id:  ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - name: Deploy function fixtures
         run: make deploy-function-fixtures

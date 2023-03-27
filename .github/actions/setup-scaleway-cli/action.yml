@@ -12,6 +12,9 @@ inputs:
   scw-default-project-id:
     description: "Scaleway default project ID"
     required: true
+  scw-default-organization-id:
+    description: "Scaleway default organization ID"
+    required: true
   scw-version:
     description: "Scaleway CLI version."
     required: true
@@ -30,4 +33,8 @@ runs:
       run: |
         mkdir -p ${HOME}/.config/scw
         touch ${HOME}/.config/scw/config.yaml
-        scw config set secret-key="${{ inputs.scw-secret-key }}" access-key="${{ inputs.scw-access-key }}" default-project-id="${{ inputs.scw-default-project-id }}"
+        scw config set \
+          access-key="${{ inputs.scw-access-key }}" \
+          secret-key="${{ inputs.scw-secret-key }}" \
+          default-project-id="${{ inputs.scw-default-project-id }}" \
+          default-organization-id="${{ inputs.scw-default-organization-id }}"
