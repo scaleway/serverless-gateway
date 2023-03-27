@@ -1,0 +1,73 @@
+name: test with deployed gateway
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  test-deployed-gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Install npm dependencies
+        run: npm install -g serverless serverless-scaleway-functions
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+
+      - name: Deploy function fixtures
+        working-directory: tests/integration/function_fixtures
+        run: make deploy-function-fixtures
+
+      - name: Install scaleway cli
+        uses: jawher/action-scw@v2.12.0
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+
+      - name: Create Gateway namespace
+        run: |
+          make create-namespace
+          until make [ $(make check-namespace -s) == ready ]; do sleep 3; done
+
+      - name: Create Gateway container
+        run: |
+          make create-container
+          make deploy-container
+          until make [ $(make check-container -s) == ready ]; do sleep 3; done
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Install s3cmd
+        run: |
+          pip install s3cmd
+
+      - name: Create S3 bucket
+        run: |
+          make set-up-s3-cli
+          make create-s3-bucket
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+
+      - name: Delete S3 bucket
+        run: make delete-bucket
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+
+      - name: Delete Gateway namespace and container
+        run: |
+          make delete-namespace

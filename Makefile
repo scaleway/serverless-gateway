@@ -87,7 +87,8 @@ create-namespace:
 check-namespace:
 	$(eval $(call namespace_id,_id))
 	scw container namespace get ${_id} \
-	region=${SCW_API_REGION}
+	region=${SCW_API_REGION} \
+	-o json | jq -r '.status'
 
 #--------------------------
 # Container deploy
@@ -149,7 +150,8 @@ update-container-without-deploy:
 check-container:
 	$(eval $(call container_id,_id))
 	scw container container get ${_id} \
-	region=${SCW_API_REGION}
+	region=${SCW_API_REGION} \
+	-o json | jq -r '.status'
 
 #--------------------------
 # Container endpoint export
@@ -216,3 +218,7 @@ test-int-container:
 	$(eval SCW_CONTAINER_ID=$(shell scw container container list region=${SCW_API_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id'))
 	$(eval  GW_HOST_URL=${shell scw container container get $(SCW_CONTAINER_ID) region=${SCW_API_REGION} -o json | jq -r '.domain_name'})
 	pytest tests/integration -GW_HOST=$(GW_HOST_URL)
+
+.PHONY: deploy-function-fixtures
+deploy-function-fixtures:
+	cd tests/integration/function_fixtures && serverless deploy

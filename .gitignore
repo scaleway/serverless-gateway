@@ -3,6 +3,9 @@
 package/
 venv/
 
+# Serverless framework
+**/.serverless/
+
 __pycache__/
 *.py[cod]
 *$py.class
