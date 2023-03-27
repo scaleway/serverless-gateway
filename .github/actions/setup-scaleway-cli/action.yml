@@ -22,11 +22,12 @@ runs:
     - name: Download Scaleway CLI
       shell: bash
       run: |
-        curl -o /usr/local/bin/scw -L "https://github.com/scaleway/scaleway-cli/releases/download/v${VERSION}/scaleway-cli_${{ inputs.scw-version }}_linux_amd64"
+        curl -o /usr/local/bin/scw -L "https://github.com/scaleway/scaleway-cli/releases/download/v${{ inputs.scw-version }}/scaleway-cli_${{ inputs.scw-version }}_linux_amd64"
         chmod +x /usr/local/bin/scw
 
     - name: Configure Scaleway CLI
       shell: bash
       run: |
-        mkdir -p ${HOME}/.config/scw && touch ${HOME}/.config/scw/config.yaml
+        mkdir -p ${HOME}/.config/scw
+        touch ${HOME}/.config/scw/config.yaml
         scw config set secret-key="${{ inputs.scw-secret-key }}" access-key="${{ inputs.scw-access-key }}" default-project-id="${{ inputs.scw-default-project-id }}"
