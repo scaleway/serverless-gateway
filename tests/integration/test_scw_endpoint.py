@@ -118,7 +118,6 @@ class TestEndpoint(object):
         response = auth_session.get(GW_ADMIN_URL)
         expected_status_code = requests.codes.ok
 
-        assert response_gw.headers["Access-Control-Allow-Origin"] == "*"
         assert response.status_code == expected_status_code
 
         actual_endpoints = json.loads(response.content)["endpoints"]
@@ -138,6 +137,14 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
+    def test_CORS_headers_returned_enabled_for_option_request(self):
+        auth_key = self._generate_auth_key(AUTH_URL)
+        headers = {"X-Auth-Token": auth_key}
+
+        response = requests.options(GW_ADMIN_URL, headers=headers)
+
+        assert response.headers["Access-Control-Allow-Origin"] == "OPTIONS"
+
     def test_create_delete_endpoint(self, auth_session: requests.Session):
         expected_func_message = b"Hello from function A"
 
@@ -154,7 +161,6 @@ class TestEndpoint(object):
             HOST_GW_FUNC_A_HELLO, requests.codes.ok
         )
 
-        assert response_gw.headers["Access-Control-Allow-Origin"] == "*"
         assert response_gw.content == expected_func_message
 
         # Build the expected list of endpoints after adding the new one

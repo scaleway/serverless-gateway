@@ -66,5 +66,5 @@ plugins:
 - name: cors
   config: 
     origins:
-    - "*"
+    - OPTIONS
     max_age: 3600
