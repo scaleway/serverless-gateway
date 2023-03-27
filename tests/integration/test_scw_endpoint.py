@@ -162,7 +162,7 @@ class TestEndpoint(object):
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
         expected_endpoints = sorted(
             expected_endpoints,
-            key=lambda e: (e["relative_url"]), # type: ignore
+            key=lambda e: (e["relative_url"]),  # type: ignore
         )
 
         # Make the request to the SCW plugin
