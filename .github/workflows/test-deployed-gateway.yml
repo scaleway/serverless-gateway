@@ -31,8 +31,8 @@ jobs:
         run: npm install -g serverless serverless-scaleway-functions
         if: steps.npm-cache.outputs.cache-hit != 'true'
 
-      - name: Install scaleway cli
-        uses: ./.github/actions/setup-poetry
+      - name: Install scaleway CLI
+        uses: ./.github/actions/setup-scaleway-cli
         with:
           scw-version: "2.13.0"
           scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
