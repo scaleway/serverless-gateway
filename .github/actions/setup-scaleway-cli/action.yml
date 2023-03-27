@@ -28,5 +28,5 @@ runs:
     - name: Configure Scaleway CLI
       shell: bash
       run: |
-        touch ${HOME}/.config/scw/config.yaml
+        mkdir -p ${HOME}/.config/scw && touch ${HOME}/.config/scw/config.yaml
         scw config set secret-key="${{ inputs.scw-secret-key }}" access-key="${{ inputs.scw-access-key }}" default-project-id="${{ inputs.scw-default-project-id }}"
