@@ -4,14 +4,15 @@
 
 To get started with development, you can first set up a Python virtual environment:
 
-```
+```console
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements-dev.txt
 ```
 
 Then you can try running the gateway and integration test:
-```
+
+```console
 # Start the gateway
 docker compose up -d
 
@@ -28,3 +29,8 @@ The `/auth` and `/scw` endpoints are managed using a custom plugin for [Kong](ht
 
 The [Kong Python plugin docs](https://docs.konghq.com/gateway/latest/plugin-development/pluginserver/python/) and a [longer example](https://konghq.com/blog/building-plugins-for-kong-gateway-using-python) are useful reading.
 
+## Healthchecks
+
+When the gateway is deployed on Scaleway Containers, Knative will perform health checks on the root path `/`. We have defined a route to handle those calls which specifically only match Knative probes `User-Agent` with the regex `~*kube-probe/.+`.
+
+Previously, we did not specifiy a header to match against, which caused issues because in Kong every route matches `/` (routing is _greedy_). Therefore, every route which failed to match against the Gateway would be redirected to the health check and return a `200` HTTP status instead of `404`.
