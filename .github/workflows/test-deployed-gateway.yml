@@ -28,7 +28,6 @@ jobs:
         if: steps.npm-cache.outputs.cache-hit != 'true'
 
       - name: Deploy function fixtures
-        working-directory: tests/integration/function_fixtures
         run: make deploy-function-fixtures
 
       - name: Install scaleway cli
