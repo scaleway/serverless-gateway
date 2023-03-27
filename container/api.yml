@@ -8,7 +8,9 @@ routes:
 - name: base
   paths:
   - /
-  service: base
+  headers:
+    user-agent: ['~*kube-probe/.+']
+  service: ping-checker
 # Scaleway admin route
 - name: scw
   paths:
@@ -50,15 +52,6 @@ services:
   - name: scw-sls-auth
     config:
       admin_url: http://localhost:8001
-
-# Scaleway base 
-- name: base
-  url: http://ping-checker/ping
-  plugins:
-  - name: request-termination
-    config: 
-      status_code: 200
-      message: Hello from GW!
 
 # Consumers
 consumers:

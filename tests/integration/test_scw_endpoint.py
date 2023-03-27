@@ -29,11 +29,6 @@ DEFAULT_ENDPOINTS = [
     {
         "http_methods": None,
         "target": "http://ping-checker:80/ping",
-        "relative_url": "/",
-    },
-    {
-        "http_methods": None,
-        "target": "http://ping-checker:80/ping",
         "relative_url": "/ping",
     },
     {
@@ -77,7 +72,7 @@ class TestEndpoint(object):
                 logger.info(f"Got {resp.status_code} from {url}")
                 return resp
 
-            message = json.loads(resp.content)["message"]
+            message = json.loads(resp.content).get("message") or resp.content
             logger.info(
                 f"Got {resp.status_code} from {url}, retrying, message is {message}"
             )
@@ -184,7 +179,6 @@ class TestEndpoint(object):
         # Now delete the endpoint
         requests.delete(GW_ADMIN_URL, headers=headers, json=request)
         # Keep calling until we get a requests.codes.not_found
-        response_gw = self._call_endpoint_until_gw_message(
-            HOST_GW_FUNC_A_HELLO, "Hello from GW!"
+        response_gw = self._call_endpoint_until_response_code(
+            HOST_GW_FUNC_A_HELLO, requests.codes.not_found
         )
-        assert response_gw.content == b'{"message":"Hello from GW!"}'
