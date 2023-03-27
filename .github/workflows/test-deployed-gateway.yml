@@ -12,7 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -52,8 +56,7 @@ jobs:
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Install s3cmd
-        run: |
-          pip install s3cmd
+        run: pip install s3cmd
 
       - name: Create S3 bucket
         run: |
@@ -68,5 +71,4 @@ jobs:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
 
       - name: Delete Gateway namespace and container
-        run: |
-          make delete-namespace
+        run: make delete-namespace
