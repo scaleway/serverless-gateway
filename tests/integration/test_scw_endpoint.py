@@ -137,7 +137,7 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
-    def test_CORS_headers_returned_enabled_for_option_request(self):
+    def test_cors_headers_returned_for_option_request(self):
         auth_key = self._generate_auth_key(AUTH_URL)
         headers = {"X-Auth-Token": auth_key}
 
