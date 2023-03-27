@@ -1,0 +1,30 @@
+name: Set up scaleway-cli
+
+description: Install scw and create config from env
+
+inputs:
+  scw-access-key:
+    description: "Scaleway access key"
+    required: true
+  scw-secret-key:
+    description: "Scaleway secret key"
+    required: true
+  scw-default-project-id:
+    description: "Scaleway default project ID"
+    required: true
+  scw-version:
+    description: "Scaleway CLI version."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download Scaleway CLI
+      shell: bash
+      run: |
+        curl -o /usr/local/bin/scw -L "https://github.com/scaleway/scaleway-cli/releases/download/v${VERSION}/scaleway-cli_${{ inputs.scw-version }}_linux_amd64"
+        chmod +x /usr/local/bin/scw
+
+    - name: Configure Scaleway CLI
+      shell: bash
+      run: scw init secret-key=${{ inputs.scw-secret-key }} access-key=${{ inputs.scw-access-key }} default-project-id=${{ inputs.scw-default-project-id }}

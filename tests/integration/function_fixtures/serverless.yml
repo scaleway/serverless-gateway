@@ -4,6 +4,10 @@ provider:
   name: scaleway
   runtime: python311
 
+  scwToken: ${env:SCW_SECRET_KEY}
+  scwProject: ${env:SCW_DEFAULT_PROJECT_ID}
+  scwRegion: ${env:SCW_REGION}
+
 plugins:
   - serverless-scaleway-functions
 
