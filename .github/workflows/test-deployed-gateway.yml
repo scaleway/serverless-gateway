@@ -46,13 +46,13 @@ jobs:
       - name: Create Gateway namespace
         run: |
           make create-namespace
-          until make [ $(make check-namespace -s) == ready ]; do sleep 3; done
+          until [ $(make check-namespace -s) == ready ]; do sleep 3; done
 
       - name: Create Gateway container
         run: |
           make create-container
           make deploy-container
-          until make [ $(make check-container -s) == ready ]; do sleep 3; done
+          until [ $(make check-container -s) == ready ]; do sleep 3; done
         env:
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
