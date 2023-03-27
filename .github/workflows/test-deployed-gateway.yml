@@ -31,9 +31,6 @@ jobs:
         run: npm install -g serverless serverless-scaleway-functions
         if: steps.npm-cache.outputs.cache-hit != 'true'
 
-      - name: Deploy function fixtures
-        run: make deploy-function-fixtures
-
       - name: Install scaleway cli
         uses: ./.github/actions/setup-poetry
         with:
@@ -41,6 +38,9 @@ jobs:
           scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
           scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
           scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+
+      - name: Deploy function fixtures
+        run: make deploy-function-fixtures
 
       - name: Create Gateway namespace
         run: |

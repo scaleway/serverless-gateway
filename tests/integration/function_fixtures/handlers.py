@@ -9,6 +9,5 @@ def handle(event, context):
         "body": "Hello From Python3 runtime on Serverless Framework and Scaleway Functions",
         "headers": {
             "Content-Type": ["text/plain"],
-        }
+        },
     }
-
