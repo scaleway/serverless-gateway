@@ -53,7 +53,7 @@ jobs:
         # We need to truncate gateway.env as it will override our env vars
         run: |
           truncate -s 0 gateway.env
-          make create-containerdelete
+          make create-container
           make deploy-container
           until [ $(make check-container -s) == ready ]; do sleep 10; done
         env:
