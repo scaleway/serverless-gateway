@@ -22,7 +22,6 @@ define container_id
 	ns_id=$(shell scw container container \
 		  list region=${SCW_API_REGION} -o json | \
 		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id')
-
 	$(1) := $$(ns_id)
 endef
 
@@ -32,6 +31,15 @@ define namespace_id
 		  list region=${SCW_API_REGION} -o json | \
 		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id')
 	$(1) := $$(ns_id)
+endef
+
+# Function to get the container host
+define gateway_host
+	$(eval $(call container_id,_id))
+	gw_host=$(shell scw container container \
+		  get ${_id} -o json | \
+		  jq -r '.domain_name')
+	$(1) := $$(gw_host)
 endef
 
 SECRET_ENV_CMD_OPTIONS := secret-environment-variables.0.key=SCW_ACCESS_KEY \
@@ -153,6 +161,11 @@ check-container:
 	region=${SCW_API_REGION} \
 	-o json | jq -r '.status'
 
+.PHONY: get-gateway-host
+get-gateway-host:
+	$(eval $(call gateway_host,_gw_host))
+	echo ${_gw_host}
+
 #--------------------------
 # Container endpoint export
 #--------------------------
@@ -214,10 +227,15 @@ test-int:
 	pytest tests/integration
 
 .PHONY: test-int-container
-test-int-container:
-	$(eval SCW_CONTAINER_ID=$(shell scw container container list region=${SCW_API_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id'))
-	$(eval  GW_HOST_URL=${shell scw container container get $(SCW_CONTAINER_ID) region=${SCW_API_REGION} -o json | jq -r '.domain_name'})
-	pytest tests/integration -GW_HOST=$(GW_HOST_URL)
+test-int-container: get-gateway-host
+	$(eval $(call gateway_host,_gw_host))
+	pytest tests/integration \
+	-GW_HOST=${_gw_host} -GW_PORT=443 \
+	-MINIO_BUCKET=${SCW_BUCKET_NAME} \
+	-MINIO_ENDPOINT=${S3_ENDPOINT} \
+	-MINIO_ACCESS_KEY=${SCW_ACCESS_KEY} \
+	-MINIO_SECRET_KEY=${SCW_SECRET_KEY} \
+	-MINIO_REGION=${S3_REGION} \
 
 .PHONY: deploy-function-fixtures
 deploy-function-fixtures:
