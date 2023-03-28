@@ -22,10 +22,10 @@ class Endpoint(object):
         Parses an endpoint from a JSON input
         """
         endpoint = Endpoint()
-        endpoint.http_methods = json_body.get("http_methods") or []
-        endpoint.target = json_body.get("target") or ""
+        endpoint.http_methods = json_body.get("http_methods", [])
+        endpoint.target = json_body.get("target", "")
 
-        endpoint.relative_url = json_body.get("relative_url") or ""
+        endpoint.relative_url = json_body.get("relative_url", "")
         endpoint.name = endpoint.relative_url.replace("/", "_")
 
         endpoint.service = endpoint.build_service()

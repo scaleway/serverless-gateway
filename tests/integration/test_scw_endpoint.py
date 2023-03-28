@@ -58,11 +58,15 @@ def auth_session() -> requests.Session:
         aws_secret_access_key=MINIO_SECRET_KEY,
     )
 
+    # It's important to sort the keys by date because
+    # the keys are persisted in the bucket after a container reload
     objects = sorted(
         s3.Bucket(MINIO_BUCKET).objects.all(),
         key=lambda obj: obj.last_modified,
         reverse=True,
     )
+
+    assert objects, "No key was found in bucket!"
     auth_key = objects[0].key
 
     session = requests.Session()
