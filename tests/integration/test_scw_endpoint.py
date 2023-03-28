@@ -137,13 +137,24 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
-    def test_cors_headers_returned_for_option_request(self):
-        auth_key = self._generate_auth_key(AUTH_URL)
-        headers = {"X-Auth-Token": auth_key}
+    def test_cors_headers_returned_for_option_request(self, auth_session: requests.Session):
 
-        response = requests.options(GW_ADMIN_URL, headers=headers)
+        request = {
+                    "target": GW_FUNC_A_URL,
+                    "relative_url": "/func-a",
+                }
+        
+        auth_session.post(GW_ADMIN_URL, json=request)
 
-        assert response.headers["Access-Control-Allow-Origin"] == "OPTIONS"
+        cors_headers = {
+            "Origin": "https://google.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "X-Requested-With"
+        }
+
+        response = requests.options(HOST_FUNC_A_HELLO, headers=cors_headers)
+
+        assert response.headers["Access-Control-Allow-Origin"] == "*"
 
     def test_create_delete_endpoint(self, auth_session: requests.Session):
         expected_func_message = b"Hello from function A"
