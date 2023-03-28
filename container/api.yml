@@ -60,11 +60,3 @@ consumers:
 # Authentication
 keyauth_credentials:
 - consumer: "admin"
-
-# Globally enabled plugins
-plugins:
-- name: cors
-  config: 
-    origins:
-    - OPTIONS
-    max_age: 3600
