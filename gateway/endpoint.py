@@ -3,6 +3,7 @@ from typing import Any
 # Config file constants
 ROUTES_CONFIG_SECTION = "routes"
 SERVICES_CONFIG_SECTION = "services"
+PLUGINS_CONFIG_SECTION = "plugins"
 
 
 class Endpoint(object):
@@ -18,12 +19,12 @@ class Endpoint(object):
         self.service = {}
         self.route = {}
         self.built_in_plugins = [{
-                        "name": "cors", 
-                        "config": {
-                            "origins": ["*"],
-                            "headers": ["*"],
-                            "credentials": True
-                        }
+            "name": "cors", 
+            "config": {
+                "origins": ["*"],
+                "headers": ["*"],
+                "credentials": True
+            }
         }]
 
     @staticmethod
@@ -91,5 +92,6 @@ class Endpoint(object):
         """
         kong_conf.delete_element(ROUTES_CONFIG_SECTION, self.route)
         kong_conf.delete_element(SERVICES_CONFIG_SECTION, self.service)
+        kong_conf.delete_element(PLUGINS_CONFIG_SECTION, self.built_in_plugins[0])
 
         kong_conf.update_config()
