@@ -46,16 +46,19 @@ jobs:
       - name: Create Gateway namespace
         run: |
           make create-namespace
-          until [ $(make check-namespace -s) == ready ]; do sleep 3; done
+          until [ $(make check-namespace -s) == ready ]; do sleep 10; done
 
       - name: Create Gateway container
+        # We need to delete gateway.env as it will override our env vars
         run: |
+          rm -f gateway.env
           make create-container
           make deploy-container
-          until [ $(make check-container -s) == ready ]; do sleep 3; done
+          until [ $(make check-container -s) == ready ]; do sleep 10; done
         env:
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
 
       - name: Install s3cmd
         run: pip install s3cmd
@@ -65,12 +68,14 @@ jobs:
           make set-up-s3-cli
           make create-s3-bucket
         env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
 
       - name: Delete S3 bucket
         run: make delete-bucket
         env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        if: ${{ always() }}
 
       - name: Delete Gateway namespace and container
         run: make delete-namespace
+        if: ${{ always() }}
