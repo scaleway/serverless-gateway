@@ -2,6 +2,7 @@
 .git
 
 # Python
+tests/
 venv
 __pycache__/
 *.py[cod]
