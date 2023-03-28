@@ -1,3 +1,5 @@
+from typing import Any
+
 # Config file constants
 ROUTES_CONFIG_SECTION = "routes"
 SERVICES_CONFIG_SECTION = "services"
@@ -17,7 +19,7 @@ class Endpoint(object):
         self.route = {}
 
     @staticmethod
-    def from_json(json_body):
+    def from_json(json_body: dict[str, Any]):
         """
         Parses an endpoint from a JSON input
         """
