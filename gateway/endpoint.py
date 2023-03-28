@@ -18,14 +18,12 @@ class Endpoint(object):
         self.name = ""
         self.service = {}
         self.route = {}
-        self.built_in_plugins = [{
-            "name": "cors", 
-            "config": {
-                "origins": ["*"],
-                "headers": ["*"],
-                "credentials": True
+        self.built_in_plugins = [
+            {
+                "name": "cors",
+                "config": {"origins": ["*"], "headers": ["*"], "credentials": True},
             }
-        }]
+        ]
 
     @staticmethod
     def from_json(json_body: dict[str, Any]):
@@ -74,7 +72,7 @@ class Endpoint(object):
             "name": self.name,
             "host": "localhost",
             "url": self.target,
-            "plugins": self.built_in_plugins
+            "plugins": self.built_in_plugins,
         }
 
     def create(self, kong_conf):
