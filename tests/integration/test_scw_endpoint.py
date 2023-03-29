@@ -231,14 +231,17 @@ class TestEndpoint(object):
     def test_cors_enabled_for_target_function(self, auth_session: requests.Session):
         self.add_route(FUNC_A_URL, auth_session)
 
-        cors_headers = {
+        preflight_req_headers = {
             "Origin": "https://www.dummy-url.com",
             "Access-Control-Request-Method": "GET",
         }
 
-        response = requests.options(HOST_GW_FUNC_A_HELLO, headers=cors_headers)
+        response = requests.options(HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers)
 
-        assert response.headers["Access-Control-Allow-Origin"] == "https://www.dummy-url.com"
+        assert (
+            response.headers["Access-Control-Allow-Origin"]
+            == "https://www.dummy-url.com"
+        )
         assert response.headers["Access-Control-Allow-Headers"] == "*"
         assert (
             response.headers["Access-Control-Allow-Methods"]
