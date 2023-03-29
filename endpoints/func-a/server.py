@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from scaleway_functions_python import local
-
 if TYPE_CHECKING:
     from scaleway_functions_python.framework.v1.hints import Context, Event, Response
 
@@ -20,4 +18,6 @@ def handler(event: "Event", context: "Context") -> "Response":
 
 
 if __name__ == "__main__":
+    from scaleway_functions_python import local
+
     local.serve_handler(handler, host="0.0.0.0", port=80, debug=False)

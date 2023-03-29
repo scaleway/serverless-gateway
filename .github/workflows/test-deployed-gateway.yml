@@ -75,11 +75,16 @@ jobs:
 
       - name: Run integration tests
         run: |
+          export GATEWAY_HOST=$(make get-gateway-host -s)
+          export FUNC_A_DOMAIN=$(make get-func-a-host -s)
           make test-int-container
         env:
+          ENV: "scw"
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          S3_ENDPOINT: "https://s3.fr-par.scw.cloud"
+          S3_REGION: "fr-par"
 
       - name: Delete S3 bucket
         run: make delete-bucket

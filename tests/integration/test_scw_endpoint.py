@@ -1,31 +1,11 @@
 import json
 import time
 
-import boto3
 import pytest
 import requests
 from loguru import logger
 
-GW_HOST = "localhost"
-GW_PORT = "8080"
-
-AUTH_URL = f"http://{GW_HOST}:{GW_PORT}/token"
-GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
-
-FUNC_A_HOST = "localhost"
-FUNC_A_PORT = "8004"
-FUNC_A_URL = "/func-a"
-HOST_FUNC_A_URL = f"http://{FUNC_A_HOST}:{FUNC_A_PORT}"
-HOST_FUNC_A_HELLO = f"{HOST_FUNC_A_URL}/hello"
-GW_FUNC_A_URL = f"http:/{FUNC_A_URL}"
-HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}{FUNC_A_URL}/hello"
-
-MINIO_BUCKET = "tokens"
-MINIO_ENDPOINT = "http://localhost:9000"
-MINIO_ACCESS_KEY = "minioadmin"
-MINIO_SECRET_KEY = "minioadmin"
-MINIO_REGION = "whatever"
-
+from tests.integration.environment import IntegrationEnvironment
 
 DEFAULT_ENDPOINTS = [
     {
@@ -46,37 +26,13 @@ DEFAULT_ENDPOINTS = [
 ]
 
 
-@pytest.fixture(scope="module")
-def auth_session() -> requests.Session:
-    response = requests.post(AUTH_URL)
-    assert response.status_code == requests.codes.ok
-
-    s3 = boto3.resource(
-        "s3",
-        region_name=MINIO_REGION,
-        endpoint_url=MINIO_ENDPOINT,
-        aws_access_key_id=MINIO_ACCESS_KEY,
-        aws_secret_access_key=MINIO_SECRET_KEY,
-    )
-
-    # It's important to sort the keys by date because
-    # the keys are persisted in the bucket after a container reload
-    objects = sorted(
-        s3.Bucket(MINIO_BUCKET).objects.all(),
-        key=lambda obj: obj.last_modified,
-        reverse=True,
-    )
-
-    assert objects, "No key was found in bucket!"
-    auth_key = objects[0].key
-
-    session = requests.Session()
-    session.headers["X-Auth-Token"] = auth_key
-
-    return session
-
-
 class TestEndpoint(object):
+    @staticmethod
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(integration_env: IntegrationEnvironment):
+        TestEndpoint.env = integration_env
+        TestEndpoint.session = integration_env.get_auth_session()
+
     @staticmethod
     def _call_endpoint_until_response_code(url, code, method: str = "GET"):
         max_retries = 5
@@ -115,16 +71,16 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
-    def add_route(self, relative_url, auth_session: requests.Session):
-        post_request = {
-            "target": GW_FUNC_A_URL,
+    def add_route(self, relative_url: str):
+        request = {
+            "target": self.env.gw_func_a_url,
             "relative_url": relative_url,
         }
 
-        auth_session.post(GW_ADMIN_URL, json=post_request)
+        self.session.post(self.env.gw_auth_url, json=request)
 
-    def test_default_list_of_endpoints(self, auth_session: requests.Session):
-        response = auth_session.get(GW_ADMIN_URL)
+    def test_default_list_of_endpoints(self):
+        response = self.session.get(self.env.gw_admin_url)
         expected_status_code = requests.codes.ok
 
         assert response.status_code == expected_status_code
@@ -138,7 +94,9 @@ class TestEndpoint(object):
         assert actual_endpoints_sorted_list == DEFAULT_ENDPOINTS
 
     def test_direct_call_to_target(self):
-        response = requests.get(HOST_FUNC_A_HELLO)
+        """Asserts that the upstream function is healthy."""
+
+        response = requests.get(self.env.host_func_a_url + "/hello")
 
         expected_status_code = requests.codes.ok
         expected_content = b"Hello from function A"
@@ -146,20 +104,20 @@ class TestEndpoint(object):
         assert response.status_code == expected_status_code
         assert response.content == expected_content
 
-    def test_create_delete_endpoint(self, auth_session: requests.Session):
+    def test_create_delete_endpoint(self):
         expected_func_message = b"Hello from function A"
 
         request = {
-            "target": GW_FUNC_A_URL,
-            "relative_url": FUNC_A_URL,
+            "target": self.env.gw_func_a_url,
+            "relative_url": "/func-a",
         }
 
         # Create the endpoint and keep calling until it's up
         logger.info(f"Creating new endpoint {request}")
-        auth_session.post(GW_ADMIN_URL, json=request)
+        self.session.post(self.env.gw_admin_url, json=request)
 
         response_gw = self._call_endpoint_until_response_code(
-            HOST_GW_FUNC_A_HELLO, requests.codes.ok
+            self.env.gw_url + "/func-a/hello", requests.codes.ok
         )
 
         assert response_gw.content == expected_func_message
@@ -169,7 +127,7 @@ class TestEndpoint(object):
             {
                 "http_methods": [],
                 "target": "http://func-a:80",
-                "relative_url": FUNC_A_URL,
+                "relative_url": "/func-a",
             },
         ]
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
@@ -179,7 +137,7 @@ class TestEndpoint(object):
         )
 
         # Make the request to the SCW plugin
-        response_endpoints = auth_session.get(GW_ADMIN_URL)
+        response_endpoints = self.session.get(self.env.gw_admin_url)
         assert response_endpoints.status_code == requests.codes.ok
 
         # Parse JSON and check
@@ -194,42 +152,44 @@ class TestEndpoint(object):
         assert actual_endpoints_sorted_list == expected_endpoints
 
         # Now delete the endpoint
-        auth_session.delete(GW_ADMIN_URL, json=request)
+        self.session.delete(self.env.gw_admin_url, json=request)
         # Keep calling until we get a requests.codes.not_found
         response_gw = self._call_endpoint_until_response_code(
-            HOST_GW_FUNC_A_HELLO, requests.codes.not_found
+            self.env.gw_url + "/func-a/hello", requests.codes.not_found
         )
 
-    def test_endpoint_with_http_methods(self, auth_session: requests.Session):
+    def test_endpoint_with_http_methods(self):
         request = {
             "http_methods": ["PATCH", "PUT"],
-            "target": GW_FUNC_A_URL,
-            "relative_url": FUNC_A_URL,
+            "target": self.env.gw_func_a_url,
+            "relative_url": "/func-a",
         }
 
+        hello_path = self.env.gw_url + "/func-a/hello"
         try:
-            resp = auth_session.post(GW_ADMIN_URL, json=request)
+            resp = self.session.post(self.env.gw_admin_url, json=request)
             resp.raise_for_status()
 
+            # Should not be accessible with GET
             self._call_endpoint_until_response_code(
-                HOST_GW_FUNC_A_HELLO, requests.codes.not_found, "GET"
+                hello_path, requests.codes.not_found, "GET"
             )
 
             self._call_endpoint_until_response_code(
-                HOST_GW_FUNC_A_HELLO, requests.codes.ok, "PUT"
+                hello_path, requests.codes.ok, "PUT"
             )
 
             self._call_endpoint_until_response_code(
-                HOST_GW_FUNC_A_HELLO, requests.codes.ok, "PATCH"
+                hello_path, requests.codes.ok, "PATCH"
             )
         finally:
-            auth_session.delete(GW_ADMIN_URL, json=request)
+            self.session.delete(self.env.gw_admin_url, json=request)
             self._call_endpoint_until_response_code(
-                HOST_GW_FUNC_A_HELLO, requests.codes.not_found, "PUT"
+                hello_path, requests.codes.not_found, "PUT"
             )
 
-    def test_cors_enabled_for_target_function(self, auth_session: requests.Session):
-        self.add_route(FUNC_A_URL, auth_session)
+    def test_cors_enabled_for_target_function(self):
+        self.add_route("/func-a")
 
         preflight_req_headers = {
             "Origin": "https://www.dummy-url.com",
@@ -237,7 +197,7 @@ class TestEndpoint(object):
         }
 
         preflight_resp = requests.options(
-            HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers
+            self.env.gw_url + "/func-a/hello", headers=preflight_req_headers
         )
 
         assert (
