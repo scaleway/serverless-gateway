@@ -149,7 +149,7 @@ make add-container-endpoint
 Serverless Gateway is engineered to provide our clients with a better experience when using functions and containers:
 * It provides you with access to multiple functions and containers via relative URLs on a single base URL. 
 * It enables you direct traffic to different functions and containers based on HTTP method.
-* :soon: (WIP) It allows CORS handling to make functions and containers accessible from the browser
+* It allows CORS handling to make functions and containers accessible from the browser
 
 It uses [Kong](https://konghq.com/) under the hood and is deployed as a [Serverless Container](https://www.scaleway.com/en/serverless-containers/), which acts as the proxy for other containers and functions.
 
