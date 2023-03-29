@@ -236,8 +236,12 @@ class TestEndpoint(object):
             "Access-Control-Request-Method": "GET",
         }
 
-        response = requests.options(HOST_FUNC_A_HELLO, headers=cors_headers)
+        response = requests.options(HOST_GW_FUNC_A_HELLO, headers=cors_headers)
 
-        assert response.headers["Access-Control-Allow-Origin"] == "*"
-        assert response.headers["Access-Control-Allow-Headers"] == "Content-Type"
-
+        assert response.headers["Access-Control-Allow-Origin"] == "https://www.dummy-url.com"
+        assert response.headers["Access-Control-Allow-Headers"] == "*"
+        assert (
+            response.headers["Access-Control-Allow-Methods"]
+            == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
+        )
+        assert response.headers["Access-Control-Allow-Credentials"] == "true"
