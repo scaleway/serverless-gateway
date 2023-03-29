@@ -115,9 +115,7 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
-    
     def add_route(self, relative_url, auth_session: requests.Session):
-
         post_request = {
             "target": GW_FUNC_A_URL,
             "relative_url": relative_url,
@@ -241,9 +239,7 @@ class TestEndpoint(object):
 
         response = requests.options(HOST_FUNC_A_HELLO, headers=cors_headers)
 
-        assert (
-            response.headers["Access-Control-Allow-Origin"] == "*"
-        )
+        assert response.headers["Access-Control-Allow-Origin"] == "*"
         assert response.headers["Access-Control-Allow-Headers"] == "*"
         assert (
             response.headers["Access-Control-Allow-Methods"]
