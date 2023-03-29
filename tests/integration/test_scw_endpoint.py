@@ -242,7 +242,7 @@ class TestEndpoint(object):
         response = requests.options(HOST_FUNC_A_HELLO, headers=cors_headers)
 
         assert (
-            response.headers["Access-Control-Allow-Origin"] == "https://dummy-url.com"
+            response.headers["Access-Control-Allow-Origin"] == "*"
         )
         assert response.headers["Access-Control-Allow-Headers"] == "*"
         assert (
