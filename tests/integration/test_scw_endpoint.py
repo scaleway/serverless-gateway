@@ -236,15 +236,15 @@ class TestEndpoint(object):
             "Access-Control-Request-Method": "GET",
         }
 
-        response = requests.options(HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers)
+        preflight_resp = requests.options(HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers)
 
         assert (
-            response.headers["Access-Control-Allow-Origin"]
+            preflight_resp.headers["Access-Control-Allow-Origin"]
             == "https://www.dummy-url.com"
         )
-        assert response.headers["Access-Control-Allow-Headers"] == "*"
+        assert preflight_resp.headers["Access-Control-Allow-Headers"] == "*"
         assert (
-            response.headers["Access-Control-Allow-Methods"]
+            preflight_resp.headers["Access-Control-Allow-Methods"]
             == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
         )
-        assert response.headers["Access-Control-Allow-Credentials"] == "true"
+        assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
