@@ -17,7 +17,7 @@ FUNC_A_PORT = "8004"
 FUNC_A_URL = "/func-a"
 HOST_FUNC_A_URL = f"http://{FUNC_A_HOST}:{FUNC_A_PORT}"
 HOST_FUNC_A_HELLO = f"{HOST_FUNC_A_URL}/hello"
-GW_FUNC_A_URL = "http:/{FUNC_A_URL}"
+GW_FUNC_A_URL = f"http:/{FUNC_A_URL}"
 HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}{FUNC_A_URL}/hello"
 
 MINIO_BUCKET = "tokens"
