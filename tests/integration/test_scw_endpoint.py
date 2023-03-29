@@ -151,7 +151,7 @@ class TestEndpoint(object):
 
         request = {
             "target": GW_FUNC_A_URL,
-            "relative_url": "{FUNC_A_URL}",
+            "relative_url": FUNC_A_URL,
         }
 
         # Create the endpoint and keep calling until it's up
@@ -169,7 +169,7 @@ class TestEndpoint(object):
             {
                 "http_methods": [],
                 "target": "http://func-a:80",
-                "relative_url": "{FUNC_A_URL}",
+                "relative_url": FUNC_A_URL,
             },
         ]
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
@@ -204,7 +204,7 @@ class TestEndpoint(object):
         request = {
             "http_methods": ["PATCH", "PUT"],
             "target": GW_FUNC_A_URL,
-            "relative_url": "/func-a",
+            "relative_url": FUNC_A_URL,
         }
 
         try:
@@ -236,7 +236,9 @@ class TestEndpoint(object):
             "Access-Control-Request-Method": "GET",
         }
 
-        preflight_resp = requests.options(HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers)
+        preflight_resp = requests.options(
+            HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers
+        )
 
         assert (
             preflight_resp.headers["Access-Control-Allow-Origin"]
