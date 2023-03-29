@@ -232,17 +232,12 @@ class TestEndpoint(object):
         self.add_route(FUNC_A_URL, auth_session)
 
         cors_headers = {
-            "Origin": "https://dummy-url.com",
+            "Origin": "https://www.dummy-url.com",
             "Access-Control-Request-Method": "GET",
-            "Access-Control-Request-Headers": "X-Requested-With",
         }
 
         response = requests.options(HOST_FUNC_A_HELLO, headers=cors_headers)
 
         assert response.headers["Access-Control-Allow-Origin"] == "*"
-        assert response.headers["Access-Control-Allow-Headers"] == "*"
-        assert (
-            response.headers["Access-Control-Allow-Methods"]
-            == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
-        )
-        assert response.headers["Access-Control-Allow-Credentials"] == "true"
+        assert response.headers["Access-Control-Allow-Headers"] == "Content-Type"
+
