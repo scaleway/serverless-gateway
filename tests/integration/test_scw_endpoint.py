@@ -14,10 +14,11 @@ GW_ADMIN_URL = f"http://{GW_HOST}:{GW_PORT}/scw"
 
 FUNC_A_HOST = "localhost"
 FUNC_A_PORT = "8004"
+FUNC_A_URL = "/func-a"
 HOST_FUNC_A_URL = f"http://{FUNC_A_HOST}:{FUNC_A_PORT}"
 HOST_FUNC_A_HELLO = f"{HOST_FUNC_A_URL}/hello"
-GW_FUNC_A_URL = "http://func-a"
-HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}/func-a/hello"
+GW_FUNC_A_URL = f"http:/{FUNC_A_URL}"
+HOST_GW_FUNC_A_HELLO = f"http://{GW_HOST}:{GW_PORT}{FUNC_A_URL}/hello"
 
 MINIO_BUCKET = "tokens"
 MINIO_ENDPOINT = "http://localhost:9000"
@@ -114,6 +115,14 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
+    def add_route(self, relative_url, auth_session: requests.Session):
+        post_request = {
+            "target": GW_FUNC_A_URL,
+            "relative_url": relative_url,
+        }
+
+        auth_session.post(GW_ADMIN_URL, json=post_request)
+
     def test_default_list_of_endpoints(self, auth_session: requests.Session):
         response = auth_session.get(GW_ADMIN_URL)
         expected_status_code = requests.codes.ok
@@ -142,7 +151,7 @@ class TestEndpoint(object):
 
         request = {
             "target": GW_FUNC_A_URL,
-            "relative_url": "/func-a",
+            "relative_url": FUNC_A_URL,
         }
 
         # Create the endpoint and keep calling until it's up
@@ -160,7 +169,7 @@ class TestEndpoint(object):
             {
                 "http_methods": [],
                 "target": "http://func-a:80",
-                "relative_url": "/func-a",
+                "relative_url": FUNC_A_URL,
             },
         ]
         expected_endpoints.extend(DEFAULT_ENDPOINTS)
@@ -195,7 +204,7 @@ class TestEndpoint(object):
         request = {
             "http_methods": ["PATCH", "PUT"],
             "target": GW_FUNC_A_URL,
-            "relative_url": "/func-a",
+            "relative_url": FUNC_A_URL,
         }
 
         try:
@@ -218,3 +227,26 @@ class TestEndpoint(object):
             self._call_endpoint_until_response_code(
                 HOST_GW_FUNC_A_HELLO, requests.codes.not_found, "PUT"
             )
+
+    def test_cors_enabled_for_target_function(self, auth_session: requests.Session):
+        self.add_route(FUNC_A_URL, auth_session)
+
+        preflight_req_headers = {
+            "Origin": "https://www.dummy-url.com",
+            "Access-Control-Request-Method": "GET",
+        }
+
+        preflight_resp = requests.options(
+            HOST_GW_FUNC_A_HELLO, headers=preflight_req_headers
+        )
+
+        assert (
+            preflight_resp.headers["Access-Control-Allow-Origin"]
+            == "https://www.dummy-url.com"
+        )
+        assert preflight_resp.headers["Access-Control-Allow-Headers"] == "*"
+        assert (
+            preflight_resp.headers["Access-Control-Allow-Methods"]
+            == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
+        )
+        assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
