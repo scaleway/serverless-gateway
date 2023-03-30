@@ -80,8 +80,8 @@ jobs:
           make test-int
         env:
           ENV: "scw"
-          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          S3_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           S3_ENDPOINT: "https://s3.fr-par.scw.cloud"
           S3_REGION: "fr-par"
@@ -90,8 +90,8 @@ jobs:
         run: make delete-bucket
         env:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-        if: ${{ steps.create-bucket.outcome == 'success' }}
+        if: always()
 
       - name: Delete Gateway namespace and container
         run: make delete-namespace
-        if: ${{ steps.create-namespace.outcome == 'success' }}
+        if: always()
