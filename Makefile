@@ -1,6 +1,6 @@
 VERSION := $(shell cat VERSION)
 
-IMAGE_REGISTRY := registry.hub.docker.com
+IMAGE_REGISTRY := docker.io
 IMAGE_ORG := scaleway
 IMAGE_NAME := serverless-gateway
 IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
