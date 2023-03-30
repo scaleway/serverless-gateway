@@ -32,7 +32,7 @@ To get started with the gateway, you must do the following:
 - Install [`Scaleway's Serverless API Framework`](https://github.com/scaleway/serverless-api-project)
 - Install [`s3cmd`](https://github.com/s3tools/s3cmd/blob/master/INSTALL.md)
 
-You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
+You can then follow the next steps from the root of the project to deploy the gateway as a serverless container in your Scaleway account using our public [Serverless Gateway image](https://hub.docker.com/r/scaleway/serverless-gateway).
 
 ### Export required environment variables
 You need to provide the gateway with your S3 bucket configuration
@@ -157,7 +157,7 @@ It integrates fully with the [Scaleway Python API framework](https://github.com/
 
 ## :hammer: Architecture
 
-The gateway image is held in Docker Hub [here](https://hub.docker.com/r/shillakerscw/scw-sls-gw).
+The gateway image is held in Docker Hub [here](https://hub.docker.com/r/scaleway/serverless-gateway).
 
 This image contains:
 
