@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from scaleway_functions_python.framework.v1.hints import Context, Event, Response
 
