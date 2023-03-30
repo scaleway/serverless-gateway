@@ -77,7 +77,7 @@ jobs:
         run: |
           export GATEWAY_HOST=$(make get-gateway-host -s)
           export FUNC_A_DOMAIN=$(make get-func-a-host -s)
-          make test-int-container
+          make test-int
         env:
           ENV: "scw"
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
@@ -90,8 +90,8 @@ jobs:
         run: make delete-bucket
         env:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-        if: steps.create-bucket.conclusion == 'success'
+        if: ${{ steps.create-bucket.outcome == 'success' }}
 
       - name: Delete Gateway namespace and container
         run: make delete-namespace
-        if: steps.create-namespace.conclusion == 'success'
+        if: ${{ steps.create-namespace.outcome == 'success' }}
