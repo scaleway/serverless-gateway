@@ -1,8 +1,8 @@
 VERSION := $(shell cat VERSION)
 
-IMAGE_REGISTRY := registry.hub.docker.com
-IMAGE_ORG := shillakerscw
-IMAGE_NAME := scw-sls-gw
+IMAGE_REGISTRY := docker.io
+IMAGE_ORG := scaleway
+IMAGE_NAME := serverless-gateway
 IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:${VERSION}
 
 SCW_CONTAINER_NAMESPACE := scw-sls-gw
