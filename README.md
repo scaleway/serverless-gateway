@@ -79,6 +79,12 @@ In case you want to update your container, you can use:
 make update-container
 ```
 
+### Add gateway URL as environment variable
+You can use:
+```
+export GATEWAY_URL=$(make get-gateway-token)
+```
+
 ### Deploy your function
 You can use the functions in the handler at `endpoints/func-example` and deploy it using Scaleway's Serverless API framework using:
 ```
@@ -99,10 +105,17 @@ You will need this token to authenticate against all `/scw` calls
 make list-tokens
 ```
 
+### Add token as environment variable
+You can use:
+```
+export GATEWAY_TOKEN=$(make get-gateway-token)
+```
+
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
 curl -X POST http://<your container domain name>/scw \
+             -H 'X-Auth-Token: <generated_key>' \
              -H 'Content-Type: application/json' \
              -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
