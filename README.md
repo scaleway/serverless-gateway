@@ -82,7 +82,7 @@ make update-container
 ### Add gateway URL as environment variable
 You can use:
 ```
-export GATEWAY_URL=$(make get-gateway-token)
+export GATEWAY_URL=$(make get-gateway-endpoint)
 ```
 
 ### Deploy your function
