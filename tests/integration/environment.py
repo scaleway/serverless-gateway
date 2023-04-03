@@ -45,8 +45,8 @@ class IntegrationEnvironment:
             gw_func_a_url=func_a_url,
             s3_bucket=os.environ["S3_BUCKET_NAME"],
             s3_endpoint=os.environ["S3_ENDPOINT"],
-            s3_access_key=os.environ["S3_ACCESS_KEY"],
-            s3_secret_key=os.environ["S3_SECRET_KEY"],
+            s3_access_key=os.environ["SCW_ACCESS_KEY"],
+            s3_secret_key=os.environ["SCW_SECRET_KEY"],
             s3_region=os.environ["S3_REGION"],
         )
 
@@ -60,7 +60,7 @@ class IntegrationEnvironment:
 
     def get_auth_session(self) -> requests.Session:
         response = requests.post(self.gw_auth_url)
-        assert response.status_code == requests.codes.ok
+        response.raise_for_status()
 
         s3 = boto3.resource(
             "s3",
