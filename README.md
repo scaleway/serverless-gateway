@@ -94,7 +94,7 @@ You will get two URLs, one for `hello` function and the other one for `goodbye` 
 
 ### Generate a token
 ```
-curl -X POST http://<your container domain name>/token
+curl -X POST http://${GATEWAY_URL}/token
 ```
 The generated key will be uploaded to your bucket.
 
@@ -114,11 +114,8 @@ export GATEWAY_TOKEN=$(make get-gateway-token)
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
-export GATEWAY_URL=$(make get-gateway-endpoint)
-export GATEWAY_TOKEN=$(make get-gateway-token)
-
-curl -X POST ${GATEWAY_URL}/scw \
-             -H 'X-Auth-Token: ${GATEWAY_TOKEN}' \
+curl -X POST http://${GATEWAY_URL}/scw \
+             -H "X-Auth-Token: ${GATEWAY_TOKEN}" \
              -H 'Content-Type: application/json' \
              -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
@@ -126,19 +123,19 @@ You can add as many endpoints as you want to your serverless gateway.
 
 ### List the endpoints of your gateway
 ```
-curl http://<your container domain name>/scw -H 'X-Auth-Token: <generated_key>' | jq
+curl http://${GATEWAY_URL}/scw -H "X-Auth-Token: ${GATEWAY_TOKEN}"| jq
 ```
 
 ### Call your function using gateway base URL
 ```
-curl http://<your container domain name>/hello
+curl http://${GATEWAY_URL}/hello
 ```
 
 ### Delete a target in your gateway
 You can remove `hello` function as a target from your gateway using:
 ```
-curl -X DELETE http://<your container domain name>/scw \
-               -H 'X-Auth-Token: <generated_key>' \
+curl -X DELETE http://${GATEWAY_URL}/scw \
+               -H "X-Auth-Token: ${GATEWAY_TOKEN}" \
                -H 'Content-Type: application/json' \
                -d '{"target":"<your hello function URL>,"relative_url":"/hello"}'
 ```
