@@ -37,9 +37,9 @@ class IntegrationEnvironment:
 
     @staticmethod
     def get_scw_env():
-        func_a_url = f'https://{os.environ["FUNC_A_DOMAIN"]}'
+        func_a_url = f'https://{os.environ["FUNC_A_DOMAIN"]}:443'
         return IntegrationEnvironment(
-            gw_url=f'https://{os.environ["GATEWAY_HOST"]}',
+            gw_url=f'https://{os.environ["GATEWAY_HOST"]}:443',
             host_func_a_url=func_a_url,
             gw_func_a_url=func_a_url,
             s3_bucket=os.environ["S3_BUCKET_NAME"],
