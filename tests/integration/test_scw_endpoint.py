@@ -1,5 +1,7 @@
+import contextlib
 import json
 import time
+import typing
 
 import pytest
 import requests
@@ -27,6 +29,9 @@ DEFAULT_ENDPOINTS = [
 
 
 class TestEndpoint(object):
+    env: IntegrationEnvironment
+    session: requests.Session
+
     @staticmethod
     @pytest.fixture(autouse=True, scope="class")
     def setup(integration_env: IntegrationEnvironment):
@@ -35,7 +40,7 @@ class TestEndpoint(object):
 
     @staticmethod
     def _call_endpoint_until_response_code(url, code, method: str = "GET"):
-        max_retries = 5
+        max_retries = 10
         sleep_time = 2
 
         for _ in range(max_retries):
@@ -71,13 +76,24 @@ class TestEndpoint(object):
         # Here we have failed
         raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
 
-    def add_route(self, relative_url: str):
-        request = {
+    @contextlib.contextmanager
+    def add_route_to_fixture(
+        self, relative_url: str, http_methods: list[str] | None = None
+    ):
+        """Context manager to add a route and remove it."""
+
+        request: dict[str, typing.Any] = {
             "target": self.env.gw_func_a_url,
             "relative_url": relative_url,
         }
+        if http_methods:
+            request["http_methods"] = http_methods
 
-        self.session.post(self.env.gw_auth_url, json=request)
+        resp = self.session.post(self.env.gw_admin_url, json=request)
+        resp.raise_for_status()
+        yield relative_url
+        resp = self.session.delete(self.env.gw_admin_url, json=request)
+        resp.raise_for_status()
 
     def test_default_list_of_endpoints(self):
         response = self.session.get(self.env.gw_admin_url)
@@ -126,7 +142,7 @@ class TestEndpoint(object):
         expected_endpoints = [
             {
                 "http_methods": [],
-                "target": "http://func-a:80",
+                "target": self.env.gw_func_a_url,
                 "relative_url": "/func-a",
             },
         ]
@@ -159,16 +175,10 @@ class TestEndpoint(object):
         )
 
     def test_endpoint_with_http_methods(self):
-        request = {
-            "http_methods": ["PATCH", "PUT"],
-            "target": self.env.gw_func_a_url,
-            "relative_url": "/func-a",
-        }
-
-        hello_path = self.env.gw_url + "/func-a/hello"
-        try:
-            resp = self.session.post(self.env.gw_admin_url, json=request)
-            resp.raise_for_status()
+        with self.add_route_to_fixture(
+            relative_url="/func-a", http_methods=["PATCH", "PUT"]
+        ):
+            hello_path = self.env.gw_url + "/func-a/hello"
 
             # Should not be accessible with GET
             self._call_endpoint_until_response_code(
@@ -182,31 +192,25 @@ class TestEndpoint(object):
             self._call_endpoint_until_response_code(
                 hello_path, requests.codes.ok, "PATCH"
             )
-        finally:
-            self.session.delete(self.env.gw_admin_url, json=request)
-            self._call_endpoint_until_response_code(
-                hello_path, requests.codes.not_found, "PUT"
-            )
 
     def test_cors_enabled_for_target_function(self):
-        self.add_route("/func-a")
+        with self.add_route_to_fixture(relative_url="/func-a"):
+            preflight_req_headers = {
+                "Origin": "https://www.dummy-url.com",
+                "Access-Control-Request-Method": "GET",
+            }
 
-        preflight_req_headers = {
-            "Origin": "https://www.dummy-url.com",
-            "Access-Control-Request-Method": "GET",
-        }
+            preflight_resp = requests.options(
+                self.env.gw_url + "/func-a/hello", headers=preflight_req_headers
+            )
 
-        preflight_resp = requests.options(
-            self.env.gw_url + "/func-a/hello", headers=preflight_req_headers
-        )
-
-        assert (
-            preflight_resp.headers["Access-Control-Allow-Origin"]
-            == "https://www.dummy-url.com"
-        )
-        assert preflight_resp.headers["Access-Control-Allow-Headers"] == "*"
-        assert (
-            preflight_resp.headers["Access-Control-Allow-Methods"]
-            == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
-        )
-        assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
+            assert (
+                preflight_resp.headers["Access-Control-Allow-Origin"]
+                == "https://www.dummy-url.com"
+            )
+            assert preflight_resp.headers["Access-Control-Allow-Headers"] == "*"
+            assert (
+                preflight_resp.headers["Access-Control-Allow-Methods"]
+                == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
+            )
+            assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"

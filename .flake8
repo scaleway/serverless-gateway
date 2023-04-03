@@ -10,4 +10,4 @@ extend-ignore =
 max-line-length = 88
 exclude =
     __pycache__
-    venv
+    *venv

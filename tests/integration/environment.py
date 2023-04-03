@@ -2,7 +2,6 @@ import os
 from dataclasses import dataclass
 
 import boto3
-import pytest
 import requests
 
 
@@ -28,7 +27,7 @@ class IntegrationEnvironment:
         return IntegrationEnvironment(
             gw_url="http://localhost:8080",
             host_func_a_url="http://localhost:8004",
-            gw_func_a_url="http://func-a",
+            gw_func_a_url="http://func-a:80",
             s3_bucket="tokens",
             s3_endpoint="http://localhost:9000",
             s3_access_key="minioadmin",
