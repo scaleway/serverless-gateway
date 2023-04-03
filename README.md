@@ -115,7 +115,7 @@ export GATEWAY_TOKEN=$(make get-gateway-token)
 You can add `hello` function to the deployed gateway using:
 ```
 curl -X POST http://<your container domain name>/scw \
-             -H 'X-Auth-Token: <generated_key>' \
+             -H 'X-Auth-Token: ${GATEWAY_TOKEN}' \
              -H 'Content-Type: application/json' \
              -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
 ```
