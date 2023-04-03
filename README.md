@@ -114,7 +114,10 @@ export GATEWAY_TOKEN=$(make get-gateway-token)
 ### Add a function as a target in your gateway
 You can add `hello` function to the deployed gateway using:
 ```
-curl -X POST http://<your container domain name>/scw \
+export GATEWAY_URL=$(make get-gateway-endpoint)
+export GATEWAY_TOKEN=$(make get-gateway-token)
+
+curl -X POST ${GATEWAY_URL}/scw \
              -H 'X-Auth-Token: ${GATEWAY_TOKEN}' \
              -H 'Content-Type: application/json' \
              -d '{"target":"<your hello function URL>","relative_url":"/hello"}'
