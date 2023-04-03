@@ -202,7 +202,7 @@ delete-namespace:
 
 .PHONY: delete-bucket
 delete-bucket:
-	s3cmd rb s3://${S3_BUCKET_NAME}
+	s3cmd rb s3://${S3_BUCKET_NAME} --force --recursive
 
 #--------------------------
 # Tokens
