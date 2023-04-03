@@ -92,8 +92,8 @@ jobs:
         run: make delete-bucket
         env:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-        # if: always()
+        if: always()
 
       - name: Delete Gateway namespace and container
         run: make delete-namespace
-        # if: always()
+        if: always()
