@@ -152,6 +152,14 @@ check-container:
 	region=${SCW_API_REGION}
 
 #--------------------------
+# Container endpoint export
+#--------------------------
+.PHONY: get-gateway-endpoint
+get-gateway-endpoint:
+	$(eval $(call container_id,_id))
+	@echo $(shell scw container container get ${_id} region=${SCW_API_REGION} -o json | jq -r '.domain_name')
+
+#--------------------------
 # S3
 #--------------------------
 .PHONY: set-up-s3-cli
@@ -187,6 +195,10 @@ delete-bucket:
 .PHONY: list-tokens
 list-tokens:
 	@s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}'
+
+.PHONY: get-token
+get-token:
+	@echo $(shell make list-tokens) | awk '{print$$1}'
 
 #--------------------------
 # Tests
