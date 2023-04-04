@@ -79,7 +79,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          export GATEWAY_HOST=$(make get-gateway-host -s)
+          export GATEWAY_HOST=$(make get-gateway-endpoint -s)
           export FUNC_A_DOMAIN=$(make get-func-a-host -s)
           make test-int
         env:

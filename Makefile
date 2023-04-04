@@ -33,15 +33,6 @@ define namespace_id
 	$(1) := $$(ns_id)
 endef
 
-# Function to get the container host
-define gateway_host
-	$(eval $(call container_id,_id))
-	gw_host=$(shell scw container container \
-		  get ${_id} -o json | \
-		  jq -r '.domain_name')
-	$(1) := $$(gw_host)
-endef
-
 SECRET_ENV_CMD_OPTIONS := secret-environment-variables.0.key=SCW_ACCESS_KEY \
 		                  secret-environment-variables.0.value=${SCW_ACCESS_KEY} \
 		                  secret-environment-variables.1.key=SCW_SECRET_KEY \
@@ -160,11 +151,6 @@ check-container:
 	scw container container get ${_id} \
 	region=${SCW_API_REGION} \
 	-o json | jq -r '.status'
-
-.PHONY: get-gateway-host
-get-gateway-host:
-	$(eval $(call gateway_host,_gw_host))
-	echo ${_gw_host}
 
 #--------------------------
 # Container endpoint export
