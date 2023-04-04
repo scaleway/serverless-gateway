@@ -46,7 +46,8 @@ class Endpoint(object):
         """
         Validates the endpoint configuration
         """
-        # TODO - validate operation and return error message
+        if not self.target.startswith(("http://", "https://")):
+            return "endpoint target has no http:// or https:// prefix"
         pass
 
     def build_route(self):
