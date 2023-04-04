@@ -1,4 +1,4 @@
-name: test with deployed gateway
+name: tests with deployed gateway
 
 on:
   push:

@@ -4,16 +4,16 @@ description: Install scw and create config from env
 
 inputs:
   scw-access-key:
-    description: "Scaleway access key"
+    description: "Scaleway access key."
     required: true
   scw-secret-key:
-    description: "Scaleway secret key"
+    description: "Scaleway secret key."
     required: true
   scw-default-project-id:
-    description: "Scaleway default project ID"
+    description: "Scaleway default project ID."
     required: true
   scw-default-organization-id:
-    description: "Scaleway default organization ID"
+    description: "Scaleway default organization ID."
     required: true
   scw-version:
     description: "Scaleway CLI version."
