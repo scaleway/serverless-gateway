@@ -1,0 +1,99 @@
+name: tests with deployed gateway
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+env:
+  S3_ENDPOINT: "https://s3.fr-par.scw.cloud"
+  S3_REGION: "fr-par"
+
+jobs:
+  test-deployed-gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - run: pip install -r requirements-dev.txt
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Install npm dependencies
+        run: npm install -g serverless serverless-scaleway-functions
+
+      - name: Install scaleway CLI
+        uses: ./.github/actions/setup-scaleway-cli
+        with:
+          scw-version: "2.13.0"
+          scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+
+      - name: Deploy function fixtures
+        run: make deploy-function-fixtures
+
+      - name: Create Gateway namespace
+        id: create-namespace
+        run: |
+          make create-namespace
+          until [ $(make check-namespace -s) == ready ]; do sleep 10; done
+
+      - name: Create Gateway container
+        # We need to truncate gateway.env as it will override our env vars
+        run: |
+          truncate -s 0 gateway.env
+          make create-container
+          make deploy-container
+          until [ $(make check-container -s) == ready ]; do sleep 10; done
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
+      - name: Install s3cmd
+        run: pip install s3cmd
+
+      - name: Create S3 bucket
+        id: create-bucket
+        run: |
+          make set-up-s3-cli
+          make create-s3-bucket
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
+      - name: Run integration tests
+        run: |
+          export GATEWAY_HOST=$(make get-gateway-endpoint -s)
+          export FUNC_A_DOMAIN=$(make get-func-a-host -s)
+          make test-int
+        env:
+          ENV: "scw"
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
+      - name: Delete S3 bucket
+        run: make delete-bucket
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        if: always()
+
+      - name: Delete Gateway namespace and container
+        run: make delete-namespace
+        if: always()

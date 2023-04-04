@@ -22,7 +22,6 @@ define container_id
 	ns_id=$(shell scw container container \
 		  list region=${SCW_API_REGION} -o json | \
 		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id')
-
 	$(1) := $$(ns_id)
 endef
 
@@ -87,7 +86,8 @@ create-namespace:
 check-namespace:
 	$(eval $(call namespace_id,_id))
 	scw container namespace get ${_id} \
-	region=${SCW_API_REGION}
+	region=${SCW_API_REGION} \
+	-o json | jq -r '.status'
 
 #--------------------------
 # Container deploy
@@ -149,7 +149,8 @@ update-container-without-deploy:
 check-container:
 	$(eval $(call container_id,_id))
 	scw container container get ${_id} \
-	region=${SCW_API_REGION}
+	region=${SCW_API_REGION} \
+	-o json | jq -r '.status'
 
 #--------------------------
 # Container endpoint export
@@ -187,7 +188,7 @@ delete-namespace:
 
 .PHONY: delete-bucket
 delete-bucket:
-	s3cmd rb s3://${S3_BUCKET_NAME}
+	s3cmd rb s3://${S3_BUCKET_NAME} --force --recursive
 
 #--------------------------
 # Tokens
@@ -203,6 +204,24 @@ get-token:
 #--------------------------
 # Tests
 #--------------------------
+
+FIXTURES_NAMESPACE_NAME := function-fixtures
+
+define fixture_namespace_id
+	ns_id=$(shell scw function namespace \
+		  list name=${FIXTURES_NAMESPACE_NAME} -o json | \
+		  jq -r '.[0] | .id')
+	$(1) := $$(ns_id)
+endef
+
+define fixture_host
+	$(eval $(call fixture_namespace_id,_id))
+	fnc_host := $(shell scw function function \
+		  list namespace-id=${_id} -o json | \
+		  jq -r '.[] | select(.name==$(1)) | .domain_name')
+	$(2) := $$(fnc_host)
+endef 
+
 .PHONY: test
 test:
 	pytest tests/unit
@@ -211,8 +230,11 @@ test:
 test-int:
 	pytest tests/integration
 
-.PHONY: test-int-container
-test-int-container:
-	$(eval SCW_CONTAINER_ID=$(shell scw container container list region=${SCW_API_REGION} -o json | jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id'))
-	$(eval  GW_HOST_URL=${shell scw container container get $(SCW_CONTAINER_ID) region=${SCW_API_REGION} -o json | jq -r '.domain_name'})
-	pytest tests/integration -GW_HOST=$(GW_HOST_URL)
+.PHONY: deploy-function-fixtures
+deploy-function-fixtures:
+	cd endpoints && serverless deploy
+
+.PHONY:
+get-func-a-host:
+	$(eval $(call fixture_host,"func-a",_func_a_host))
+	echo ${_func_a_host}

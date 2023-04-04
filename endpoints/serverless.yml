@@ -1,0 +1,20 @@
+service: function-fixtures
+configValidationMode: off
+provider:
+  name: scaleway
+  runtime: python311
+
+plugins:
+  - serverless-scaleway-functions
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!.gitignore'
+    - '!.git/**'
+    # No need to package ping
+    - '!ping/**'
+
+functions:
+  func-a:
+    handler: func-a/server.handler
