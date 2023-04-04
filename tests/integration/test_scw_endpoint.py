@@ -36,7 +36,7 @@ class TestEndpoint(object):
     @pytest.fixture(autouse=True, scope="class")
     def setup(integration_env: IntegrationEnvironment):
         TestEndpoint.env = integration_env
-        TestEndpoint.session = integration_env.get_self.session()
+        TestEndpoint.session = integration_env.get_auth_session()
 
     @staticmethod
     def _call_endpoint_until_response_code(url, code, method: str = "GET"):
