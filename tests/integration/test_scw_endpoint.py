@@ -36,7 +36,7 @@ class TestEndpoint(object):
     @pytest.fixture(autouse=True, scope="class")
     def setup(integration_env: IntegrationEnvironment):
         TestEndpoint.env = integration_env
-        TestEndpoint.session = integration_env.get_auth_session()
+        TestEndpoint.session = integration_env.get_self.session()
 
     @staticmethod
     def _call_endpoint_until_response_code(url, code, method: str = "GET"):
@@ -214,3 +214,50 @@ class TestEndpoint(object):
                 == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
             )
             assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
+
+    @pytest.mark.parametrize(
+            "test_request,expected_status_code,expected_message",
+            [
+                (
+                    {
+                        "target": "dummy_url.com",
+                        "relative_url": "/dummy",
+                    },
+                    400,
+                    "Invalid request: endpoint target has no http:// or https:// prefix"
+                ),
+                (
+                    {
+                        "target": "/dummy_url.com",
+                        "relative_url": "/dummy",
+                    },
+                    400,
+                    "Invalid request: endpoint target has no http:// or https:// prefix"
+                ),
+                (
+                    {
+                        "target": "http://dummy_url.com",
+                        "relative_url": "/dummy",
+                    },
+                    200,
+                    "Success"
+                ),
+                (
+                    {
+                        "target": "https://dummy_url.com",
+                        "relative_url": "/dummy",
+                    },
+                    200,
+                    "Success"
+                )
+            ]
+    )
+    def test_prefix_endpoint_validation(self, test_request, expected_status_code, expected_message):
+        
+        try:
+            response = self.session.post(self.env.gw_admin_url, json=test_request)
+            assert response.json()["message"] == expected_message
+            assert response.status_code == expected_status_code
+
+        finally:
+            self.session.delete(self.env.gw_admin_url, json=test_request)
