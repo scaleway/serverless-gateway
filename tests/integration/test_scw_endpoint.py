@@ -216,44 +216,45 @@ class TestEndpoint(object):
             assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
 
     @pytest.mark.parametrize(
-            "test_request,expected_status_code,expected_message",
-            [
-                (
-                    {
-                        "target": "dummy_url.com",
-                        "relative_url": "/dummy",
-                    },
-                    requests.codes.bad_request,
-                    "Invalid request: endpoint target has no http:// or https:// prefix"
-                ),
-                (
-                    {
-                        "target": "/dummy_url.com",
-                        "relative_url": "/dummy",
-                    },
-                    requests.codes.bad_request,
-                    "Invalid request: endpoint target has no http:// or https:// prefix"
-                ),
-                (
-                    {
-                        "target": "http://dummy_url.com",
-                        "relative_url": "/dummy",
-                    },
-                    requests.codes.ok,
-                    "Success"
-                ),
-                (
-                    {
-                        "target": "https://dummy_url.com",
-                        "relative_url": "/dummy",
-                    },
-                    requests.codes.ok,
-                    "Success"
-                )
-            ]
+        "test_request,expected_status_code,expected_message",
+        [
+            (
+                {
+                    "target": "dummy_url.com",
+                    "relative_url": "/dummy",
+                },
+                requests.codes.bad_request,
+                "Invalid request: endpoint target has no http:// or https:// prefix",
+            ),
+            (
+                {
+                    "target": "/dummy_url.com",
+                    "relative_url": "/dummy",
+                },
+                requests.codes.bad_request,
+                "Invalid request: endpoint target has no http:// or https:// prefix",
+            ),
+            (
+                {
+                    "target": "http://dummy_url.com",
+                    "relative_url": "/dummy",
+                },
+                requests.codes.ok,
+                "Success",
+            ),
+            (
+                {
+                    "target": "https://dummy_url.com",
+                    "relative_url": "/dummy",
+                },
+                requests.codes.ok,
+                "Success",
+            ),
+        ],
     )
-    def test_prefix_endpoint_validation(self, test_request, expected_status_code, expected_message):
-        
+    def test_prefix_endpoint_validation(
+        self, test_request, expected_status_code, expected_message
+    ):
         try:
             response = self.session.post(self.env.gw_admin_url, json=test_request)
             assert response.json()["message"] == expected_message
