@@ -223,7 +223,7 @@ class TestEndpoint(object):
                         "target": "dummy_url.com",
                         "relative_url": "/dummy",
                     },
-                    400,
+                    requests.codes.bad_request,
                     "Invalid request: endpoint target has no http:// or https:// prefix"
                 ),
                 (
@@ -231,7 +231,7 @@ class TestEndpoint(object):
                         "target": "/dummy_url.com",
                         "relative_url": "/dummy",
                     },
-                    400,
+                    requests.codes.bad_request,
                     "Invalid request: endpoint target has no http:// or https:// prefix"
                 ),
                 (
@@ -239,7 +239,7 @@ class TestEndpoint(object):
                         "target": "http://dummy_url.com",
                         "relative_url": "/dummy",
                     },
-                    200,
+                    requests.codes.ok,
                     "Success"
                 ),
                 (
@@ -247,7 +247,7 @@ class TestEndpoint(object):
                         "target": "https://dummy_url.com",
                         "relative_url": "/dummy",
                     },
-                    200,
+                    requests.codes.ok,
                     "Success"
                 )
             ]
