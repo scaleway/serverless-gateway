@@ -121,7 +121,7 @@ curl -X POST http://${GATEWAY_URL}/scw \
 ```
 You can add as many endpoints as you want to your serverless gateway. 
 
-Make sure that your endpoint targets are prefixed with `http` or `https`.
+Make sure that your endpoint targets are prefixed with `http://` or `https://`.
 
 ### List the endpoints of your gateway
 ```
