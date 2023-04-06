@@ -9,7 +9,7 @@ SCW_CONTAINER_NAMESPACE := scw-sls-gw
 SCW_CONTAINER_NAME := scw-sls-gw
 SCW_CONTAINER_MIN_SCALE := 1
 SCW_CONTAINER_MEMORY_LIMIT := 1024
-CONTAINER_CUSTOM_DOMAIN := your-custom-domain-name
+GATEWAY_CUSTOM_DOMAIN := your-custom-domain-name
 
 # Include s3 configuration
 include gateway.env
@@ -19,10 +19,10 @@ SCW_API_REGION ?= fr-par
 
 # Function to get the container ID
 define container_id
-	ns_id=$(shell scw container container \
+	c_id=$(shell scw container container \
 		  list region=${SCW_API_REGION} -o json | \
 		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAME)") | .id')
-	$(1) := $$(ns_id)
+	$(1) := $$(c_id)
 endef
 
 # Function to get the namespace ID
@@ -31,6 +31,19 @@ define namespace_id
 		  list region=${SCW_API_REGION} -o json | \
 		  jq -r '.[] | select(.name=="$(SCW_CONTAINER_NAMESPACE)") | .id')
 	$(1) := $$(ns_id)
+endef
+
+# Function to get the gateway host
+define gateway_host
+	$(eval $(call container_id,_cid))
+	host=$(shell scw container container get ${_cid} region=${SCW_API_REGION} -o json | jq -r '.domain_name')
+	$(1) := $$(host)
+endef
+
+# Function to get a valid token
+define token
+	token=$(shell make list-tokens | awk '{print$$1}')
+	$(1) := $$(token)
 endef
 
 SECRET_ENV_CMD_OPTIONS := secret-environment-variables.0.key=SCW_ACCESS_KEY \
@@ -47,6 +60,7 @@ SECRET_ENV_CMD_OPTIONS := secret-environment-variables.0.key=SCW_ACCESS_KEY \
 #-------------------------
 # Format
 #-------------------------
+
 .PHONY: lint
 lint:
 	isort . --check-only
@@ -73,8 +87,9 @@ push-image:
 	docker push ${IMAGE_TAG}
 
 #--------------------------
-# Serverless namespace
+# Container namespace
 #--------------------------
+
 .PHONY: create-namespace
 create-namespace:
 	scw container namespace \
@@ -90,8 +105,9 @@ check-namespace:
 	-o json | jq -r '.status'
 
 #--------------------------
-# Container deploy
+# Container
 #--------------------------
+
 .PHONY: create-container
 create-container:
 	$(eval $(call namespace_id,_id))
@@ -110,16 +126,17 @@ deploy-container:
 	scw container container deploy ${_id} \
 	region=${SCW_API_REGION}
 
-.PHONY: add-container-endpoint
-add-container-endpoint:
+# -- Custom domain --
+
+.PHONY: set-container-domain
+set-custom-domain:
 	$(eval $(call container_id,_id))
 	scw container domain create \
 		container_id=${_id} \
-		hostname=${CONTAINER_CUSTOM_DOMAIN}
+		hostname=${GATEWAY_CUSTOM_DOMAIN}
 
-#--------------------------
-# Container update
-#--------------------------
+# -- Update --
+
 .PHONY: update-container
 update-container:
 	$(eval $(call container_id,_id))
@@ -141,10 +158,8 @@ update-container-without-deploy:
 		redeploy=false \
 		${SECRET_ENV_CMD_OPTIONS}
 
+# -- Checks --
 
-#--------------------------
-# Container check
-#--------------------------
 .PHONY: check-container
 check-container:
 	$(eval $(call container_id,_id))
@@ -152,17 +167,25 @@ check-container:
 	region=${SCW_API_REGION} \
 	-o json | jq -r '.status'
 
+.PHONY: gateway-host
+gateway-host:
+	$(eval $(call gateway_host,_h))
+	@echo ${_h}
+
 #--------------------------
-# Container endpoint export
+# Routes
 #--------------------------
-.PHONY: get-gateway-endpoint
-get-gateway-endpoint:
-	$(eval $(call container_id,_id))
-	@echo $(shell scw container container get ${_id} region=${SCW_API_REGION} -o json | jq -r '.domain_name')
+
+.PHONY: list-routes
+list-routes:
+	$(eval $(call gateway_host,_h))
+	$(eval $(call token,_t))
+	curl http://${_h}/scw -H "X-Auth-Token: ${_t}"| jq
 
 #--------------------------
 # S3
 #--------------------------
+
 .PHONY: set-up-s3-cli
 set-up-s3-cli:
 	scw object config install type=s3cmd
@@ -174,6 +197,7 @@ create-s3-bucket:
 #--------------------------
 # Cleanup
 #--------------------------
+
 .PHONY: delete-container
 delete-container:
 	$(eval $(call container_id,_id))
@@ -193,13 +217,20 @@ delete-bucket:
 #--------------------------
 # Tokens
 #--------------------------
+
+.PHONY: generate-token
+generate-token:
+	$(eval $(call gateway_host,_h))
+	curl -X POST http://${_h}/token
+
 .PHONY: list-tokens
 list-tokens:
 	@s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}'
 
 .PHONY: get-token
 get-token:
-	@echo $(shell make list-tokens) | awk '{print$$1}'
+	$(eval $(call token,_t))
+	@echo ${_t}
 
 #--------------------------
 # Tests
@@ -220,7 +251,7 @@ define fixture_host
 		  list namespace-id=${_id} -o json | \
 		  jq -r '.[] | select(.name==$(1)) | .domain_name')
 	$(2) := $$(fnc_host)
-endef 
+endef
 
 .PHONY: test
 test:
