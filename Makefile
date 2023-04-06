@@ -42,7 +42,7 @@ endef
 
 # Function to get a valid token
 define token
-	token=$(shell make list-tokens | awk '{print$$1}')
+	token=$(shell s3cmd ls s3://${S3_BUCKET_NAME} | awk -F'/' '{print$$4}' | awk '{print$$1}')
 	$(1) := $$(token)
 endef
 
@@ -180,7 +180,7 @@ gateway-host:
 list-routes:
 	$(eval $(call gateway_host,_h))
 	$(eval $(call token,_t))
-	curl http://${_h}/scw -H "X-Auth-Token: ${_t}"| jq
+	@curl http://${_h}/scw -H "X-Auth-Token: ${_t}"| jq
 
 #--------------------------
 # S3

@@ -29,7 +29,7 @@ Once done, the following steps can be run from the root of the project, and will
 
 The gateway is packaged via our public [Serverless Gateway Docker image](https://hub.docker.com/r/scaleway/serverless-gateway).
 
-*1. Provider your Scaleway credentials*
+*1. Provide your Scaleway credentials*
 
 You will need to set your Scaleway access and secret keys in the `gateway.env` file:
 
@@ -47,9 +47,9 @@ make set-up-s3-cli
 make create-s3-bucket
 ```
 
-*3. Deploy the container*
+*3. Deploy your gateway*
 
-To create your container namespace and deploy the gateway:
+To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
 ```
 # Create the namespace
@@ -66,20 +66,10 @@ make deploy-container
 make check-container
 ```
 
-To update your container in future, you can run
-
-```
-# Update without redeploy
-make update-container-without-deploy
-
-# Update with redeploy
-make update-container
-```
-
 *4. Generate a token*
 
 ```
-# Generate a token which is written to our private S3 bucket
+# Generate a token which is written to your private S3 bucket
 make generate-token
 
 # Retrieve the token
@@ -116,6 +106,30 @@ You can list the routes configured on your gateway with:
 
 ```
 make list-routes
+```
+
+### Updating your gateway
+
+If you make changes to your gateway in this repo, you can run the following to update it:
+
+```
+# Update without redeploy
+make update-container-without-deploy
+
+# Update with redeploy
+make update-container
+```
+
+### Deleting your gateway
+
+To clear up everything related to your gateway, you can run:
+
+```
+# Delete the namespace, which implicitly deletes the container
+make delete-namespace
+
+# Delete the bucket used to store tokens
+make delete-bucket
 ```
 
 ## Custom domains
