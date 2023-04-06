@@ -8,13 +8,23 @@ It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving y
 
 ## :page_with_curl: Summary
 
-- [Quick-start](#computer-quick-start)
 - [Features](#rocket-features)
+- [Quick-start](#computer-quick-start)
 - [Custom domains](#custom-domains)
 - [Serverless functions](#serverless-functions)
 - [Architecture](#hammer-architecture)
 - [Contributing](#mortar_board-contributing)
 - [Reach Us](#mailbox-reach-us)
+
+## :rocket: Features
+
+The Serverless Gateway:
+
+* Adds routing via a single base URL
+* Adds routing based on HTTP methods
+* Adds permissive CORS by default, to support accessing routes from a browser
+
+The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
 ## :computer: Quick-start
 
@@ -59,8 +69,7 @@ make create-namespace
 make check-namespace
 
 # Create and deploy the container
-make create-container
-make deploy-container
+make create-container deploy-container
 
 # Check the status of your container
 make check-container
@@ -76,7 +85,7 @@ make generate-token
 make get-token
 ```
 
-The generated token is needed to authenticate against all calls to modify the gateway.
+The generated token will be used to authenticate against all calls that modify the gateway.
 
 *5. Add a route*
 
@@ -165,16 +174,6 @@ scw-serverless deploy endpoints/func-example/handler.py
 ```
 
 This will create two URLs, one for the `hello` function and the other one for the `goodbye` function.
-
-## :rocket: Features
-
-The Serverless Gateway:
-
-* Adds routing via a single base URL
-* Adds routing based on HTTP methods
-* Adds permissive CORS by default, to support accessing routes from a browser
-
-The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
 ## :hammer: Architecture
 
