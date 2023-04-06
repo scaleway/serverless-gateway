@@ -3,15 +3,17 @@ name: tests with deployed gateway
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
 
 env:
   S3_ENDPOINT: "https://s3.fr-par.scw.cloud"
   S3_REGION: "fr-par"
 
 jobs:
+
   test-deployed-gateway:
     runs-on: ubuntu-latest
     steps:

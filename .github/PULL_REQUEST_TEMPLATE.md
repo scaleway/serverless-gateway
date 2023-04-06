@@ -11,5 +11,6 @@
 - [ ] I have reviewed this myself
 - [ ] There is a unit test covering every change in this PR
 - [ ] I have updated the relevant documentation
+- [ ] I have upgraded the VERSION file to push the gateway image with a new tag
 
 ## Details
