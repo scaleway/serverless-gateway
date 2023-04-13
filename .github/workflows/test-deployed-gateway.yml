@@ -38,14 +38,15 @@ jobs:
       - name: Install npm dependencies
         run: npm install -g serverless serverless-scaleway-functions
 
-      - name: Install scaleway CLI
-        uses: ./.github/actions/setup-scaleway-cli
+      - name: Install CLI and create config file
+        uses: scaleway/action-scw
         with:
-          scw-version: "2.13.0"
-          scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
-          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
-          scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          version: v2.14.0
+          access_key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret_key: ${{ secrets.SCW_SECRET_KEY }}
+          default_project_id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default_organization_id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          save_config: true
 
       - name: Deploy function fixtures
         run: make deploy-function-fixtures
