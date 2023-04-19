@@ -42,11 +42,11 @@ jobs:
         uses: scaleway/action-scw@master
         with:
           version: v2.14.0
-          access_key: ${{ secrets.SCW_ACCESS_KEY }}
-          secret_key: ${{ secrets.SCW_SECRET_KEY }}
-          default_project_id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          default_organization_id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
-          save_config: true
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          save-config: true
 
       - name: Deploy function fixtures
         run: make deploy-function-fixtures
