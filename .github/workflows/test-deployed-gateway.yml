@@ -39,7 +39,7 @@ jobs:
         run: npm install -g serverless serverless-scaleway-functions
 
       - name: Install CLI and create config file
-        uses: scaleway/action-scw@master
+        uses: scaleway/action-scw@v0.0.1
         with:
           version: v2.14.0
           access-key: ${{ secrets.SCW_ACCESS_KEY }}
