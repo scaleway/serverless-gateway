@@ -17,32 +17,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install -r requirements-dev.txt
+      - uses: ./.github/actions/setup-poetry
       - run: make lint
+        working-directory: cli
   unit-test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install -r requirements-dev.txt
+      - uses: ./.github/actions/setup-poetry
       - run: make test
+        working-directory: cli
   int-test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+
+      - uses: ./.github/actions/setup-cli
         with:
-          python-version: '3.10'
-      - run: pip install -r requirements-dev.txt
+          access-key: "foo"
+          secret-key: "bar"
+          project-id: "00000000-0000-0000-0000-000000000000"
+          organization-id: "00000000-0000-0000-0000-000000000000"
+
+      - uses: ./.github/actions/setup-poetry
+
       - name: Start the stack
         run: docker compose up -d
+        working-directory: gateway
+
       - name: API gateway health check
         run: until curl http://localhost:8080/ping; do sleep 3; done
-      - run: make test-int
+
+      - name: Set up local config
+        run: poetry run scwgw local-config
+        working-directory: cli
+
+      - name: Run the tests
+        run: poetry run pytest tests/integration
+        working-directory: cli

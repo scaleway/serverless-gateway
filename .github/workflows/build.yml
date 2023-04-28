@@ -2,10 +2,8 @@ name: build
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    tags:
+      - 'v*.*.*'
 
 env:
   TAG_BASE: scaleway/serverless-gateway
@@ -15,7 +13,10 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
+      - name: "Get tag version"
+        run: echo "TAG=$TAG_BASE:${GITHUB_REF#refs/tags/v*}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-poetry
       - name: "Set up QEMU"
         uses: docker/setup-qemu-action@v2
       - name: "Set up Docker Buildx"
@@ -25,17 +26,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: "Get image tag"
-        id: get_tag
-        run: echo "tag=$TAG_BASE:$(cat VERSION)" >> $GITHUB_ENV
-      - name: "Build"
-        uses: docker/build-push-action@v4
-        with:
-          push: false
-          tags: "${{ env.tag }}"
       - name: "Push"
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: "${{ env.tag }}"
-        if: github.event_name != 'pull_request'
+          context: gateway
+          tags: "${{ env.TAG }}"
+
+  pypi-build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-poetry
+      - name: "Set up PyPI auth"
+        run: ./scripts/pypi_auth.sh ${{ secrets.PYPI_TOKEN }}
+      - name: "Publish"
+        run: ./scripts/publish.sh

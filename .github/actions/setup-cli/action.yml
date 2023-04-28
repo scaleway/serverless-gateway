@@ -1,0 +1,29 @@
+name: Set up SCW CLI
+description: Install SCW CLI
+
+inputs:
+  access-key:
+    description: "Access key"
+    required: true
+  secret-key:
+    description: "Secret key"
+    required: true
+  project-id:
+    description: "Project ID"
+    required: true
+  organization-id:
+    description: "Organization ID"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install CLI and create config file
+      uses: scaleway/action-scw@v0.0.1
+      with:
+        version: v2.14.0
+        save-config: true
+        access-key: ${{ inputs.access-key }}
+        secret-key: ${{ inputs.secret-key }}
+        default-project-id: ${{ inputs.project-id }}
+        default-organization-id: ${{ inputs.organization-id }}

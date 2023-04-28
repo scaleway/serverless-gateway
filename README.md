@@ -23,71 +23,55 @@ The Serverless Gateway:
 * Adds routing via a single base URL
 * Adds routing based on HTTP methods
 * Adds permissive CORS by default, to support accessing routes from a browser
+* Gives access to a serverless [Kong Gateway](https://docs.konghq.com/gateway/latest/) deployment
 
 The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
 ## :computer: Quick-start
 
-Before deploying your gateway you need to install the following:
+To deploy your gateway you need to install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli), and the [Gateway CLI](https://pypi.org/project/scw-gateway/) via [`pip`](https://pip.pypa.io/en/stable/index.html):
 
-- The [Scaleway CLI](https://github.com/scaleway/scaleway-cli)
-- [`jq`](https://stedolan.github.io/jq/download/) for parsing JSON responses
-- [`s3cmd`](https://github.com/s3tools/s3cmd/blob/master/INSTALL.md) for interacting with [Scaleway Object Storage](https://www.scaleway.com/en/object-storage/)
-- `make` for running commands via the project `Makefile`
+```
+pip install scw-gateway
+```
 
 Once done, the following steps can be run from the root of the project, and will deploy the gateway as a Serverless Container in your Scaleway account.
 
-The gateway is packaged via our public [Serverless Gateway Docker image](https://hub.docker.com/r/scaleway/serverless-gateway).
+The gateway image itself is packaged via our public [Serverless Gateway Docker image](https://hub.docker.com/r/scaleway/serverless-gateway).
 
-*1. Provide your Scaleway credentials*
-
-You will need to set your Scaleway access and secret keys in the `gateway.env` file:
-
-```
-SCW_ACCESS_KEY=<your access key>
-SCW_SECRET_KEY=<your secret key>
-```
-
-*2. Create a bucket to store tokens*
-
-The gateway needs to generate and store your access tokens in a bucket, which can be created by running:
-
-```
-make set-up-s3-cli
-make create-s3-bucket
-```
-
-*3. Deploy your gateway*
+*1. Deploy your gateway*
 
 To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
 ```
+# Create the database
+scwgw create-db
+
 # Create the namespace
-make create-namespace
+scwgw create-namespace
 
 # Wait for the namespace to be ready
-make check-namespace
+scwgw await-namespace
 
-# Create and deploy the container
-make create-container deploy-container
+# Create and deploy the containers
+scwgw create-containers
 
-# Check the status of your container
-make check-container
+# Wait for the containers to be ready
+scwgw await-containers
+
+# Wait for the database to be ready
+scwgw await-db
 ```
 
-*4. Generate a token*
+*2. Set up your config*
+
+Configure your local CLI to use all the newly deployed resources:
 
 ```
-# Generate a token which is written to your private S3 bucket
-make generate-token
-
-# Retrieve the token
-make get-token
+scwgw remote-config
 ```
 
-The generated token will be used to authenticate against all calls that modify the gateway.
-
-*5. Add a route*
+*3. Add a route*
 
 You can add a route to any URL, here we will use the `worldtimeapi`.
 
@@ -96,25 +80,18 @@ You can add a route to any URL, here we will use the `worldtimeapi`.
 curl http://worldtimeapi.org/api/timezone/Europe/Paris
 
 # Set up gateway params
-export TOKEN=$(make get-token)
-export GATEWAY_HOST=$(make gateway-host)
-
-# Add route on the gateway
-curl -X POST http://${GATEWAY_HOST}/scw \
-             -H "X-Auth-Token: ${TOKEN}" \
-             -H 'Content-Type: application/json' \
-             -d '{"target":"http://worldtimeapi.org/api/timezone/Europe/Paris","relative_url":"/time"}'
+scwgw add-route /time http://worldtimeapi.org/api/timezone/Europe/Paris
 
 # Now curl through your gateway
 curl http://${GATEWAY_HOST}/time
 ```
 
-*6. List routes*
+*4. List routes*
 
 You can list the routes configured on your gateway with:
 
 ```
-make list-routes
+scwgw get-routes
 ```
 
 ### Updating your gateway
@@ -123,10 +100,10 @@ If you make changes to your gateway in this repo, you can run the following to u
 
 ```
 # Update without redeploy
-make update-container-without-deploy
+scwgw update-container-no-redeploy
 
 # Update with redeploy
-make update-container
+scwgw update-container
 ```
 
 ### Deleting your gateway
@@ -135,10 +112,10 @@ To clear up everything related to your gateway, you can run:
 
 ```
 # Delete the namespace, which implicitly deletes the container
-make delete-namespace
+scwgw delete-namespace
 
 # Delete the bucket used to store tokens
-make delete-bucket
+scwgw delete-bucket
 ```
 
 ## Custom domains
@@ -156,7 +133,7 @@ GATEWAY_CUSTOM_DOMAIN := your-custom-domain-name
 Then uou can add your domain name to your gateway using:
 
 ```
-make set-custom-domain
+scwgw set-custom-domain
 ```
 
 ## Serverless functions
