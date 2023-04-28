@@ -2,32 +2,28 @@
 
 ## Getting started
 
-To get started with development, you can first set up a Python virtual environment:
+To get started with development, you need to set up a Python environment with [Poetry](https://python-poetry.org/docs/).
+
+First of all, you need to launch the gateway locally:
 
 ```console
-python3 -m venv venv
-source venv/bin/activate
-pip3 install -r requirements-dev.txt
+cd gateway
+docker compose up
 ```
 
-Then you can try running the gateway and integration test:
+Then from the root of the project, you can launch the CLI:
 
 ```console
-# Start the gateway
-docker compose up -d
+cd cli
+poetry shell
+poetry install
+```
 
-# Check that the gateway has started
-docker compose ps -a
+Inside your poetry shell, you can launch the integration tests locally:
 
-# Run the integration test
+```
 make test-int
 ```
-
-## Kong plugin
-
-The `/auth` and `/scw` endpoints are managed using a custom plugin for [Kong](https://docs.konghq.com), built using the [Kong Python plugin development kit](https://github.com/Kong/kong-python-pdk).
-
-The [Kong Python plugin docs](https://docs.konghq.com/gateway/latest/plugin-development/pluginserver/python/) and a [longer example](https://konghq.com/blog/building-plugins-for-kong-gateway-using-python) are useful reading.
 
 ## Healthchecks
 
@@ -35,6 +31,20 @@ When the gateway is deployed on Scaleway Containers, Knative will perform health
 
 Previously, we did not specifiy a header to match against, which caused issues because in Kong every route matches `/` (routing is _greedy_). Therefore, every route which failed to match against the Gateway would be redirected to the health check and return a `200` HTTP status instead of `404`.
 
-## CORS support for endpoints
+## Releasing
 
-Each functions/container endpoint has its attached Kong built-in CORS plugin with a fixed configuration as you can see [here](../gateway/endpoint.py). You can add more plugins to the list of endpoint built-in plugins. When a new endpoint is created through the gateway, a plugin attached to service of this endpoint is generated in the plugins list. When the endpoint is deleted the attached plugin is deleted as well.
+To release a new version of the CLI and gateway, we need to create an push a new tag. To do this:
+
+```
+# Bump the version
+cd cli
+poetry version patch
+
+# Commit and push
+
+# Create and push the tag
+cd ..
+./scripts/tag.sh
+```
+
+This will trigger the Github Actions build that will build and push the container, and the PyPI package.

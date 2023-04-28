@@ -1,0 +1,97 @@
+version: '3.9'
+
+x-kong-env: &kong-env
+  KONG_PG_HOST: db
+  KONG_PG_DATABASE: kong
+  KONG_PG_USER: kong
+  KONG_PG_PASSWORD: kong
+
+volumes:
+  kong_data: {}
+
+networks:
+  scw-sls-gw:
+    driver: bridge
+
+services:
+  kong:
+    build:
+      context: .
+    environment:
+      <<: *kong-env
+    depends_on:
+      - db
+      - kong-admin
+    networks:
+      - scw-sls-gw
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure:5
+
+  kong-admin:
+    build:
+      context: .
+    environment:
+      <<: *kong-env
+      IS_ADMIN_CONTAINER: 1
+    depends_on:
+      - db
+    networks:
+      - scw-sls-gw
+    ports:
+      - 8001:8001
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure:5
+
+  db:
+    image: postgres:9.5
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    restart: on-failure
+    stdin_open: true
+    tty: true
+    networks:
+      - scw-sls-gw
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+
+  ping-checker:
+    networks:
+      - scw-sls-gw
+    build:
+      context: ./endpoints/ping/
+    ports:
+      - 8003:80
+
+  func-a:
+    networks:
+      - scw-sls-gw
+    build:
+      context: ./endpoints/func-a/
+    ports:
+      - 8004:80
+
+  func-b:
+    networks:
+      - scw-sls-gw
+    build:
+      context: ./endpoints/func-b/
+    ports:
+      - 8005:80
+
