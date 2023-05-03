@@ -7,14 +7,12 @@ from cli.model import Route
 
 
 class GatewayManager(object):
-    def __init__(
-        self,
-        admin_url,
-        local=False,
-    ):
-        self.admin_url = admin_url
-        self.routes_url = admin_url + "/routes"
-        self.services_url = admin_url + "/services"
+    def __init__(self):
+        # TODO - load config
+        self.config = None
+        self.admin_url = None
+        self.routes_url = self.admin_url + "/routes"
+        self.services_url = self.admin_url + "/services"
 
         if local:
             self.auth_headers = {}

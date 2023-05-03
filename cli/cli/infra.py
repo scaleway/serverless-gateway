@@ -1,4 +1,7 @@
 import click
+import yaml
+
+from cli.conf import CONFIG_FILE
 
 from scaleway import Client
 from scaleway.container.v1beta1 import (
@@ -11,7 +14,12 @@ from scaleway.container.v1beta1 import (
     Container,
     Token,
 )
-from scaleway.rdb.v1 import RdbV1API, ListInstancesResponse
+from scaleway.rdb.v1 import (
+    RdbV1API,
+    ListInstancesResponse,
+    Instance,
+    ListDatabasesResponse,
+)
 
 API_REGION = "fr-par"
 
@@ -37,7 +45,8 @@ CONTAINER_ADMIN_MEMORY_LIMIT = 1024
 # RDB API - https://www.scaleway.com/en/developers/api/managed-database-postgre-mysql/
 # Python SDK - https://github.com/scaleway/scaleway-sdk-python
 
-DB_NAME = "scw-sls-gw"
+DB_INSTANCE_NAME = "scw-sls-gw"
+DB_DATABASE_NAME = "kong"
 DB_ENGINE = "PostgreSQL-14"
 DB_USERNAME = "kong"
 DB_PASSWORD = "K0ngkongkong!"
@@ -54,6 +63,27 @@ class InfraManager(object):
         # Initi Scaleway APIs
         self.containers = ContainerV1Beta1API(self.scw_client)
         self.rdb = RdbV1API(self.scw_client)
+
+    def set_up_config(self, is_local: bool):
+        if is_local:
+            config_data = {
+                "gw_admin_endpoint": "http://localhost:8001",
+                "gw_admin_token": "",
+                "gw_endpoint": "http://localhost:8080",
+            }
+        else:
+            admin_container = self._get_admin_container()
+            container = self._get_container()
+            token = self.create_admin_container_token()
+
+            config_data = {
+                "gw_admin_endpoint": f"https://{admin_container.domain_name}",
+                "gw_admin_token": token,
+                "gw_endpoint": f"https://{container.domain_name}",
+            }
+
+        with open(CONFIG_FILE, "w") as fh:
+            yaml.safe_dump(config_data, fh)
 
     def _get_container(self, admin=False):
         namespace = self._get_namespace()
@@ -73,11 +103,24 @@ class InfraManager(object):
     def _get_admin_container(self):
         return self._get_container(admin=True)
 
-    def _get_database(self):
-        databases: ListInstancesResponse = self.rdb.list_instances(region=API_REGION)
+    def _get_database_instance(self):
+        instances: ListInstancesResponse = self.rdb.list_instances(region=API_REGION)
 
-        for d in databases.instances:
-            if d.name == DB_NAME:
+        for i in instances.instances:
+            if i.name == DB_INSTANCE_NAME:
+                return i
+
+        return None
+
+    def _get_database(self):
+        instance = self._get_database_instance()
+
+        databases: ListDatabasesResponse = self.rdb.list_databases(
+            instance_id=instance.id
+        )
+
+        for d in databases.databases:
+            if d.name == DB_DATABASE_NAME:
                 return d
 
         return None
@@ -100,35 +143,61 @@ class InfraManager(object):
         pass
 
     def create_db(self):
+        instance = self._get_database_instance()
         db = self._get_database()
 
+        if instance:
+            click.secho(
+                f"Database {DB_INSTANCE_NAME} already exists", fg="green", bold=True
+            )
+        else:
+            click.secho(
+                f"Creating database instance {DB_INSTANCE_NAME}", fg="green", bold=True
+            )
+
+            instance: Instance = self.rdb.create_instance(
+                name=DB_INSTANCE_NAME,
+                engine=DB_ENGINE,
+                user_name=DB_USERNAME,
+                password=DB_PASSWORD,
+                is_ha_cluster=False,
+                disable_backup=True,
+                backup_same_region=True,
+                node_type=DB_NODE_TYPE,
+                volume_type=DB_VOLUME_TYPE,
+                volume_size=DB_VOLUME_SIZE,
+            )
+
         if db:
-            click.secho(f"Database {DB_NAME} already exists", fg="green", bold=True)
+            click.secho(
+                f"Database {DB_DATABASE_NAME} already exists", fg="green", bold=True
+            )
             return
 
-        click.secho(f"Creating database {DB_NAME}", fg="green", bold=True)
+        click.secho(f"Creating database {DB_DATABASE_NAME}", fg="green", bold=True)
 
-        self.rdb.create_instance(
-            name=DB_NAME,
-            engine=DB_ENGINE,
-            user_name=DB_USERNAME,
-            password=DB_PASSWORD,
-            is_ha_cluster=False,
-            disable_backup=True,
-            backup_same_region=True,
-            node_type=DB_NODE_TYPE,
-            volume_type=DB_VOLUME_TYPE,
-            volume_size=DB_VOLUME_SIZE,
+        self.rdb.create_database(
+            instance_id=instance.id,
+            name=DB_DATABASE_NAME,
+            region=API_REGION,
         )
 
     def check_db(self):
+        instance = self._get_database_instance()
         db = self._get_database()
+
+        if not instance:
+            click.secho("No database instance found", fg="red", bold=True)
+            raise click.Abort()
 
         if not db:
             click.secho("No database found", fg="red", bold=True)
             raise click.Abort()
 
-        click.secho(f"Database status: {db.status}", fg="green", bold=True)
+        click.secho(
+            f"Database instance status: {instance.status}", fg="green", bold=True
+        )
+        click.secho("Database present", fg="green", bold=True)
 
     def create_namespace(self):
         namespace = self._get_namespace()
@@ -168,6 +237,21 @@ class InfraManager(object):
             click.secho("No namespace found", fg="red", bold="true")
             raise click.Abort()
 
+        instance = self._get_database_instance()
+        if instance is None:
+            click.secho("No database found", fg="red", bold="true")
+            raise click.Abort()
+
+        container_env_vars = {
+            "KONG_PG_HOST": instance.endpoint,
+            "KONG_PG_DATABASE": DB_DATABASE_NAME,
+            "KONG_PG_USER": DB_USERNAME,
+            "KONG_PG_PASSWORD": DB_PASSWORD,
+        }
+
+        admin_container_env_vars = container_env_vars
+        admin_container_env_vars["IS_ADMIN_CONTAINER"] = "1"
+
         admin_container = self._get_admin_container()
         if admin_container is not None:
             click.secho(
@@ -192,6 +276,7 @@ class InfraManager(object):
                 protocol=ContainerProtocol.HTTP1,
                 http_option=ContainerHttpOption.REDIRECTED,
                 registry_image=IMAGE_TAG,
+                environment_variables=admin_container_env_vars,
             )
 
             click.secho(
@@ -228,6 +313,7 @@ class InfraManager(object):
                 protocol=ContainerProtocol.HTTP1,
                 http_option=ContainerHttpOption.REDIRECTED,
                 registry_image=IMAGE_TAG,
+                environment_variables=container_env_vars,
             )
 
             click.secho(

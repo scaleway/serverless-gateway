@@ -5,14 +5,6 @@ from cli.model import Route
 from cli.infra import InfraManager
 
 
-def _get_manager(local):
-    if local:
-        return GatewayManager("http://localhost:8001")
-    else:
-        click.secho("Not implemented for non-local", fg="red", bold=True)
-        raise click.Abort()
-
-
 @click.group()
 def cli():
     pass
@@ -21,19 +13,21 @@ def cli():
 @cli.command()
 def local_config():
     """Sets up config for local deployment"""
-    pass
+    manager = InfraManager()
+    manager.set_up_config(True)
 
 
 @cli.command()
 def remote_config():
     """Sets up config for remote deployment"""
-    pass
+    manager = InfraManager()
+    manager.set_up_config(False)
 
 
 @cli.command()
 def get_routes(local):
     """Returns the routes configured on the gateway"""
-    manager = _get_manager(local)
+    manager = GatewayManager()
     routes = manager.get_routes()
     print(routes)
 
@@ -43,7 +37,7 @@ def get_routes(local):
 @click.argument("target")
 def add_route(relative_url, target, local):
     """Adds a route to the gateway"""
-    manager = _get_manager(local)
+    manager = GatewayManager()
 
     route = Route(relative_url, target)
     manager.add_route(route)
@@ -54,7 +48,7 @@ def add_route(relative_url, target, local):
 @click.argument("target")
 def delete_route(relative_url, target, local):
     """Deletes a route from the gateway"""
-    manager = _get_manager(local)
+    manager = GatewayManager()
 
     route = Route(relative_url, target)
     manager.delete_route(route)

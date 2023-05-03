@@ -53,7 +53,9 @@ jobs:
 
       - name: Run integration tests
         working-directory: cli
-        run: make test-int
+        run: |
+          scwgw remote-config
+          make test-int
         env:
           DEPLOY_ENV: "scw"
 
