@@ -1,8 +1,3 @@
-IMAGE_REGISTRY := docker.io
-IMAGE_ORG := scaleway
-IMAGE_NAME := serverless-gateway
-IMAGE_TAG := ${IMAGE_REGISTRY}/${IMAGE_ORG}/${IMAGE_NAME}:0.0.0
-
 #-------------------------
 # Format
 #-------------------------
@@ -18,18 +13,6 @@ lint:
 tidy:
 	black .
 	isort .
-
-#-------------------------
-# Container image
-#-------------------------
-
-.PHONY: build-image
-build-image:
-	docker build . -t ${IMAGE_TAG}
-
-.PHONY: push-image
-push-image:
-	docker push ${IMAGE_TAG}
 
 #--------------------------
 # Tests

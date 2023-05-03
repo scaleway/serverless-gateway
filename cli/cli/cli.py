@@ -63,6 +63,13 @@ def deploy_containers():
 
 
 @cli.command()
+def create_admin_token():
+    manager = InfraManager()
+    token = manager.create_admin_container_token()
+    click.secho(token)
+
+
+@cli.command()
 def delete_containers():
     manager = InfraManager()
     manager.delete_containers()
