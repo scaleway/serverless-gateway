@@ -1,4 +1,5 @@
 import click
+import copy
 import yaml
 
 from cli.conf import CONFIG_FILE
@@ -73,7 +74,15 @@ class InfraManager(object):
             }
         else:
             admin_container = self._get_admin_container()
+            if not admin_container:
+                click.secho("No admin container found", fg="red", bold=True)
+                raise click.Abort()
+
             container = self._get_container()
+            if not container:
+                click.secho("No container found", fg="red", bold=True)
+                raise click.Abort()
+
             token = self.create_admin_container_token()
 
             config_data = {
@@ -87,6 +96,9 @@ class InfraManager(object):
 
     def _get_container(self, admin=False):
         namespace = self._get_namespace()
+        if not namespace:
+            click.secho("No namespace found", fg="red", bold=True)
+            raise click.Abort()
 
         containers: ListContainersResponse = self.containers.list_containers(
             namespace_id=namespace.id, region=API_REGION
@@ -243,13 +255,13 @@ class InfraManager(object):
             raise click.Abort()
 
         container_env_vars = {
-            "KONG_PG_HOST": instance.endpoint,
+            "KONG_PG_HOST": f"{instance.endpoint.hostname}:{instance.endpoint.port}",
             "KONG_PG_DATABASE": DB_DATABASE_NAME,
             "KONG_PG_USER": DB_USERNAME,
             "KONG_PG_PASSWORD": DB_PASSWORD,
         }
 
-        admin_container_env_vars = container_env_vars
+        admin_container_env_vars = copy.copy(container_env_vars)
         admin_container_env_vars["IS_ADMIN_CONTAINER"] = "1"
 
         admin_container = self._get_admin_container()

@@ -1,38 +1,25 @@
 import requests
+import yaml
 from loguru import logger
-from scaleway import Client
-from scaleway.container.v1beta1 import ContainerV1Beta1API
 
+from cli.conf import CONFIG_FILE
 from cli.model import Route
 
 
 class GatewayManager(object):
     def __init__(self):
-        # TODO - load config
-        self.config = None
-        self.admin_url = None
+        # Local local config
+        with open(CONFIG_FILE, "r") as fh:
+            self.config = yaml.safe_load(fh)
+
+        self.admin_url = self.config["gw_admin_endpoint"]
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
+        self.token = self.config.get("gw_admin_token")
 
-        if local:
-            self.auth_headers = {}
-            self.scw_client = None
-            self.containers = None
-        else:
-            # TODO - add auth for deployed container
-            self.auth_headers = {} if local else {}
-
-            # Initialise SCW client
-            self.scw_client = Client.from_config_file_and_env(profile_name="dev")
-
-            # Initi Scaleway APIs
-            self.containers = ContainerV1Beta1API(self.scw_client)
-
-    def _get_gateway_container(
-        self,
-    ):
-        # TODO - use API to get deployed gateway container
-        pass
+        self.auth_headers = dict()
+        if self.token:
+            self.auth_headers["X-Auth-Token"] = self.token
 
     def add_route(self, route: Route):
         service_url = f"{self.services_url}/{route.name}"
