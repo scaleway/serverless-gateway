@@ -71,6 +71,7 @@ class InfraManager(object):
                 "gw_admin_endpoint": "http://localhost:8001",
                 "gw_admin_token": "",
                 "gw_endpoint": "http://localhost:8080",
+                "db_endpoint": "http://localhost:5432",
             }
         else:
             admin_container = self._get_admin_container()
@@ -83,12 +84,18 @@ class InfraManager(object):
                 click.secho("No container found", fg="red", bold=True)
                 raise click.Abort()
 
+            instance = self._get_database_instance()
+            if not instance:
+                click.secho("No database instance found", fg="red", bold=True)
+                raise click.Abort()
+
             token = self.create_admin_container_token()
 
             config_data = {
                 "gw_admin_endpoint": f"https://{admin_container.domain_name}",
                 "gw_admin_token": token,
                 "gw_endpoint": f"https://{container.domain_name}",
+                "db_endpoint": f"{instance.endpoint.ip}:{instance.endpoint.port}",
             }
 
         with open(CONFIG_FILE, "w") as fh:
@@ -255,7 +262,7 @@ class InfraManager(object):
             raise click.Abort()
 
         container_env_vars = {
-            "KONG_PG_HOST": f"{instance.endpoint.hostname}:{instance.endpoint.port}",
+            "KONG_PG_HOST": f"{instance.endpoint.ip}:{instance.endpoint.port}",
             "KONG_PG_DATABASE": DB_DATABASE_NAME,
             "KONG_PG_USER": DB_USERNAME,
             "KONG_PG_PASSWORD": DB_PASSWORD,
