@@ -4,14 +4,6 @@ from cli.gateway import GatewayManager
 from cli.model import Route
 from cli.infra import InfraManager
 
-LOCAL_FLAG = click.option(
-    "-l",
-    "--local",
-    required=False,
-    is_flag=True,
-    help="Run against local deployment",
-)
-
 
 def _get_manager(local):
     if local:
@@ -27,8 +19,20 @@ def cli():
 
 
 @cli.command()
-@LOCAL_FLAG
+def local_config():
+    """Sets up config for local deployment"""
+    pass
+
+
+@cli.command()
+def remote_config():
+    """Sets up config for remote deployment"""
+    pass
+
+
+@cli.command()
 def get_routes(local):
+    """Returns the routes configured on the gateway"""
     manager = _get_manager(local)
     routes = manager.get_routes()
     print(routes)
@@ -37,8 +41,8 @@ def get_routes(local):
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-@LOCAL_FLAG
 def add_route(relative_url, target, local):
+    """Adds a route to the gateway"""
     manager = _get_manager(local)
 
     route = Route(relative_url, target)
@@ -48,8 +52,8 @@ def add_route(relative_url, target, local):
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-@LOCAL_FLAG
 def delete_route(relative_url, target, local):
+    """Deletes a route from the gateway"""
     manager = _get_manager(local)
 
     route = Route(relative_url, target)
@@ -58,12 +62,14 @@ def delete_route(relative_url, target, local):
 
 @cli.command()
 def deploy_containers():
+    """Deploys the containers needed for the gateway"""
     manager = InfraManager()
     manager.deploy_containers()
 
 
 @cli.command()
 def create_admin_token():
+    """Creates a token for the admin container"""
     manager = InfraManager()
     token = manager.create_admin_container_token()
     click.secho(token)
@@ -71,77 +77,90 @@ def create_admin_token():
 
 @cli.command()
 def delete_containers():
+    """Deletes the containers used for the gateway"""
     manager = InfraManager()
     manager.delete_containers()
 
 
 @cli.command()
-def get_gateway_host():
+def get_gateway_endpoint():
+    """Returns the endpoint for the gateway"""
     manager = InfraManager()
     manager.get_gateway_host()
 
 
 @cli.command()
-def get_gateway_admin_host():
+def get_gateway_admin_endpoint():
+    """Returns the endpoint for the gateway admin"""
     manager = InfraManager()
     manager.get_gateway_admin_host()
 
 
 @cli.command()
 def create_db():
+    """Creates the database for the gateway"""
     manager = InfraManager()
     manager.create_db()
 
 
 @cli.command()
 def check_db():
+    """Checks the status of the database"""
     manager = InfraManager()
     manager.check_db()
 
 
 @cli.command()
 def create_namespace():
+    """Creates the container container namespace"""
     manager = InfraManager()
     manager.create_namespace()
 
 
 @cli.command()
 def check_namespace():
+    """Checks the status of the container namespace"""
     manager = InfraManager()
     manager.check_namespace()
 
 
 @cli.command()
 def delete_namespace():
+    """Deletes the container namespace"""
     manager = InfraManager()
     manager.delete_namespace()
 
 
 @cli.command()
 def create_containers():
+    """Creates the containers"""
     manager = InfraManager()
     manager.create_containers()
 
 
 @cli.command()
 def check_containers():
+    """Checks the status of the containers"""
     manager = InfraManager()
     manager.check_containers()
 
 
 @cli.command()
 def set_custom_domain():
+    """Sets the custom domain for the gateway container"""
     manager = InfraManager()
     manager.set_custom_domain()
 
 
 @cli.command()
-def update_container():
+def update_containers():
+    """Updates the containers"""
     manager = InfraManager()
     manager.update_container()
 
 
 @cli.command()
-def update_container_without_deploy():
+def update_container_no_deploy():
+    """Updates the containers without redeploying"""
     manager = InfraManager()
     manager.update_container_without_deploy()
