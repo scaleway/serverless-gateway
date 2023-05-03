@@ -105,6 +105,13 @@ def check_db():
 
 
 @cli.command()
+def await_db():
+    """Waits for the database to be ready"""
+    manager = InfraManager()
+    manager.await_db()
+
+
+@cli.command()
 def create_namespace():
     """Creates the container container namespace"""
     manager = InfraManager()
@@ -116,6 +123,13 @@ def check_namespace():
     """Checks the status of the container namespace"""
     manager = InfraManager()
     manager.check_namespace()
+
+
+@cli.command()
+def await_namespace():
+    """Waits for the namespace to be ready"""
+    manager = InfraManager()
+    manager.await_namespace()
 
 
 @cli.command()
@@ -137,6 +151,13 @@ def check_containers():
     """Checks the status of the containers"""
     manager = InfraManager()
     manager.check_containers()
+
+
+@cli.command()
+def await_containers():
+    """Waits for the containers to be ready"""
+    manager = InfraManager()
+    manager.await_containers()
 
 
 @cli.command()

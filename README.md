@@ -44,25 +44,31 @@ The gateway image itself is packaged via our public [Serverless Gateway Docker i
 To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
 ```
+# Create the database
+scwgw create-db
+
 # Create the namespace
 scwgw create-namespace
 
 # Wait for the namespace to be ready
-scwgw check-namespace
+scwgw await-namespace
 
-# Create and deploy the container
-scwgw create-container deploy-container
+# Create and deploy the containers
+scwgw create-containers
 
-# Check the status of your container
-scwgw check-container
+# Wait for the containers to be ready
+scwgw await-containers
+
+# Wait for the database to be ready
+scwgw await-db
 ```
 
-*2. Get your admin token*
+*2. Set up your config*
 
-*TODO* - accessing token for private container
+Configure your local CLI to use all the newly deployed resources:
 
 ```
-scwgw get-admin-token
+scwgw remote-config
 ```
 
 *3. Add a route*
@@ -85,7 +91,7 @@ curl http://${GATEWAY_HOST}/time
 You can list the routes configured on your gateway with:
 
 ```
-scwgw list-routes
+scwgw get-routes
 ```
 
 ### Updating your gateway
@@ -94,7 +100,7 @@ If you make changes to your gateway in this repo, you can run the following to u
 
 ```
 # Update without redeploy
-scwgw update-container-without-deploy
+scwgw update-container-no-redeploy
 
 # Update with redeploy
 scwgw update-container
