@@ -87,6 +87,12 @@ def create_db():
 
 
 @cli.command()
+def check_db():
+    manager = InfraManager()
+    manager.check_db()
+
+
+@cli.command()
 def create_namespace():
     manager = InfraManager()
     manager.create_namespace()
