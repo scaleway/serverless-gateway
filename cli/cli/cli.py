@@ -25,7 +25,7 @@ def remote_config():
 
 
 @cli.command()
-def get_routes(local):
+def get_routes():
     """Returns the routes configured on the gateway"""
     manager = GatewayManager()
     routes = manager.get_routes()
@@ -35,7 +35,7 @@ def get_routes(local):
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-def add_route(relative_url, target, local):
+def add_route(relative_url, target):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
@@ -46,7 +46,7 @@ def add_route(relative_url, target, local):
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-def delete_route(relative_url, target, local):
+def delete_route(relative_url, target):
     """Deletes a route from the gateway"""
     manager = GatewayManager()
 
