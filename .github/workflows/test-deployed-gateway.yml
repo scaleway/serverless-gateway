@@ -36,54 +36,27 @@ jobs:
           scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - name: Deploy function fixtures
-        run: make deploy-function-fixtures
+        working-directory: gateway/endpoints
+        run: serverless deploy
 
       - name: Create Gateway namespace
         id: create-namespace
         run: |
-          make create-namespace
-          until [ $(make check-namespace -s) == ready ]; do sleep 10; done
+          scwgw create-namespace
+          scwgw await-namespace
 
       - name: Create Gateway container
         # We need to truncate gateway.env as it will override our env vars
         run: |
-          truncate -s 0 gateway.env
-          make create-container
-          make deploy-container
-          until [ $(make check-container -s) == ready ]; do sleep 10; done
-        env:
-          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-
-      - name: Install s3cmd
-        run: pip install s3cmd
-
-      - name: Create S3 bucket
-        id: create-bucket
-        run: |
-          make set-up-s3-cli
-          make create-s3-bucket
-        env:
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          scwgw create-containers
+          scwgw await-containers
 
       - name: Run integration tests
-        run: |
-          export GATEWAY_HOST=$(make gateway-host -s)
-          export FUNC_A_DOMAIN=$(make get-func-a-host -s)
-          make test-int
+        working-directory: cli
+        run: make test-int
         env:
-          ENV: "scw"
-          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-
-      - name: Delete S3 bucket
-        run: make delete-bucket
-        env:
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-        if: always()
+          DEPLOY_ENV: "scw"
 
       - name: Delete Gateway namespace and container
-        run: make delete-namespace
+        run: scwgw delete-namespace
         if: always()
