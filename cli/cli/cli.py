@@ -55,13 +55,6 @@ def delete_route(relative_url, target):
 
 
 @cli.command()
-def deploy_containers():
-    """Deploys the containers needed for the gateway"""
-    manager = InfraManager()
-    manager.deploy_containers()
-
-
-@cli.command()
 def create_admin_token():
     """Creates a token for the admin container"""
     manager = InfraManager()

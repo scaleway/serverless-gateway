@@ -106,6 +106,8 @@ class InfraManager(object):
             if check_func():
                 break
 
+            click.secho(".", nl=False)
+
             time.sleep(AWAIT_DELAY_SECONDS)
 
     def _get_container(self, admin=False):
@@ -185,13 +187,9 @@ class InfraManager(object):
         db = self._get_database()
 
         if instance:
-            click.secho(
-                f"Database {DB_INSTANCE_NAME} already exists", fg="green", bold=True
-            )
+            click.secho(f"Database {DB_INSTANCE_NAME} already exists")
         else:
-            click.secho(
-                f"Creating database instance {DB_INSTANCE_NAME}", fg="green", bold=True
-            )
+            click.secho(f"Creating database instance {DB_INSTANCE_NAME}")
 
             instance: Instance = self.rdb.create_instance(
                 name=DB_INSTANCE_NAME,
@@ -207,12 +205,10 @@ class InfraManager(object):
             )
 
         if db:
-            click.secho(
-                f"Database {DB_DATABASE_NAME} already exists", fg="green", bold=True
-            )
+            click.secho(f"Database {DB_DATABASE_NAME} already exists")
             return
 
-        click.secho(f"Creating database {DB_DATABASE_NAME}", fg="green", bold=True)
+        click.secho(f"Creating database {DB_DATABASE_NAME}")
 
         self.rdb.create_database(
             instance_id=instance.id,
@@ -232,9 +228,7 @@ class InfraManager(object):
             click.secho("No database found", fg="red", bold=True)
             raise click.Abort()
 
-        click.secho(
-            f"Database status: {instance.status}", fg="green", bold=True
-        )
+        click.secho(f"Database status: {instance.status}", fg="green", bold=True)
 
     def _do_await_db(self):
         instance = self._get_database_instance()
@@ -260,7 +254,7 @@ class InfraManager(object):
             click.secho("Namespace already exists")
             return
 
-        click.secho(f"Creating namespace {CONTAINER_NAMESPACE}", fg="green", bold=True)
+        click.secho(f"Creating namespace {CONTAINER_NAMESPACE}")
         self.containers.create_namespace(
             region=API_REGION,
             name=CONTAINER_NAMESPACE,
@@ -274,7 +268,7 @@ class InfraManager(object):
             raise click.Abort()
 
         if namespace.status == NamespaceStatus.ERROR:
-            click.secho("Namespace in error", fg="error", bold="true")
+            click.secho("Namespace in error", fg="red", bold="true")
             raise click.Abort()
 
         click.secho(f"Namespace status: {namespace.status}", fg="green", bold="true")
@@ -353,11 +347,7 @@ class InfraManager(object):
                 environment_variables=admin_container_env_vars,
             )
 
-            click.secho(
-                f"Deploying container {CONTAINER_ADMIN_NAME}",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Deploying container {CONTAINER_ADMIN_NAME}")
 
             self.containers.deploy_container(
                 container_id=created_container.id, region=API_REGION
@@ -365,17 +355,9 @@ class InfraManager(object):
 
         container = self._get_container()
         if container is not None:
-            click.secho(
-                f"Container {CONTAINER_NAME} already exists",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Container {CONTAINER_NAME} already exists")
         else:
-            click.secho(
-                f"Creating container {CONTAINER_NAME}",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Creating container {CONTAINER_NAME}")
 
             created_container: Container = self.containers.create_container(
                 namespace_id=namespace.id,
@@ -390,11 +372,7 @@ class InfraManager(object):
                 environment_variables=container_env_vars,
             )
 
-            click.secho(
-                f"Deploying container {CONTAINER_NAME}",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Deploying container {CONTAINER_NAME}")
             self.containers.deploy_container(
                 container_id=created_container.id, region=API_REGION
             )
@@ -404,21 +382,13 @@ class InfraManager(object):
         container = self._get_container()
 
         if admin_container:
-            click.secho(
-                f"Delete container {CONTAINER_ADMIN_NAME}",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Deleting container {CONTAINER_ADMIN_NAME}")
             self.containers.delete_container(
                 container_id=admin_container.id, region=API_REGION
             )
 
         if container:
-            click.secho(
-                f"Delete container {CONTAINER_NAME}",
-                fg="green",
-                bold="true",
-            )
+            click.secho(f"Deleting container {CONTAINER_NAME}")
             self.containers.delete_container(
                 container_id=container.id, region=API_REGION
             )
@@ -436,10 +406,8 @@ class InfraManager(object):
         if admin_container is None or container is None:
             raise click.Abort()
 
-        click.secho(
-            f"Admin container status: {admin_container.status}", fg="green", bold="true"
-        )
-        click.secho(f"Container status: {container.status}", fg="green", bold="true")
+        click.secho(f"Admin container status: {admin_container.status}")
+        click.secho(f"Container status: {container.status}")
 
     def _do_await_containers(self):
         admin_container = self._get_admin_container()
@@ -464,7 +432,7 @@ class InfraManager(object):
     def await_containers(self):
         self._do_await(self._do_await_containers)
 
-        click.secho(f"Containers ready", fg="green", bold=True)
+        click.secho("Containers ready", fg="green", bold=True)
 
     def create_admin_container_token(self):
         admin_container = self._get_admin_container()
