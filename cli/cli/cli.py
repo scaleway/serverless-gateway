@@ -80,14 +80,16 @@ def delete_containers():
 def get_gateway_endpoint():
     """Returns the endpoint for the gateway"""
     manager = InfraManager()
-    manager.get_gateway_host()
+    endpoint = manager.get_gateway_endpoint()
+    click.secho(endpoint)
 
 
 @cli.command()
 def get_gateway_admin_endpoint():
     """Returns the endpoint for the gateway admin"""
     manager = InfraManager()
-    manager.get_gateway_admin_host()
+    endpoint = manager.get_gateway_admin_endpoint()
+    click.secho(endpoint)
 
 
 @cli.command()

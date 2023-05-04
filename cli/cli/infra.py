@@ -1,6 +1,7 @@
 import click
 import copy
 import yaml
+import time
 
 from cli.conf import CONFIG_FILE
 
@@ -13,7 +14,10 @@ from scaleway.container.v1beta1 import (
     ContainerPrivacy,
     ContainerProtocol,
     Container,
+    ContainerStatus,
     Token,
+    Namespace,
+    NamespaceStatus,
 )
 from scaleway.rdb.v1 import (
     RdbV1API,
@@ -23,6 +27,9 @@ from scaleway.rdb.v1 import (
 )
 
 API_REGION = "fr-par"
+
+AWAIT_DELAY_SECONDS = 5
+AWAIT_RETRIES = 60
 
 IMAGE_REGISTRY = "docker.io"
 IMAGE_ORG = "scaleway"
@@ -74,15 +81,8 @@ class InfraManager(object):
                 "db_endpoint": "http://localhost:5432",
             }
         else:
-            admin_container = self._get_admin_container()
-            if not admin_container:
-                click.secho("No admin container found", fg="red", bold=True)
-                raise click.Abort()
-
-            container = self._get_container()
-            if not container:
-                click.secho("No container found", fg="red", bold=True)
-                raise click.Abort()
+            admin_endpoint = self.get_gateway_admin_endpoint()
+            container_endpoint = self.get_gateway_endpoint()
 
             instance = self._get_database_instance()
             if not instance:
@@ -92,14 +92,21 @@ class InfraManager(object):
             token = self.create_admin_container_token()
 
             config_data = {
-                "gw_admin_endpoint": f"https://{admin_container.domain_name}",
                 "gw_admin_token": token,
-                "gw_endpoint": f"https://{container.domain_name}",
+                "gw_admin_endpoint": admin_endpoint,
+                "gw_endpoint": container_endpoint,
                 "db_endpoint": f"{instance.endpoint.ip}:{instance.endpoint.port}",
             }
 
         with open(CONFIG_FILE, "w") as fh:
             yaml.safe_dump(config_data, fh)
+
+    def _do_await(self, check_func):
+        for r in range(AWAIT_RETRIES):
+            if check_func():
+                break
+
+            time.sleep(AWAIT_DELAY_SECONDS)
 
     def _get_container(self, admin=False):
         namespace = self._get_namespace()
@@ -155,11 +162,23 @@ class InfraManager(object):
 
         return None
 
-    def get_gateway_host(self):
-        pass
+    def get_gateway_endpoint(self):
+        container = self._get_container()
 
-    def get_gateway_admin_host(self):
-        pass
+        if not container:
+            click.secho("No admin container found", fg="red", bold=True)
+            raise click.Abort()
+
+        return container.domain_name
+
+    def get_gateway_admin_endpoint(self):
+        container = self._get_admin_container()
+
+        if not container:
+            click.secho("No container found", fg="red", bold=True)
+            raise click.Abort()
+
+        return container.domain_name
 
     def create_db(self):
         instance = self._get_database_instance()
@@ -214,9 +233,25 @@ class InfraManager(object):
             raise click.Abort()
 
         click.secho(
-            f"Database instance status: {instance.status}", fg="green", bold=True
+            f"Database status: {instance.status}", fg="green", bold=True
         )
-        click.secho("Database present", fg="green", bold=True)
+
+    def _do_await_db(self):
+        instance = self._get_database_instance()
+        db = self._get_database()
+
+        if not instance or instance.status != "ready":
+            return False
+
+        if not db:
+            return False
+
+        return True
+
+    def await_db(self):
+        self._do_await(self._do_await_db)
+
+        click.secho("Database ready", fg="green", bold=True)
 
     def create_namespace(self):
         namespace = self._get_namespace()
@@ -238,7 +273,27 @@ class InfraManager(object):
             click.secho("No namespace found", fg="red", bold="true")
             raise click.Abort()
 
+        if namespace.status == NamespaceStatus.ERROR:
+            click.secho("Namespace in error", fg="error", bold="true")
+            raise click.Abort()
+
         click.secho(f"Namespace status: {namespace.status}", fg="green", bold="true")
+
+    def _do_await_namespace(self):
+        namespace: Namespace = self._get_namespace()
+
+        if namespace.status == NamespaceStatus.ERROR:
+            click.secho("Namespace in error", fg="error", bold="true")
+            raise click.Abort()
+
+        if not namespace or namespace.status != NamespaceStatus.READY:
+            return False
+
+        return True
+
+    def await_namespace(self):
+        self._do_await(self._do_await_namespace)
+        click.secho("Namespace ready", fg="green", bold=True)
 
     def delete_namespace(self):
         namespace = self._get_namespace()
@@ -385,6 +440,31 @@ class InfraManager(object):
             f"Admin container status: {admin_container.status}", fg="green", bold="true"
         )
         click.secho(f"Container status: {container.status}", fg="green", bold="true")
+
+    def _do_await_containers(self):
+        admin_container = self._get_admin_container()
+        container = self._get_container()
+
+        if admin_container.status == ContainerStatus.ERROR:
+            click.secho("Admin container in error", fg="red", bold=True)
+            raise click.Abort()
+
+        if container.status == ContainerStatus.ERROR:
+            click.secho("Container in error", fg="red", bold=True)
+            raise click.Abort()
+
+        if not admin_container or admin_container.status != ContainerStatus.READY:
+            return False
+
+        if not container or container.status != ContainerStatus.READY:
+            return False
+
+        return True
+
+    def await_containers(self):
+        self._do_await(self._do_await_containers)
+
+        click.secho(f"Containers ready", fg="green", bold=True)
 
     def create_admin_container_token(self):
         admin_container = self._get_admin_container()
