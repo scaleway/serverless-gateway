@@ -79,15 +79,19 @@ class InfraManager(object):
     def set_up_config(self, is_local: bool):
         if is_local:
             config_data = {
-                "gw_admin_endpoint": "http://localhost:8001",
+                "protocol": "http",
+                "gw_admin_host": "localhost",
+                "gw_admin_port": "8001",
                 "gw_admin_token": "",
-                "gw_endpoint": "http://localhost:8080",
-                "db_endpoint": "http://localhost:5432",
+                "gw_host": "localhost",
+                "gw_port": "8080",
+                "db_host": "localhost",
+                "db_port": "5432",
                 "db_name": DB_DATABASE_NAME_LOCAL,
             }
         else:
-            admin_endpoint = self.get_gateway_admin_endpoint()
-            container_endpoint = self.get_gateway_endpoint()
+            admin_host = self.get_gateway_admin_endpoint()
+            container_host = self.get_gateway_endpoint()
 
             instance = self._get_database_instance()
             if not instance:
@@ -97,10 +101,14 @@ class InfraManager(object):
             token = self.create_admin_container_token()
 
             config_data = {
+                "protocol": "https",
+                "gw_admin_host": admin_host,
+                "gw_admin_port": 8080,
                 "gw_admin_token": token,
-                "gw_admin_endpoint": admin_endpoint,
-                "gw_endpoint": container_endpoint,
-                "db_endpoint": f"{instance.endpoint.ip}:{instance.endpoint.port}",
+                "gw_host": container_host,
+                "gw_port": 8080,
+                "db_host": instance.endpoint.ip,
+                "db_port": instance.endpoint.port,
                 "db_name": DB_DATABASE_NAME,
             }
 
@@ -146,19 +154,6 @@ class InfraManager(object):
 
         return None
 
-    def _get_database(self):
-        instance = self._get_database_instance()
-
-        databases: ListDatabasesResponse = self.rdb.list_databases(
-            instance_id=instance.id
-        )
-
-        for d in databases.databases:
-            if d.name == DB_DATABASE_NAME:
-                return d
-
-        return None
-
     def _get_namespace(self):
         namespaces: ListNamespacesResponse = self.containers.list_namespaces(
             region=API_REGION
@@ -190,7 +185,6 @@ class InfraManager(object):
 
     def create_db(self):
         instance = self._get_database_instance()
-        db = self._get_database()
 
         if instance:
             click.secho(f"Database {DB_INSTANCE_NAME} already exists")

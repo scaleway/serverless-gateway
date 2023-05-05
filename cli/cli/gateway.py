@@ -12,7 +12,24 @@ class GatewayManager(object):
         with open(CONFIG_FILE, "r") as fh:
             self.config = yaml.safe_load(fh)
 
-        self.admin_url = self.config["gw_admin_endpoint"]
+        self.admin_url = [
+            self.config["protocol"],
+            "://",
+            self.config["gw_admin_host"],
+            ":",
+            str(self.config["gw_admin_port"]),
+        ]
+        self.admin_url = "".join(self.admin_url)
+
+        self.gateway_url = [
+            self.config["protocol"],
+            "://",
+            self.config["gw_host"],
+            ":",
+            str(self.config["gw_port"]),
+        ]
+        self.gateway_url = "".join(self.gateway_url)
+
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
         self.token = self.config.get("gw_admin_token")
@@ -69,6 +86,8 @@ class GatewayManager(object):
 
     def _do_request(self, method, url, data=None) -> requests.Response:
         logger.debug(f"{method}: {url}")
+
+        logger.debug(f"AUTH: {self.auth_headers}")
 
         if method == "GET":
             resp = requests.get(url, headers=self.auth_headers)
