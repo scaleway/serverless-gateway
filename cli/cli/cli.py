@@ -1,8 +1,8 @@
 import click
 
 from cli.gateway import GatewayManager
-from cli.model import Route
 from cli.infra import InfraManager
+from cli.model import Route
 
 
 @click.group()

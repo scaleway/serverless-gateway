@@ -19,7 +19,7 @@ class TestEndpoint(object):
     @pytest.fixture(autouse=True, scope="class")
     def setup(integration_env: IntegrationEnvironment):
         TestEndpoint.env = integration_env
-        TestEndpoint.manager = GatewayManager(integration_env.gw_admin_url)
+        TestEndpoint.manager = GatewayManager()
 
     @staticmethod
     def _call_endpoint_until_response_code(url, code, method: str = "GET"):

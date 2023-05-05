@@ -1,32 +1,25 @@
-import click
 import copy
-import yaml
 import time
 
-from cli.conf import CONFIG_FILE
-
+import click
+import yaml
 from scaleway import Client
 from scaleway.container.v1beta1 import (
-    ContainerV1Beta1API,
-    ListNamespacesResponse,
-    ListContainersResponse,
+    Container,
     ContainerHttpOption,
     ContainerPrivacy,
     ContainerProtocol,
-    Container,
     ContainerStatus,
-    Token,
+    ContainerV1Beta1API,
+    ListContainersResponse,
+    ListNamespacesResponse,
     Namespace,
     NamespaceStatus,
+    Token,
 )
+from scaleway.rdb.v1 import Instance, InstanceStatus, ListInstancesResponse, RdbV1API
 
-from scaleway.rdb.v1 import (
-    RdbV1API,
-    ListInstancesResponse,
-    Instance,
-    ListDatabasesResponse,
-    InstanceStatus,
-)
+from cli.conf import CONFIG_FILE
 
 API_REGION = "fr-par"
 
