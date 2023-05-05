@@ -47,4 +47,4 @@ cd ..
 ./scripts/tag.sh
 ```
 
-This will trigger the Github Actions build that will build and push the container, and the PyPI package.
+This will trigger the [Github Actions build](https://github.com/scaleway/serverless-gateway/actions/runs) that will build and push the container and the PyPI package.

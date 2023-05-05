@@ -19,6 +19,7 @@ from scaleway.container.v1beta1 import (
     Namespace,
     NamespaceStatus,
 )
+
 from scaleway.rdb.v1 import (
     RdbV1API,
     ListInstancesResponse,
@@ -35,7 +36,7 @@ AWAIT_RETRIES = 60
 IMAGE_REGISTRY = "docker.io"
 IMAGE_ORG = "scaleway"
 IMAGE_NAME = "serverless-gateway"
-IMAGE_VERSION = "0.1.1"
+IMAGE_VERSION = "0.1.2"
 IMAGE_TAG = f"{IMAGE_REGISTRY}/{IMAGE_ORG}/{IMAGE_NAME}:{IMAGE_VERSION}"
 
 CONTAINER_NAMESPACE = "scw-sls-gw"
@@ -103,10 +104,10 @@ class InfraManager(object):
             config_data = {
                 "protocol": "https",
                 "gw_admin_host": admin_host,
-                "gw_admin_port": 8080,
+                "gw_admin_port": "",
                 "gw_admin_token": token,
                 "gw_host": container_host,
-                "gw_port": 8080,
+                "gw_port": "",
                 "db_host": instance.endpoint.ip,
                 "db_port": instance.endpoint.port,
                 "db_name": DB_DATABASE_NAME,
