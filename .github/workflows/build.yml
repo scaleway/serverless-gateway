@@ -32,8 +32,14 @@ jobs:
           push: true
           context: gateway
           tags: "${{ env.TAG }}"
+
+  pypi-build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-poetry
       - name: "Set up PyPI auth"
         run: ./scripts/pypi_auth.sh ${{ secrets.PYPI_TOKEN }}
       - name: "Publish"
         run: ./scripts/publish.sh
-
