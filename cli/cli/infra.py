@@ -24,6 +24,7 @@ from scaleway.rdb.v1 import (
     ListInstancesResponse,
     Instance,
     ListDatabasesResponse,
+    InstanceStatus,
 )
 
 API_REGION = "fr-par"
@@ -54,13 +55,16 @@ CONTAINER_ADMIN_MEMORY_LIMIT = 1024
 # Python SDK - https://github.com/scaleway/scaleway-sdk-python
 
 DB_INSTANCE_NAME = "scw-sls-gw"
-DB_DATABASE_NAME = "kong"
 DB_ENGINE = "PostgreSQL-14"
 DB_USERNAME = "kong"
 DB_PASSWORD = "K0ngkongkong!"
 DB_VOLUME_TYPE = "lssd"
 DB_NODE_TYPE = "DB-DEV-S"
 DB_VOLUME_SIZE = "5000000000"  # Expressed in bytes
+
+# Name is fixed for Scaleway managed database
+DB_DATABASE_NAME = "rdb"
+DB_DATABASE_NAME_LOCAL = "kong"
 
 
 class InfraManager(object):
@@ -79,6 +83,7 @@ class InfraManager(object):
                 "gw_admin_token": "",
                 "gw_endpoint": "http://localhost:8080",
                 "db_endpoint": "http://localhost:5432",
+                "db_name": DB_DATABASE_NAME_LOCAL,
             }
         else:
             admin_endpoint = self.get_gateway_admin_endpoint()
@@ -96,6 +101,7 @@ class InfraManager(object):
                 "gw_admin_endpoint": admin_endpoint,
                 "gw_endpoint": container_endpoint,
                 "db_endpoint": f"{instance.endpoint.ip}:{instance.endpoint.port}",
+                "db_name": DB_DATABASE_NAME,
             }
 
         with open(CONFIG_FILE, "w") as fh:
@@ -204,40 +210,25 @@ class InfraManager(object):
                 volume_size=DB_VOLUME_SIZE,
             )
 
-        if db:
-            click.secho(f"Database {DB_DATABASE_NAME} already exists")
-            return
-
-        click.secho(f"Creating database {DB_DATABASE_NAME}")
-
-        self.rdb.create_database(
-            instance_id=instance.id,
-            name=DB_DATABASE_NAME,
-            region=API_REGION,
-        )
-
     def check_db(self):
         instance = self._get_database_instance()
-        db = self._get_database()
 
         if not instance:
             click.secho("No database instance found", fg="red", bold=True)
-            raise click.Abort()
-
-        if not db:
-            click.secho("No database found", fg="red", bold=True)
             raise click.Abort()
 
         click.secho(f"Database status: {instance.status}", fg="green", bold=True)
 
     def _do_await_db(self):
         instance = self._get_database_instance()
-        db = self._get_database()
 
-        if not instance or instance.status != "ready":
+        if not instance:
             return False
 
-        if not db:
+        if instance.status == InstanceStatus.ERROR:
+            click.secho("Database in error", fg="red", bold="true")
+            raise click.Abort()
+        elif instance.status != InstanceStatus.READY:
             return False
 
         return True
@@ -276,11 +267,13 @@ class InfraManager(object):
     def _do_await_namespace(self):
         namespace: Namespace = self._get_namespace()
 
+        if not namespace:
+            return False
+
         if namespace.status == NamespaceStatus.ERROR:
             click.secho("Namespace in error", fg="error", bold="true")
             raise click.Abort()
-
-        if not namespace or namespace.status != NamespaceStatus.READY:
+        elif namespace.status != NamespaceStatus.READY:
             return False
 
         return True
@@ -299,19 +292,15 @@ class InfraManager(object):
             namespace_id=namespace.id, region=namespace.region
         )
 
-    def create_containers(self):
-        namespace = self._get_namespace()
-        if namespace is None:
-            click.secho("No namespace found", fg="red", bold="true")
-            raise click.Abort()
-
+    def _get_container_env_vars(self):
         instance = self._get_database_instance()
         if instance is None:
             click.secho("No database found", fg="red", bold="true")
             raise click.Abort()
 
         container_env_vars = {
-            "KONG_PG_HOST": f"{instance.endpoint.ip}:{instance.endpoint.port}",
+            "KONG_PG_HOST": instance.endpoint.ip,
+            "KONG_PG_PORT": f"{instance.endpoint.port}",
             "KONG_PG_DATABASE": DB_DATABASE_NAME,
             "KONG_PG_USER": DB_USERNAME,
             "KONG_PG_PASSWORD": DB_PASSWORD,
@@ -320,12 +309,20 @@ class InfraManager(object):
         admin_container_env_vars = copy.copy(container_env_vars)
         admin_container_env_vars["IS_ADMIN_CONTAINER"] = "1"
 
+        return admin_container_env_vars, container_env_vars
+
+    def create_containers(self):
+        namespace = self._get_namespace()
+        if namespace is None:
+            click.secho("No namespace found", fg="red", bold="true")
+            raise click.Abort()
+
+        admin_container_env_vars, container_env_vars = self._get_container_env_vars()
+
         admin_container = self._get_admin_container()
         if admin_container is not None:
             click.secho(
                 f"Admin container {CONTAINER_ADMIN_NAME} already exists",
-                fg="green",
-                bold="true",
             )
         else:
             click.secho(
@@ -413,18 +410,22 @@ class InfraManager(object):
         admin_container = self._get_admin_container()
         container = self._get_container()
 
+        if not admin_container:
+            return False
+
+        if not container:
+            return False
+
         if admin_container.status == ContainerStatus.ERROR:
             click.secho("Admin container in error", fg="red", bold=True)
             raise click.Abort()
+        elif admin_container.status != ContainerStatus.READY:
+            return False
 
         if container.status == ContainerStatus.ERROR:
             click.secho("Container in error", fg="red", bold=True)
             raise click.Abort()
-
-        if not admin_container or admin_container.status != ContainerStatus.READY:
-            return False
-
-        if not container or container.status != ContainerStatus.READY:
+        elif container.status != ContainerStatus.READY:
             return False
 
         return True
@@ -447,11 +448,61 @@ class InfraManager(object):
 
         return token.token
 
-    def set_custom_domain(self):
-        pass
-
     def update_container(self):
-        pass
+        self.update_container_without_deploy()
+
+        admin_container = self._get_admin_container()
+        container = self._get_container()
+
+        click.secho("Deploying admin container")
+        self.containers.deploy_container(
+            container_id=admin_container.id, region=API_REGION
+        )
+
+        click.secho("Deploying container")
+        self.containers.deploy_container(container_id=container.id, region=API_REGION)
 
     def update_container_without_deploy(self):
+        admin_container = self._get_admin_container()
+        container = self._get_container()
+
+        if not admin_container:
+            click.secho("Admin container does not exist", fg="red", bold=True)
+            raise click.Abort()
+
+        if not container:
+            click.secho("Container does not exist", fg="red", bold=True)
+            raise click.Abort()
+
+        container_admin_env_vars, container_env_vars = self._get_container_env_vars()
+
+        click.secho("Updating admin container")
+
+        self.containers.update_container(
+            container_id=admin_container.id,
+            privacy=ContainerPrivacy.PRIVATE,
+            memory_limit=CONTAINER_ADMIN_MEMORY_LIMIT,
+            min_scale=CONTAINER_ADMIN_MIN_SCALE,
+            max_scale=CONTAINER_ADMIN_MAX_SCALE,
+            protocol=ContainerProtocol.HTTP1,
+            http_option=ContainerHttpOption.REDIRECTED,
+            registry_image=IMAGE_TAG,
+            environment_variables=container_admin_env_vars,
+        )
+
+        click.secho("Updating container")
+
+        self.containers.update_container(
+            container_id=container.id,
+            privacy=ContainerPrivacy.PRIVATE,
+            memory_limit=CONTAINER_MEMORY_LIMIT,
+            min_scale=CONTAINER_MIN_SCALE,
+            max_scale=CONTAINER_MAX_SCALE,
+            protocol=ContainerProtocol.HTTP1,
+            http_option=ContainerHttpOption.REDIRECTED,
+            registry_image=IMAGE_TAG,
+            environment_variables=container_env_vars,
+        )
+
+    def set_custom_domain(self):
         pass
