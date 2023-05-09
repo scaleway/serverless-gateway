@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-deployed-gateway:
-    if: github.event.pull_request.draft == false
+    #if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
