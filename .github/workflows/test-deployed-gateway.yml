@@ -45,23 +45,23 @@ jobs:
       - name: Create Gateway namespace
         id: create-namespace
         run: |
-          scwgw create-namespace
-          scwgw await-namespace
+          poetry run scwgw create-namespace
+          poetry run scwgw await-namespace
 
       - name: Create Gateway container
         # We need to truncate gateway.env as it will override our env vars
         run: |
-          scwgw create-containers
-          scwgw await-containers
+          poetry run scwgw create-containers
+          poetry run scwgw await-containers
 
       - name: Run integration tests
         working-directory: cli
         run: |
-          scwgw remote-config
+          poetry run scwgw remote-config
           make test-int
         env:
           DEPLOY_ENV: "scw"
 
       - name: Delete Gateway namespace and container
-        run: scwgw delete-namespace
+        run: poetry run scwgw delete-namespace
         if: always()
