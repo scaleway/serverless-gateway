@@ -42,6 +42,7 @@ jobs:
 
   setup-gateway:
     #if: github.event.pull_request.draft == false
+    #needs: setup-fixtures
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

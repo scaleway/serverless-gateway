@@ -64,7 +64,7 @@ DB_DATABASE_NAME_LOCAL = "kong"
 class InfraManager(object):
     def __init__(self):
         # Initialise SCW client
-        self.scw_client = Client.from_config_file_and_env(profile_name="dev")
+        self.scw_client = Client.from_config_file_and_env()
 
         # Initi Scaleway APIs
         self.containers = ContainerV1Beta1API(self.scw_client)
