@@ -17,6 +17,7 @@ from scaleway.container.v1beta1 import (
     NamespaceStatus,
     Token,
 )
+from scaleway.function.v1beta1 import FunctionV1Beta1API, ListFunctionsResponse
 from scaleway.rdb.v1 import Instance, InstanceStatus, ListInstancesResponse, RdbV1API
 
 from cli.conf import CONFIG_FILE
@@ -66,8 +67,9 @@ class InfraManager(object):
         # Initialise SCW client
         self.scw_client = Client.from_config_file_and_env()
 
-        # Initi Scaleway APIs
+        # Init Scaleway APIs
         self.containers = ContainerV1Beta1API(self.scw_client)
+        self.functions = FunctionV1Beta1API(self.scw_client)
         self.rdb = RdbV1API(self.scw_client)
 
     def set_up_config(self, is_local: bool):
@@ -156,6 +158,26 @@ class InfraManager(object):
         for n in namespaces.namespaces:
             if n.name == CONTAINER_NAMESPACE:
                 return n
+
+        return None
+
+    def get_function_endpoint(self, namespace_name, function_name):
+        namespaces = self.functions.list_namespaces(
+            region=API_REGION,
+            name=namespace_name,
+        )
+        if len(namespaces.namespaces) == 0:
+            click.secho("No namespace found", fg="red", bold=True)
+            raise click.Abort()
+
+        namespace = namespaces.namespaces[0]
+        functions: ListFunctionsResponse = self.functions.list_functions(
+            namespace_id=namespace.id, region=API_REGION
+        )
+
+        for f in functions.functions:
+            if f.name == function_name:
+                return f.domain_name
 
         return None
 

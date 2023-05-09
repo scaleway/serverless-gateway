@@ -1,5 +1,9 @@
-import os
 from dataclasses import dataclass
+
+from cli.infra import InfraManager
+
+FUNC_FIXTURE_NAME = "func-a"
+FUNC_FIXTURE_NAMESPACE = "function-fixtures"
 
 
 @dataclass
@@ -30,9 +34,18 @@ class IntegrationEnvironment:
 
     @staticmethod
     def get_scw_env():
-        func_a_url = f'https://{os.environ["FUNC_A_DOMAIN"]}:443'
-        gw_admin_url = f'https://{os.environ["GATEWAY_ADMIN_HOST"]}:443'
-        gw_url = f'https://{os.environ["GATEWAY_HOST"]}:443'
+        manager = InfraManager()
+
+        func_a_endpoint = manager.get_function_endpoint(
+            FUNC_FIXTURE_NAMESPACE, FUNC_FIXTURE_NAME
+        )
+        func_a_url = f"https://{func_a_endpoint}:443"
+
+        gw_admin_endpoint = manager.get_gateway_admin_endpoint()
+        gw_admin_url = f"https://{gw_admin_endpoint}:443"
+
+        gw_endpoint = manager.get_gateway_endpoint()
+        gw_url = f"https://{gw_endpoint}:443"
 
         return IntegrationEnvironment(
             gw_admin_url=gw_admin_url,
