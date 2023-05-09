@@ -8,13 +8,20 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  test-deployed-gateway:
+  setup-fixtures:
     #if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./.github/actions/setup-poetry
+      - name: Install scaleway CLI
+        uses: ./.github/actions/setup-scaleway-cli
+        with:
+          scw-version: "2.13.0"
+          scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - uses: actions/setup-node@v3
         with:
@@ -29,6 +36,15 @@ jobs:
       - name: Install npm dependencies
         run: npm install -g serverless serverless-scaleway-functions
 
+      - name: Deploy function fixtures
+        working-directory: gateway/endpoints
+        run: serverless deploy
+
+  setup-gateway:
+    #if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v3
+
       - name: Install scaleway CLI
         uses: ./.github/actions/setup-scaleway-cli
         with:
@@ -38,18 +54,16 @@ jobs:
           scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
-      - name: Deploy function fixtures
-        working-directory: gateway/endpoints
-        run: serverless deploy
+      - uses: ./.github/actions/setup-poetry
 
       - name: Create Gateway namespace
-        id: create-namespace
+        working-directory: cli
         run: |
           poetry run scwgw create-namespace
           poetry run scwgw await-namespace
 
       - name: Create Gateway container
-        # We need to truncate gateway.env as it will override our env vars
+        working-directory: cli
         run: |
           poetry run scwgw create-containers
           poetry run scwgw await-containers
@@ -63,5 +77,6 @@ jobs:
           DEPLOY_ENV: "scw"
 
       - name: Delete Gateway namespace and container
+        working-directory: cli
         run: poetry run scwgw delete-namespace
         if: always()
