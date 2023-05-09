@@ -14,14 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install scaleway CLI
-        uses: ./.github/actions/setup-scaleway-cli
+      - name: Install CLI and create config file
+        uses: scaleway/action-scw@v0.0.1
         with:
-          scw-version: "2.13.0"
-          scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
-          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
-          scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          version: v2.14.0
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          default-region: "fr-par"
+          default-zone: "fr-par-1"
+          save-config: true
 
       - uses: actions/setup-node@v3
         with:
@@ -47,16 +50,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install scaleway CLI
-        uses: ./.github/actions/setup-scaleway-cli
+      - name: Install CLI and create config file
+        uses: scaleway/action-scw@v0.0.1
         with:
-          scw-version: "2.13.0"
-          scw-access-key: ${{ secrets.SCW_ACCESS_KEY }}
-          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
-          scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
-          scw-default-region: "fr-par"
-          scw-default-zone: "fr-par-1"
+          version: v2.14.0
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          default-region: "fr-par"
+          default-zone: "fr-par-1"
+          save-config: true
 
       - uses: ./.github/actions/setup-poetry
 
