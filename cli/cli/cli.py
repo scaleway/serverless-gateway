@@ -33,16 +33,6 @@ def get_routes():
 
 
 @cli.command()
-@click.argument("namespace")
-@click.argument("function")
-def get_function_endpoint(namespace, function):
-    """Returns the endpoint for a serverless function in the same namespace"""
-    manager = InfraManager()
-    endpoint = manager.get_function_endpoint(namespace, function)
-    print(endpoint)
-
-
-@cli.command()
 @click.argument("relative_url")
 @click.argument("target")
 def add_route(relative_url, target):
