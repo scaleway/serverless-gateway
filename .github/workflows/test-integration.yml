@@ -55,6 +55,8 @@ jobs:
           scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
           scw-default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           scw-default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          scw-default-region: "fr-par"
+          scw-default-zone: "fr-par-1"
 
       - uses: ./.github/actions/setup-poetry
 

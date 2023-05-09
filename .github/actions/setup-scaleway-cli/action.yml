@@ -37,4 +37,6 @@ runs:
           access-key="${{ inputs.scw-access-key }}" \
           secret-key="${{ inputs.scw-secret-key }}" \
           default-project-id="${{ inputs.scw-default-project-id }}" \
-          default-organization-id="${{ inputs.scw-default-organization-id }}"
+          default-organization-id="${{ inputs.scw-default-organization-id }}" \
+          default-region="${{ inputs.scw-default-region }}" \
+          default-zone="${{ inputs.scw-default-zone }}"
