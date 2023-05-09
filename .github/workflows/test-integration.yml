@@ -15,6 +15,11 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/setup-cli
+        with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - uses: actions/setup-node@v3
         with:
@@ -40,6 +45,11 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/setup-cli
+        with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - uses: ./.github/actions/setup-poetry
 
@@ -71,6 +81,11 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/setup-cli
+        with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
 
       - uses: ./.github/actions/setup-poetry
 
@@ -78,7 +93,7 @@ jobs:
         working-directory: cli
         run: |
           poetry run scwgw remote-config
-          make test-int
+          poetry run pytest tests/integration
         env:
           DEPLOY_ENV: "scw"
 
