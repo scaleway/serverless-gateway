@@ -22,10 +22,8 @@ runs:
       uses: scaleway/action-scw@v0.0.1
       with:
         version: v2.14.0
+        save-config: true
         access-key: ${{ inputs.access-key }}
         secret-key: ${{ inputs.secret-key }}
         default-project-id: ${{ inputs.project-id }}
         default-organization-id: ${{ inputs.organization-id }}
-        default-region: "fr-par"
-        default-zone: "fr-par-1"
-        save-config: true
