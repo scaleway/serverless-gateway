@@ -126,60 +126,45 @@ class InfraManager(object):
             click.secho("No namespace found", fg="red", bold=True)
             raise click.Abort()
 
-        containers: ListContainersResponse = self.containers.list_containers(
-            namespace_id=namespace.id, region=API_REGION
+        container_name = CONTAINER_ADMIN_NAME if admin else CONTAINER_NAME
+        containers: ListContainersResponse = self.containers.list_containers_all(
+            namespace_id=namespace.id,
+            region=API_REGION,
+            name=container_name,
         )
 
-        for c in containers.containers:
-            if admin and c.name == CONTAINER_ADMIN_NAME:
-                return c
-            elif c.name == CONTAINER_NAME:
-                return c
-
-        return None
+        return containers[0] if containers else None
 
     def _get_admin_container(self):
         return self._get_container(admin=True)
 
     def _get_database_instance(self):
-        instances: ListInstancesResponse = self.rdb.list_instances(region=API_REGION)
-
-        for i in instances.instances:
-            if i.name == DB_INSTANCE_NAME:
-                return i
-
-        return None
+        instances: ListInstancesResponse = self.rdb.list_instances_all(
+            region=API_REGION, name=DB_INSTANCE_NAME
+        )
+        return instances[0] if instances else None
 
     def _get_namespace(self):
-        namespaces: ListNamespacesResponse = self.containers.list_namespaces(
-            region=API_REGION
+        namespaces: ListNamespacesResponse = self.containers.list_namespaces_all(
+            region=API_REGION, name=CONTAINER_NAMESPACE
         )
-
-        for n in namespaces.namespaces:
-            if n.name == CONTAINER_NAMESPACE:
-                return n
-
-        return None
+        return namespaces[0] if namespaces else None
 
     def get_function_endpoint(self, namespace_name, function_name):
-        namespaces = self.functions.list_namespaces(
+        namespaces = self.functions.list_namespaces_all(
             region=API_REGION,
             name=namespace_name,
         )
-        if len(namespaces.namespaces) == 0:
+        if not namespaces:
             click.secho("No namespace found", fg="red", bold=True)
             raise click.Abort()
 
-        namespace = namespaces.namespaces[0]
-        functions: ListFunctionsResponse = self.functions.list_functions(
+        namespace = namespaces[0]
+        functions: ListFunctionsResponse = self.functions.list_functions_all(
             namespace_id=namespace.id, region=API_REGION
         )
 
-        for f in functions.functions:
-            if f.name == function_name:
-                return f.domain_name
-
-        return None
+        return functions[0].domain_name if functions else None
 
     def get_gateway_endpoint(self):
         container = self._get_container()
@@ -272,7 +257,7 @@ class InfraManager(object):
             click.secho("Namespace in error", fg="red", bold="true")
             raise click.Abort()
 
-        click.secho(f"Namespace status: {namespace.status}", fg="green", bold="true")
+        click.secho(f"Namespace status: {namespace.status}")
 
     def _do_await_namespace(self):
         namespace: Namespace = self._get_namespace()
