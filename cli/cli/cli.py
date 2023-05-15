@@ -1,26 +1,40 @@
 import click
+from loguru import logger
 
+from cli import client, credentials
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
 from cli.model import Route
 
+DB_PASSWORD_OPTION = click.option(
+    "--db-password",
+    required=False,
+    help="The password to use for the database. Will be generated if not provided.",
+    envvar="DB_PASSWORD",
+)
+
 
 @click.group()
 def cli():
-    pass
+    """CLI for managing the gateway on Scaleway.
+
+    See the README for more information.
+    """
 
 
 @cli.command()
 def local_config():
     """Sets up config for local deployment"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.set_up_config(True)
 
 
 @cli.command()
 def remote_config():
     """Sets up config for remote deployment"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.set_up_config(False)
 
 
@@ -57,7 +71,8 @@ def delete_route(relative_url, target):
 @cli.command()
 def create_admin_token():
     """Creates a token for the admin container"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
     click.secho(token)
 
@@ -65,14 +80,16 @@ def create_admin_token():
 @cli.command()
 def delete_containers():
     """Deletes the containers used for the gateway"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.delete_containers()
 
 
 @cli.command()
 def get_gateway_endpoint():
     """Returns the endpoint for the gateway"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_endpoint()
     click.secho(endpoint)
 
@@ -80,97 +97,147 @@ def get_gateway_endpoint():
 @cli.command()
 def get_gateway_admin_endpoint():
     """Returns the endpoint for the gateway admin"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_admin_endpoint()
     click.secho(endpoint)
 
 
 @cli.command()
-def create_db():
-    """Creates the database for the gateway"""
-    manager = InfraManager()
-    manager.create_db()
+@DB_PASSWORD_OPTION
+@click.option(
+    "--no-save", is_flag=True, default=False, help="Do not save the password."
+)
+def create_db(db_password: str | None, no_save: bool):
+    """Creates the database for the gateway.
+
+    If --no-save is passed, the password will not be saved to Scaleway Secret Manager.
+    The password will therefore need to be provided for other commands.
+    """
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    if not db_password:
+        logger.info("Generating database password")
+        db_password = credentials.generate_database_password()
+
+    if not no_save:
+        logger.info("Saving database password to Scaleway Secret Manager")
+        credentials.store_db_password_to_scaleway_secret(
+            scw_client, db_password=db_password
+        )
+
+    manager.create_db(password=db_password)
 
 
 @cli.command()
 def check_db():
     """Checks the status of the database"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.check_db()
 
 
 @cli.command()
 def await_db():
     """Waits for the database to be ready"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.await_db()
 
 
 @cli.command()
 def create_namespace():
     """Creates the container container namespace"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.create_namespace()
 
 
 @cli.command()
 def check_namespace():
     """Checks the status of the container namespace"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.check_namespace()
 
 
 @cli.command()
 def await_namespace():
     """Waits for the namespace to be ready"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.await_namespace()
 
 
 @cli.command()
 def delete_namespace():
     """Deletes the container namespace"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.delete_namespace()
 
 
 @cli.command()
-def create_containers():
+@DB_PASSWORD_OPTION
+def create_containers(db_password: str | None):
     """Creates the containers"""
-    manager = InfraManager()
-    manager.create_containers()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    if not db_password:
+        db_password = credentials.load_db_password_or_abort(scw_client)
+
+    manager.create_containers(db_password=db_password)
 
 
 @cli.command()
 def check_containers():
     """Checks the status of the containers"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.check_containers()
 
 
 @cli.command()
 def await_containers():
     """Waits for the containers to be ready"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.await_containers()
 
 
 @cli.command()
 def set_custom_domain():
     """Sets the custom domain for the gateway container"""
-    manager = InfraManager()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
     manager.set_custom_domain()
 
 
 @cli.command()
-def update_containers():
+@DB_PASSWORD_OPTION
+def update_containers(
+    db_password: str | None,
+):
     """Updates the containers"""
-    manager = InfraManager()
-    manager.update_container()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    if not db_password:
+        db_password = credentials.load_db_password_or_abort(scw_client)
+
+    manager.update_container(db_password=db_password)
 
 
 @cli.command()
-def update_container_no_deploy():
+@DB_PASSWORD_OPTION
+def update_container_no_deploy(db_password: str | None):
     """Updates the containers without redeploying"""
-    manager = InfraManager()
-    manager.update_container_without_deploy()
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    if not db_password:
+        db_password = credentials.load_db_password_or_abort(scw_client)
+
+    manager.update_container_without_deploy(db_password=db_password)
