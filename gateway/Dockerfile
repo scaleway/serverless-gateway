@@ -1,4 +1,6 @@
-FROM kong:3.0.2-alpine
+FROM victoriametrics/vmagent:v1.90.0 as vmagent
+
+FROM kong:3.2.2-alpine
 
 USER root
 
@@ -9,12 +11,17 @@ STOPSIGNAL SIGQUIT
 
 ENV KONG_NGINX_DAEMON=off
 
-COPY scripts/startup.sh /startup.sh
+ADD scripts /scripts
 ADD config/ /kong-conf
 
 RUN mkdir /var/run/kong
 RUN chown -R kong:kong /var/run/kong
 
+# Copy the vmagent binary from the vmagent container
+COPY --from=vmagent /vmagent-prod /vmagent
+RUN mkdir /tmp/vmagent && \
+    chown -R kong:kong /tmp/vmagent
+
 USER kong
-CMD ["/startup.sh"]
+CMD ["/scripts/startup.sh"]
 
