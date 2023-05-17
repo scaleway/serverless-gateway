@@ -1,0 +1,14 @@
+metrics:
+  wal_directory: /tmp/wal
+  global:
+    scrape_interval: ${METRICS_SCRAPE_INTERVAL:-15s}
+    remote_write:
+      - url: ${COCKPIT_METRICS_PUSH_URL}
+        headers:
+          "X-Token": ${COCKPIT_METRICS_TOKEN}
+
+integrations:
+  statsd_exporter:
+    enabled: true
+    listen_udp: :8125
+    listen_tcp: ""

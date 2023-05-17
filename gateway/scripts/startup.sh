@@ -3,7 +3,7 @@
 set -em
 
 # Run migrations only from the admin container
-if [ "$IS_ADMIN_CONTAINER" == "1" ]; then
+if [ ! -z "$IS_ADMIN_CONTAINER" ]; then
     echo "Running Kong migrations"
 
     kong migrations bootstrap
@@ -17,8 +17,10 @@ else
     # Reference: https://docs.docker.com/config/containers/multi-service_container/
     kong start -v -c /kong-conf/kong.conf &
     
-    echo "Starting vm-agent"
-    /scripts/run-vmagent.sh
+    if [ ! -z "$FORWARD_METRICS" ]; then
+        echo "Starting Grafana Agent"
+        /scripts/run-grafana-agent.sh
+    fi
     
     fg %1
 fi

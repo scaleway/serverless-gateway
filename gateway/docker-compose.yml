@@ -20,6 +20,10 @@ services:
       context: .
     environment:
       <<: *kong-env
+      # Does not forward metrics by default on docker-compose
+      FORWARD_METRICS: ${FORWARD_METRICS}
+      COCKPIT_METRICS_PUSH_URL: ${COCKPIT_METRICS_PUSH_URL}
+      COCKPIT_METRICS_TOKEN: ${COCKPIT_METRICS_TOKEN}
     depends_on:
       - db
       - kong-admin

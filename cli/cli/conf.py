@@ -50,9 +50,7 @@ class InfraConfiguration:
         admin_host = manager.get_gateway_admin_endpoint()
         container_host = manager.get_gateway_endpoint()
 
-        instance = manager._get_database_instance()
-        if not instance:
-            raise RuntimeError("Could not finda database instance")
+        instance = manager._get_database_instance_or_abort()
         endpoint = instance.endpoints[0]
 
         token = manager.create_admin_container_token()
