@@ -65,10 +65,3 @@ def delete_metrics_token_by_name(api: sdk.CockpitV1Beta1API) -> None:
     for token in tokens:
         if token.name == METRICS_TOKEN_NAME:
             api.delete_token(token_id=token.id)
-
-
-# def import_dashboard_to_cockpit_graphana(api: sdk.CockpitV1Beta1API) -> None:
-#     """Import a dashboard to cockpit graphana."""
-
-#     api = obs.CockpitV1Beta1API(scw_client)
-#     api.import_dashboard(dashboard=dashboard)

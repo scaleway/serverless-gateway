@@ -78,23 +78,6 @@ class GatewayManager:
                 # TODO - avoid ignoring this, any way to create or update?
                 pass
 
-        # TODO: add a check for metrics configured
-        try:
-            self.session.post(
-                url=plugins_url,
-                json={
-                    "name": "statsd",
-                    "config": {
-                        "port": 8125,
-                        "prefix": "kong",
-                        "tag_style": "influxdb",
-                    },
-                },
-            )
-        except requests.HTTPError:
-            # TODO - avoid ignoring this, any way to create or update?
-            pass
-
         return resp
 
     def delete_route(self, route: Route):
@@ -157,7 +140,6 @@ class GatewayManager:
                 "config": {
                     "port": 8125,
                     "prefix": "kong",
-                    "tag_style": "influxdb",
                 },
             },
         )

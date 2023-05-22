@@ -76,12 +76,9 @@ def delete_route(relative_url, target):
 # TODO: integrate with existing CLI commands
 @cli.command()
 def setup_metrics():
-    """Adds metrics to the gateway"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-
+    """Adds metrics plugin to the gateway"""
     gateway = GatewayManager()
-    gateway.setup_kong_statsd_plugin()
+    gateway.setup_global_kong_statsd_plugin()
 
 
 @cli.command()
