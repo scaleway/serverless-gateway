@@ -22,6 +22,7 @@ def generate_database_password() -> str:
             secrets.choice(string.ascii_letters + string.digits + string.punctuation)
             for _ in range(PASSWORD_LENGTH)
         )
+
         if (
             any(c.islower() for c in password)
             and any(c.isupper() for c in password)
@@ -29,14 +30,18 @@ def generate_database_password() -> str:
             and any(c in string.punctuation for c in password)
         ):
             return password
+
     raise RuntimeError("Could not generate a password")
 
 
 def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
     """Store the password to Scaleway Secret Manager."""
     try:
+        # Delete password if already exists
         secret = api.get_secret_by_name(secret_name=PASSWORD_NAME)
-        raise RuntimeError(f"Secret {PASSWORD_NAME} already exists with id {secret.id}")
+        logger.debug(f"Secret {PASSWORD_NAME} already exists, recreating")
+        api.delete_secret(secret_id=secret.id)
+
     except ScalewayException as exception:
         if exception.status_code != 404:
             raise exception

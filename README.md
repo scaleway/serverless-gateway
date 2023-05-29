@@ -10,10 +10,9 @@ It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving y
 
 - [:rocket: Features](#rocket-features)
 - [:computer: Quick-start](#computer-quick-start)
-  - [Updating your gateway](#updating-your-gateway)
-  - [Deleting your gateway](#deleting-your-gateway)
 - [Custom domains](docs/custom-domain.md)
 - [Serverless functions](docs/serverless.md)
+- [Advanced usage](docs/advanced.md)
 - [:hammer: Architecture](docs/architecture.md)
 - [:mortar\_board: Contributing](#mortar_board-contributing)
 - [:mailbox: Reach Us](#mailbox-reach-us)
@@ -48,21 +47,15 @@ To deploy your gateway, you need to create a container namespace, and a containe
 ```console
 # Create the database
 scwgw create-db
+scwgw await-db
 
 # Create the namespace
 scwgw create-namespace
-
-# Wait for the namespace to be ready
 scwgw await-namespace
 
 # Create and deploy the containers
 scwgw create-containers
-
-# Wait for the containers to be ready
 scwgw await-containers
-
-# Wait for the database to be ready
-scwgw await-db
 ```
 
 *2. Set up your config*
@@ -73,51 +66,30 @@ Configure your local CLI to use all the newly deployed resources:
 scwgw remote-config
 ```
 
-*3. Add a route*
-
-You can add a route to any URL, here we will use the `worldtimeapi`.
-
-```console
-# Curl the URL directly
-curl http://worldtimeapi.org/api/timezone/Europe/Paris
-
-# Set up gateway params
-scwgw add-route /time http://worldtimeapi.org/api/timezone/Europe/Paris
-
-# Now curl through your gateway
-curl http://${GATEWAY_HOST}/time
-```
-
-*4. List routes*
-
-You can list the routes configured on your gateway with:
+Check it's working with the following (will return an empty list):
 
 ```console
 scwgw get-routes
 ```
 
-### Updating your gateway
+*3. Add a route*
 
-If you make changes to your gateway in this repo, you can run the following to update it:
-
-```console
-# Update without redeploy
-scwgw update-container-no-redeploy
-
-# Update with redeploy
-scwgw update-container
-```
-
-### Deleting your gateway
-
-To clear up everything related to your gateway, you can run:
+You can add a route to any URL, here we will use the `worldtimeapi`.
 
 ```console
-# Delete the namespace, which implicitly deletes the container
-scwgw delete-namespace
+# Check the response direclty from the target
+TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
+curl $TARGET_URL
 
-# Delete the bucket used to store tokens
-scwgw delete-bucket
+# Add the route
+scwgw add-route /time $TARGET_URL
+
+# List routes
+scwgw get-routes
+
+# Curl the URL via the gateway
+GATEWAY_ENDPOINT=$(scwgw get-gateway-endpoint)
+curl https://${GATEWAY_ENDPOINT}/time
 ```
 
 ## :mortar_board: Contributing

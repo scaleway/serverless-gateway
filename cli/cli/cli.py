@@ -133,6 +133,14 @@ def create_db(db_password: str | None, no_save: bool):
 
 
 @cli.command()
+def delete_db():
+    """Deletes the database for the gateway."""
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+    manager.delete_db()
+
+
+@cli.command()
 def check_db():
     """Checks the status of the database"""
     scw_client = client.get_scaleway_client()
@@ -218,20 +226,22 @@ def set_custom_domain():
 
 
 @cli.command()
+@click.option(
+    "--no-redeploy",
+    is_flag=True,
+    default=False,
+    help="Don't redeploy the container, just update.",
+)
 @DB_PASSWORD_OPTION
 def update_containers(
+    no_redeploy: bool,
     db_password: str | None,
 ):
     """Updates the containers"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
-    manager.update_container(db_password=db_password)
 
-
-@cli.command()
-@DB_PASSWORD_OPTION
-def update_container_no_deploy(db_password: str | None):
-    """Updates the containers without redeploying"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.update_container_without_deploy(db_password=db_password)
+    if no_redeploy:
+        manager.update_container_without_deploy(db_password=db_password)
+    else:
+        manager.update_container(db_password=db_password)
