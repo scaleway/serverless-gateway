@@ -2,28 +2,34 @@
 
 The Scaleway Serverless Gateway is a self-hosted API gateway that runs on Scaleway [Serverless Containers](https://www.scaleway.com/en/serverless-containers/).
 
-It lets you manage routing from a single base URL, as well as handling transversal concerns such as CORS and authentication.
+It lets you manage routing from a single base URL, as well as handle transversal concerns such as CORS and authentication.
 
-It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customise your own deployments.
+It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
 
 ## :page_with_curl: Summary
 
-- [Features](#rocket-features)
-- [Quick-start](#computer-quick-start)
-- [Custom domains](#custom-domains)
-- [Serverless functions](#serverless-functions)
-- [Architecture](#hammer-architecture)
-- [Contributing](#mortar_board-contributing)
-- [Reach Us](#mailbox-reach-us)
+- [Scaleway Serverless Gateway :door:](#scaleway-serverless-gateway-door)
+  - [:page\_with\_curl: Summary](#page_with_curl-summary)
+  - [:rocket: Features](#rocket-features)
+  - [:computer: Quick-start](#computer-quick-start)
+    - [Updating your gateway](#updating-your-gateway)
+    - [Deleting your gateway](#deleting-your-gateway)
+  - [Custom domains](#custom-domains)
+  - [Serverless functions](#serverless-functions)
+  - [:hammer: Architecture](#hammer-architecture)
+    - [Authentication](#authentication)
+    - [Configuring routes](#configuring-routes)
+  - [:mortar\_board: Contributing](#mortar_board-contributing)
+  - [:mailbox: Reach Us](#mailbox-reach-us)
 
 ## :rocket: Features
 
 The Serverless Gateway:
 
-* Adds routing via a single base URL
-* Adds routing based on HTTP methods
-* Adds permissive CORS by default, to support accessing routes from a browser
-* Gives access to a serverless [Kong Gateway](https://docs.konghq.com/gateway/latest/) deployment
+- Adds routing via a single base URL
+- Adds routing based on HTTP methods
+- Adds permissive CORS by default, to support accessing routes from a browser
+- Gives access to a serverless [Kong Gateway](https://docs.konghq.com/gateway/latest/) deployment
 
 The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
@@ -31,7 +37,7 @@ The Serverless Gateway integrates fully with the [Scaleway Python API framework]
 
 To deploy your gateway you need to install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli), and the [Gateway CLI](https://pypi.org/project/scw-gateway/) via [`pip`](https://pip.pypa.io/en/stable/index.html):
 
-```
+```console
 pip install scw-gateway
 ```
 
@@ -43,7 +49,7 @@ The gateway image itself is packaged via our public [Serverless Gateway Docker i
 
 To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
-```
+```console
 # Create the database
 scwgw create-db
 
@@ -67,7 +73,7 @@ scwgw await-db
 
 Configure your local CLI to use all the newly deployed resources:
 
-```
+```console
 scwgw remote-config
 ```
 
@@ -75,7 +81,7 @@ scwgw remote-config
 
 You can add a route to any URL, here we will use the `worldtimeapi`.
 
-```
+```console
 # Curl the URL directly
 curl http://worldtimeapi.org/api/timezone/Europe/Paris
 
@@ -90,7 +96,7 @@ curl http://${GATEWAY_HOST}/time
 
 You can list the routes configured on your gateway with:
 
-```
+```console
 scwgw get-routes
 ```
 
@@ -98,7 +104,7 @@ scwgw get-routes
 
 If you make changes to your gateway in this repo, you can run the following to update it:
 
-```
+```console
 # Update without redeploy
 scwgw update-container-no-redeploy
 
@@ -110,7 +116,7 @@ scwgw update-container
 
 To clear up everything related to your gateway, you can run:
 
-```
+```console
 # Delete the namespace, which implicitly deletes the container
 scwgw delete-namespace
 
@@ -124,15 +130,15 @@ You can add a custom domain to your gateway as with any other Serverless Contain
 
 You can register a new domain as described in the [Domains and DNS docs](https://www.scaleway.com/en/docs/network/domains-and-dns/quickstart/).
 
-Then you can add your domain name as global variable to the makefile:
+Then you can add your domain name as a global variable to the makefile:
 
-```
+```console
 GATEWAY_CUSTOM_DOMAIN := your-custom-domain-name
 ```
 
-Then uou can add your domain name to your gateway using:
+Then you can add your domain name to your gateway using:
 
-```
+```console
 scwgw set-custom-domain
 ```
 
@@ -146,7 +152,7 @@ This function uses [Scaleway's Python Serverless API Framework](https://github.c
 
 Once set up, you can deploy the functions with:
 
-```
+```console
 scw-serverless deploy endpoints/func-example/handler.py
 ```
 
@@ -172,7 +178,7 @@ The generated tokens are uploaded to a private bucket configured using the param
 
 The `/scw` endpoint allows us to add and remove routes without having to redeploy the gateway and interrupt service.
 
-Routes has the following fields:
+Routes have the following fields:
 
 - `relative_url`: the relative URL on the gateway.
 - `target_url`: the URL of the target function or container.

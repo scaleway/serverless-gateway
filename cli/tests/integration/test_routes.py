@@ -197,7 +197,7 @@ class TestEndpoint(object):
         route = Route("/foo", target)
 
         resp = self.manager.add_route(route)
-        assert resp.status_code == requests.status_codes.codes.ok
+        assert resp.status_code == requests.codes.ok
 
         # Get route
         routes = self.manager.get_routes()

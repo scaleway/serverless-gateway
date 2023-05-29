@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from cli.infra import InfraManager
+from cli.client import get_scaleway_client
 
 FUNC_FIXTURE_NAME = "func-a"
 FUNC_FIXTURE_NAMESPACE = "function-fixtures"
@@ -34,7 +35,8 @@ class IntegrationEnvironment:
 
     @staticmethod
     def get_scw_env():
-        manager = InfraManager()
+        scw_client = get_scaleway_client()
+        manager = InfraManager(scw_client=scw_client)
 
         func_a_endpoint = manager.get_function_endpoint(
             FUNC_FIXTURE_NAMESPACE, FUNC_FIXTURE_NAME
