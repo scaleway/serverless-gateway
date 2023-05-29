@@ -6,21 +6,17 @@ It lets you manage routing from a single base URL, as well as handle transversal
 
 It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
 
-## :page_with_curl: Summary
+## :page_with_curl: Contents
 
-- [Scaleway Serverless Gateway :door:](#scaleway-serverless-gateway-door)
-  - [:page\_with\_curl: Summary](#page_with_curl-summary)
-  - [:rocket: Features](#rocket-features)
-  - [:computer: Quick-start](#computer-quick-start)
-    - [Updating your gateway](#updating-your-gateway)
-    - [Deleting your gateway](#deleting-your-gateway)
-  - [Custom domains](#custom-domains)
-  - [Serverless functions](#serverless-functions)
-  - [:hammer: Architecture](#hammer-architecture)
-    - [Authentication](#authentication)
-    - [Configuring routes](#configuring-routes)
-  - [:mortar\_board: Contributing](#mortar_board-contributing)
-  - [:mailbox: Reach Us](#mailbox-reach-us)
+- [:rocket: Features](#rocket-features)
+- [:computer: Quick-start](#computer-quick-start)
+  - [Updating your gateway](#updating-your-gateway)
+  - [Deleting your gateway](#deleting-your-gateway)
+- [Custom domains](docs/custom-domain.md)
+- [Serverless functions](docs/serverless.md)
+- [:hammer: Architecture](docs/architecture.md)
+- [:mortar\_board: Contributing](#mortar_board-contributing)
+- [:mailbox: Reach Us](#mailbox-reach-us)
 
 ## :rocket: Features
 
@@ -123,66 +119,6 @@ scwgw delete-namespace
 # Delete the bucket used to store tokens
 scwgw delete-bucket
 ```
-
-## Custom domains
-
-You can add a custom domain to your gateway as with any other Serverless Container.
-
-You can register a new domain as described in the [Domains and DNS docs](https://www.scaleway.com/en/docs/network/domains-and-dns/quickstart/).
-
-Then you can add your domain name as a global variable to the makefile:
-
-```console
-GATEWAY_CUSTOM_DOMAIN := your-custom-domain-name
-```
-
-Then you can add your domain name to your gateway using:
-
-```console
-scwgw set-custom-domain
-```
-
-## Serverless functions
-
-Serverless Functions and Containers can be added to your gateway as a route just like any other URL.
-
-You can try this using the function included at `endpoints/func-example`.
-
-This function uses [Scaleway's Python Serverless API Framework](https://github.com/scaleway/serverless-api-project), which must be installed for the example to work.
-
-Once set up, you can deploy the functions with:
-
-```console
-scw-serverless deploy endpoints/func-example/handler.py
-```
-
-This will create two URLs, one for the `hello` function and the other one for the `goodbye` function.
-
-## :hammer: Architecture
-
-The gateway is packaged via [a public Docker image on Docker Hub](https://hub.docker.com/r/scaleway/serverless-gateway).
-
-This image contains:
-
-- The Kong gateway
-- A plugin exposing an `/token` endpoint for generating tokens
-- A plugin exposing an `/scw` endpoint for configuring routes
-
-### Authentication
-
-Using the `/token` endpoint on the gateway, we can generate tokens to authenticate against `/scw` calls.
-
-The generated tokens are uploaded to a private bucket configured using the parameters in the `gateway.env` file.
-
-### Configuring routes
-
-The `/scw` endpoint allows us to add and remove routes without having to redeploy the gateway and interrupt service.
-
-Routes have the following fields:
-
-- `relative_url`: the relative URL on the gateway.
-- `target_url`: the URL of the target function or container.
-- `http_method` (optional): the HTTP methods to accept on this endpoint.
 
 ## :mortar_board: Contributing
 
