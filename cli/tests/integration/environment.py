@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from cli.infra import InfraManager
 from cli.client import get_scaleway_client
+from cli.infra import InfraManager
 
 FUNC_FIXTURE_NAME = "func-a"
 FUNC_FIXTURE_NAMESPACE = "function-fixtures"

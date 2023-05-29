@@ -1,6 +1,6 @@
 import click
-from scaleway import Client, ScalewayException
 import scaleway.cockpit.v1beta1 as sdk
+from scaleway import Client, ScalewayException
 
 METRICS_TOKEN_NAME = "scw-gw-write-metrics"
 WRITE_METRICS_SCOPE = sdk.TokenScopes(
@@ -27,9 +27,8 @@ def ensure_cockpit_activated(scw_client: Client) -> bool:
         if not err.status_code == 404:
             raise
 
-        project_id = scw_client.default_project_id
         should_activate_cockpit = click.confirm(
-            f"Cockpit is not activated for project {project_id}. Do you want to activate it?",
+            "Cockpit not activated for project. Do you want to activate it?",
         )
 
         if not should_activate_cockpit:
@@ -75,14 +74,6 @@ def create_metrics_token(api: sdk.CockpitV1Beta1API) -> str:
         raise RuntimeError("Token has no secret key")
 
     return token.secret_key
-
-
-def delete_metrics_token_by_name(api: sdk.CockpitV1Beta1API) -> None:
-    """Delete a Cockpit token by its name."""
-    tokens = api.list_tokens_all()
-    for token in tokens:
-        if token.name == METRICS_TOKEN_NAME:
-            delete_metrics_token(token)
 
 
 def delete_metrics_token(api: sdk.CockpitV1Beta1API, token: sdk.Token) -> None:

@@ -1,7 +1,7 @@
 import json
 
-from loguru import logger
 import requests
+from loguru import logger
 
 from cli import conf
 from cli.model import Route

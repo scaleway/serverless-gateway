@@ -1,16 +1,15 @@
 from concurrent import futures
 
 import click
-from loguru import logger
+import scaleway.cockpit.v1beta1 as cpt
 import scaleway.container.v1beta1 as cnt
 import scaleway.function.v1beta1 as fnc
 import scaleway.rdb.v1 as rdb
 import scaleway.secret.v1alpha1 as sec
-import scaleway.cockpit.v1beta1 as cpt
+from loguru import logger
 from scaleway import Client, ScalewayException
 
-from cli import conf
-from cli import infra
+from cli import conf, infra
 
 
 class InfraManager:
@@ -290,7 +289,7 @@ class InfraManager:
             else:
                 click.echo("Creating Cockpit token")
 
-            token = infra.cpt.create_metrics_token(self.cockpit)
+            token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
         created_container = infra.cnt.create_kong_container(
@@ -299,7 +298,7 @@ class InfraManager:
             db_host,
             db_port,
             db_password,
-            metrics_token=token,
+            metrics_token=token_key,
             metrics_push_url=metrics_push_url,
         )
 
@@ -385,9 +384,12 @@ class InfraManager:
 
         token, metrics_push_url = None, None
         if container.environment_variables.get("FORWARD_METRICS"):
+            token = infra.cpt.get_metrics_token(self.cockpit)
+            if token:
+                infra.cpt.delete_metrics_token(self.cockpit, token)
+
             click.echo("Creating Cockpit token to forward metrics...")
-            infra.cpt.delete_metrics_token_by_name(self.cockpit)
-            token = infra.cpt.create_metrics_token(self.cockpit)
+            token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
         infra.cnt.update_kong_container(
@@ -396,7 +398,7 @@ class InfraManager:
             db_host,
             db_port,
             db_password,
-            metrics_token=token,
+            metrics_token=token_key,
             metrics_push_url=metrics_push_url,
         )
 
