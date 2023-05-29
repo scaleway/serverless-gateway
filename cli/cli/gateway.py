@@ -22,11 +22,14 @@ def response_hook(response: requests.Response, *_args, **_kwargs):
 class GatewayManager:
     """Configure routes via the Kong admin API."""
 
+    admin_url: str
+    gateway_url: str
+
     def __init__(self):
         # Local local config
         self.config = conf.InfraConfiguration.load()
 
-        self.admin_url = [
+        admin_url = [
             self.config.protocol,
             "://",
             self.config.gw_admin_host,
@@ -34,11 +37,11 @@ class GatewayManager:
 
         admin_port = self.config.gw_admin_port
         if admin_port:
-            self.admin_url.extend([":", str(admin_port)])
+            admin_url.extend([":", str(admin_port)])
 
-        self.admin_url = "".join(self.admin_url)
+        self.admin_url = "".join(admin_url)
 
-        self.gateway_url = [
+        gateway_url = [
             self.config.protocol,
             "://",
             self.config.gw_host,
@@ -46,9 +49,9 @@ class GatewayManager:
 
         gateway_port = self.config.gw_port
         if gateway_port:
-            self.gateway_url.extend([":", str(gateway_port)])
+            gateway_url.extend([":", str(gateway_port)])
 
-        self.gateway_url = "".join(self.gateway_url)
+        self.gateway_url = "".join(gateway_url)
 
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
@@ -67,9 +70,8 @@ class GatewayManager:
         resp = self.session.put(url=service_url, json=route.service_json())
         resp = self.session.put(url=route_url, json=route.route_json())
 
+        plugins_url = f"{route_url}/plugins"
         if route.cors:
-            plugins_url = f"{route_url}/plugins"
-
             try:
                 self.session.post(url=plugins_url, json=route.cors_json())
             except requests.HTTPError:
@@ -114,3 +116,33 @@ class GatewayManager:
             )
 
         return routes
+
+    def setup_global_kong_statsd_plugin(self) -> str:
+        """Install the kong statsd plugin on the kong admin API.
+
+        This plugin is used to send metrics to Scaleway Cockpit.
+        It is installed globally for all services.
+        """
+        plugins_url = self.admin_url + "/plugins"
+
+        # Delete existing statsd plugin if it exists
+        resp = self.session.get(plugins_url)
+        plugins = resp.json()["data"]
+        for plugin in plugins:
+            if plugin["name"] == "statsd":
+                self.session.delete(f"{plugins_url}/{plugin['id']}")
+
+        # Install statsd plugin
+        resp = self.session.post(
+            plugins_url,
+            json={
+                "name": "statsd",
+                "config": {
+                    "port": 8125,
+                    "prefix": "kong",
+                },
+            },
+        )
+        body_json = resp.json()
+        plugin_id = body_json["id"]
+        return plugin_id

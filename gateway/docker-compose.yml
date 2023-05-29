@@ -1,6 +1,7 @@
 version: '3.9'
 
-x-kong-env: &kong-env
+x-kong-env:
+  &kong-env
   KONG_PG_HOST: db
   KONG_PG_DATABASE: kong
   KONG_PG_USER: kong
@@ -19,6 +20,10 @@ services:
       context: .
     environment:
       <<: *kong-env
+      # Does not forward metrics by default on docker-compose
+      FORWARD_METRICS: ${FORWARD_METRICS}
+      COCKPIT_METRICS_PUSH_URL: ${COCKPIT_METRICS_PUSH_URL}
+      COCKPIT_METRICS_TOKEN: ${COCKPIT_METRICS_TOKEN}
     depends_on:
       - db
       - kong-admin
@@ -27,7 +32,7 @@ services:
     ports:
       - 8080:8080
     healthcheck:
-      test: ["CMD", "kong", "health"]
+      test: [ "CMD", "kong", "health" ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -46,7 +51,7 @@ services:
     ports:
       - 8001:8001
     healthcheck:
-      test: ["CMD", "kong", "health"]
+      test: [ "CMD", "kong", "health" ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -59,7 +64,7 @@ services:
       POSTGRES_USER: kong
       POSTGRES_PASSWORD: kong
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
+      test: [ "CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}" ]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -94,4 +99,3 @@ services:
       context: ./endpoints/func-b/
     ports:
       - 8005:80
-
