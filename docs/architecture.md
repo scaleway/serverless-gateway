@@ -8,3 +8,7 @@ It uses the following Scaleway services to run an instance of [Kong Gateway](htt
 - [Managed Databases (Postgres)](https://www.scaleway.com/en/database/) - to hold the Kong database state
 - [Secret Manager](https://www.scaleway.com/en/secret-manager/) - to store the database credentials and share with containers
 - [Observability Cockpit](https://www.scaleway.com/en/cockpit/) - to view metrics from the gateway using [Kong statsd](https://docs.konghq.com/hub/kong-inc/statsd/)
+
+Within Kong, we use the following plugins:
+
+- [`statsd`](https://docs.konghq.com/hub/kong-inc/statsd/) - to export metrics to the Scaleway Cockpit

@@ -2,9 +2,9 @@
 
 Serverless Functions and Containers can be added to your gateway as a route just like any other URL.
 
-You can try this using the function included at `endpoints/func-example`.
+If you are building a Python serverless app, you can also manage and transparently integrate with your gateway using the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
-This function uses [Scaleway's Python Serverless API Framework](https://github.com/scaleway/serverless-api-project), which must be installed for the example to work.
+You can try this using the function included at `endpoints/func-example`.
 
 Once set up, you can deploy the functions with:
 

@@ -10,23 +10,16 @@ It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving y
 
 - [:rocket: Features](#rocket-features)
 - [:computer: Quick-start](#computer-quick-start)
-- [Custom domains](docs/custom-domain.md)
+- [Observability](docs/observability.md)
+- [Custom domains](docs/domains.md)
+- [Adding authnetication](docs/auth.md)
+- [Adding CORS](docs/cors.md)
+- [Accessing Kong directly](docs/kong.md)
 - [Serverless functions](docs/serverless.md)
-- [Advanced usage](docs/advanced.md)
+- [Modifying the gateway](docs/custom.md)
 - [:hammer: Architecture](docs/architecture.md)
 - [:mortar\_board: Contributing](#mortar_board-contributing)
 - [:mailbox: Reach Us](#mailbox-reach-us)
-
-## :rocket: Features
-
-The Serverless Gateway:
-
-- Adds routing via a single base URL
-- Adds routing based on HTTP methods
-- Adds permissive CORS by default, to support accessing routes from a browser
-- Gives access to a serverless [Kong Gateway](https://docs.konghq.com/gateway/latest/) deployment
-
-The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
 
 ## :computer: Quick-start
 
@@ -40,7 +33,7 @@ Once done, the following steps can be run from the root of the project, and will
 
 The gateway image itself is packaged via our public [Serverless Gateway Docker image](https://hub.docker.com/r/scaleway/serverless-gateway).
 
-*1. Deploy your gateway*
+### Deploy your gateway
 
 To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
@@ -56,35 +49,30 @@ scwgw await-namespace
 # Create and deploy the containers
 scwgw create-containers
 scwgw await-containers
-```
 
-*2. Set up your config*
+# Activate observability integration
+scwgw setup-metrics
 
-Configure your local CLI to use all the newly deployed resources:
-
-```console
+# Configure your CLI to use the newly deployed resources
 scwgw remote-config
 ```
 
-Check it's working with the following (will return an empty list):
+### Add a route
+
+To check your gateway is working, you can add and remove a route:
 
 ```console
+# Check no routes are configured initially
 scwgw get-routes
-```
 
-*3. Add a route*
-
-You can add a route to any URL, here we will use the `worldtimeapi`.
-
-```console
-# Check the response direclty from the target
+# Check the response directly from a given URL
 TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
 curl $TARGET_URL
 
-# Add the route
+# Add a route to this URL in your gateway
 scwgw add-route /time $TARGET_URL
 
-# List routes
+# List routes to see that it's been configured
 scwgw get-routes
 
 # Curl the URL via the gateway
@@ -98,7 +86,7 @@ We welcome all contributions to our open-source projects, please see our [contri
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
 
-## :mailbox: Reach Us
+## :mailbox: Reach us
 
 We love feedback. Feel free to:
 
