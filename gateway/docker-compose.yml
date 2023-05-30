@@ -57,6 +57,19 @@ services:
       retries: 10
     restart: on-failure:5
 
+  kong-gui:
+    build:
+      context: .
+    environment:
+      <<: *kong-env
+      IS_GUI_CONTAINER: 1
+    depends_on:
+      - db
+    networks:
+      - scw-sls-gw
+    ports:
+      - 8002:8002
+
   db:
     image: postgres:9.5
     environment:
