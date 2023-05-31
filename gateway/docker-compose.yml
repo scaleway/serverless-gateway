@@ -65,6 +65,7 @@ services:
       IS_GUI_CONTAINER: 1
     depends_on:
       - db
+      - kong-admin
     networks:
       - scw-sls-gw
     ports:
