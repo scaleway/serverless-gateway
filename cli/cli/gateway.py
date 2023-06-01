@@ -1,9 +1,9 @@
-import click
 import json
+from typing import List
 
+import click
 import requests
 from loguru import logger
-from typing import List
 
 from cli import conf
 from cli.model import Route
