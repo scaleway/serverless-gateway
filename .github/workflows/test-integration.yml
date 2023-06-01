@@ -2,7 +2,10 @@ name: tests with deployed gateway
 
 on:
   push:
-    branches: [main]
+    branches: [main,prod]
+  pull_request:
+    branches: [main,prod]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   setup-fixtures:
