@@ -37,7 +37,7 @@ jobs:
       - uses: ./.github/actions/setup-cli
         with:
           access-key: "foo"
-          secret-key: "bar"
+          secret-key: "00000000-0000-0000-0000-000000000000"
           project-id: "00000000-0000-0000-0000-000000000000"
           organization-id: "00000000-0000-0000-0000-000000000000"
 
