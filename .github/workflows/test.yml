@@ -34,13 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./.github/actions/setup-cli
-        with:
-          access-key: "SCWXXXXXXXXXXXXXXXXX"
-          secret-key: "00000000-0000-0000-0000-000000000000"
-          project-id: "00000000-0000-0000-0000-000000000000"
-          organization-id: "00000000-0000-0000-0000-000000000000"
-
       - uses: ./.github/actions/setup-poetry
 
       - name: Start the stack
