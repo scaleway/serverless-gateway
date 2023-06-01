@@ -1,7 +1,9 @@
+import click
 import json
 
 import requests
 from loguru import logger
+from typing import List
 
 from cli import conf
 from cli.model import Route
@@ -85,7 +87,18 @@ class GatewayManager:
         resp = self.session.delete(url=f"{self.services_url}/{route.name}")
         return resp
 
-    def get_routes(self):
+    def print_routes(self):
+        routes: List[Route] = self.get_routes()
+        routes.sort(key=lambda r: r.relative_url)
+
+        click.secho(
+            f"{'RELATIVE URL':<25} {'TARGET':<40} {'HTTP_METHODS':<10}", bold=True
+        )
+        for r in routes:
+            http_methods = r.http_methods if r.http_methods else "All"
+            click.secho(f"{r.relative_url:<25} {r.target:<40} {http_methods:<10}")
+
+    def get_routes(self) -> List[Route]:
         resp = self.session.get(url=self.routes_url)
         route_data = {r.get("name"): r for r in resp.json().get("data")}
 

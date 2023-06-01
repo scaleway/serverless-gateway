@@ -76,7 +76,7 @@ scwgw add-route /time $TARGET_URL
 scwgw get-routes
 
 # Curl the URL via the gateway
-GATEWAY_ENDPOINT=$(scwgw get-gateway-endpoint)
+GATEWAY_ENDPOINT=$(scwgw get-endpoint)
 curl https://${GATEWAY_ENDPOINT}/time
 ```
 

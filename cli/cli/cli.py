@@ -47,18 +47,20 @@ def remote_config():
 def get_routes():
     """Returns the routes configured on the gateway"""
     manager = GatewayManager()
-    routes = manager.get_routes()
-    print(routes)
+    manager.print_routes()
 
 
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-def add_route(relative_url, target):
+@click.option(
+    "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
+)
+def add_route(relative_url, target, cors):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
-    route = Route(relative_url, target)
+    route = Route(relative_url, target, cors=cors)
     manager.add_route(route)
 
 
@@ -99,7 +101,7 @@ def delete_containers():
 
 
 @cli.command()
-def get_gateway_endpoint():
+def get_endpoint():
     """Returns the endpoint for the gateway"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
@@ -108,7 +110,7 @@ def get_gateway_endpoint():
 
 
 @cli.command()
-def get_gateway_admin_endpoint():
+def get_admin_endpoint():
     """Returns the endpoint for the gateway admin"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
