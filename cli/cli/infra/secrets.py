@@ -7,7 +7,7 @@ import scaleway.secret.v1alpha1 as sdk
 from loguru import logger
 from scaleway import ScalewayException
 
-# Name of the secret in Scaleway Secret Manager
+# Name of the secret in Secret Manager
 PASSWORD_NAME = "scw-gw-database-password"
 PASSWORD_LENGTH = 32
 
@@ -15,7 +15,7 @@ PASSWORD_LENGTH = 32
 def generate_database_password() -> str:
     """Generate a random password for the database.
 
-    Made to be compatible with the requirements of Scaleway Database.
+    Made to be compatible with the requirements of Managed Database validation.
     """
     for _ in range(100):
         password = "".join(
@@ -35,16 +35,9 @@ def generate_database_password() -> str:
 
 
 def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
-    """Store the password to Scaleway Secret Manager."""
-    try:
-        # Delete password if already exists
-        secret = api.get_secret_by_name(secret_name=PASSWORD_NAME)
-        logger.debug(f"Secret {PASSWORD_NAME} already exists, recreating")
-        api.delete_secret(secret_id=secret.id)
+    """Store the password to Secret Manager."""
 
-    except ScalewayException as exception:
-        if exception.status_code != 404:
-            raise exception
+    delete_db_password_secret(api)
 
     logger.info("Creating secret for database password")
     secret = api.create_secret(
@@ -61,15 +54,31 @@ def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
     )
 
 
+def delete_db_password_secret(api: sdk.SecretV1Alpha1API):
+    """Delete the password from Secret Manager."""
+    try:
+        # Delete password if already exists
+        secret = api.get_secret_by_name(secret_name=PASSWORD_NAME)
+        logger.debug(f"Deleting {PASSWORD_NAME} secret")
+        api.delete_secret(secret_id=secret.id)
+
+    except ScalewayException as exception:
+        if exception.status_code != 404:
+            raise exception
+
+
 def get_db_password(api: sdk.SecretV1Alpha1API) -> str:
-    """Get the password from Scaleway Secret Manager."""
+    """Get the password from Secret Manager."""
     version = api.access_secret_version_by_name(
         secret_name=PASSWORD_NAME, revision="latest"
     )
+
     password = base64.b64decode(version.data)
     data_crc32 = zlib.crc32(password) & 0xFFFFFFFF
+
     if version.data_crc32 and not secrets.compare_digest(
         str(data_crc32), str(version.data_crc32)
     ):
         raise ValueError("CRC32 of data does not match")
+
     return password.decode("utf-8")

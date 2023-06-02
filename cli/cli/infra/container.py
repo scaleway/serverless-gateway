@@ -1,7 +1,8 @@
 import scaleway.container.v1beta1 as sdk
 
+from cli.conf import DB_DATABASE_NAME
 from cli.infra.image import IMAGE_TAG
-from cli.infra.rdb import DB_DATABASE_NAME, DB_USERNAME
+from cli.infra.rdb import DB_USERNAME
 
 CONTAINER_NAMESPACE = "scw-sls-gw"
 

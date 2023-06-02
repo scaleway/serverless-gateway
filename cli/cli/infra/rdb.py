@@ -7,12 +7,9 @@ DB_VOLUME_TYPE = "lssd"
 DB_NODE_TYPE = "DB-DEV-S"
 DB_VOLUME_SIZE = 5000000000  # Expressed in bytes
 
-# Name is fixed for Scaleway managed database
-DB_DATABASE_NAME = "rdb"
-
 
 def create_database_instance(api: sdk.RdbV1API, password: str) -> sdk.Instance:
-    """Create a Scaleway managed database instance."""
+    """Create a managed database instance."""
 
     return api.create_instance(
         name=DB_INSTANCE_NAME,

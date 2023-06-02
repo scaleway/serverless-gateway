@@ -22,7 +22,6 @@ class InfraManager:
             `Scaleway API documentation`_
             `Scaleway Python SDK`_
 
-
         .. _Scaleway API documentation:_ https://www.scaleway.com/en/developers/api/
         .. _Scaleway Python SDK:_ https://github.com/scaleway/scaleway-sdk-python
     """
@@ -76,8 +75,7 @@ class InfraManager:
         if not container:
             container_name = "Admin" if admin else "Gateway"
             click.secho(
-                f"{container_name} container not found"
-                "Run `scw-gw create-containers` to deploy the gateway",
+                f"{container_name} container not found.",
                 fg="red",
                 bold=True,
             )
@@ -131,9 +129,7 @@ class InfraManager:
             return password
         except ScalewayException as exception:
             if exception.status_code == 404:
-                click.secho(
-                    "Database password not found in Scaleway Secret Manager", fg="red"
-                )
+                click.secho("Database password not found in Secret Manager", fg="red")
                 raise click.Abort()
             raise exception
 
@@ -187,8 +183,11 @@ class InfraManager:
 
     def delete_db(self) -> None:
         """Delete the database instance."""
-        instance = self._get_database_instance_or_abort()
+        # Delete the secret
+        infra.secrets.delete_db_password_secret(self.secrets)
 
+        # Delete the database
+        instance = self._get_database_instance_or_abort()
         self.rdb.delete_instance(instance_id=instance.id)
         click.secho("Database deleted", fg="green", bold=True)
 

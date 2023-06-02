@@ -133,7 +133,7 @@ class GatewayManager:
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.
 
-        This plugin is used to send metrics to Scaleway Cockpit.
+        This plugin is used to send metrics to Cockpit.
         It is installed globally for all services.
         """
         plugins_url = self.admin_url + "/plugins"

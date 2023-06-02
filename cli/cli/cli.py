@@ -21,7 +21,7 @@ NO_METRICS_OPTION = click.option(
 
 @click.group()
 def cli():
-    """CLI for managing the gateway on Scaleway.
+    """CLI for managing the gateway.
 
     See the README for more information.
     """
@@ -126,7 +126,7 @@ def get_admin_endpoint():
 def create_db(db_password: str | None, no_save: bool):
     """Creates the database for the gateway.
 
-    If --no-save is passed, the password will not be saved to Scaleway Secret Manager.
+    If --no-save is passed, the password will not be saved to Secret Manager.
     The password will therefore need to be provided for other commands.
     """
     scw_client = client.get_scaleway_client()
