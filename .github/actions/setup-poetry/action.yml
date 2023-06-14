@@ -19,5 +19,5 @@ runs:
     - name: Install poetry dependencies
       shell: bash
       working-directory: cli
-      run: poetry install --no-interaction --no-root --with=dev
+      run: poetry install --no-interaction --with=dev
       if: steps.cache-gw-deps.outputs.cache-hit != 'true'
