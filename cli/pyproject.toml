@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "scw-gateway"
+version = "0.1.2"
+description = ""
+authors = ["Simon Shillaker <sshillaker@scaleway.com>"]
+readme = "README.md"
+packages = [{include = "cli"}]
+
+[tool.poetry.dependencies]
+loguru = "0.6.0"
+python = "^3.10"
+requests = "^2.28.2"
+click = "^8.1.3"
+pyyaml = "^6.0"
+scaleway = "^0.12.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+flake8 = "^6.0.0"
+isort = "^5.12.0"
+mypy = "^1.2.0"
+pytest = "^7.3.1"
+pytest-mock = "^3.10.0"
+responses = "^0.23.1"
+types-pyyaml = "^6.0.12.9"
+types-requests = "^2.29.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+scwgw = "cli.cli:cli"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+testpaths = ["tests"]
+
+[tool.mypy]
+exclude = ["venv", "endpoints"]
+# TODO - enable mypy checking properly and fix issue with kong_pdk
+ignore_missing_imports = true

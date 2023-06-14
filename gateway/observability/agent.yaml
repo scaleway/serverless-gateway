@@ -1,0 +1,107 @@
+metrics:
+  wal_directory: /tmp/wal
+  global:
+    scrape_interval: ${METRICS_SCRAPE_INTERVAL:-15s}
+    remote_write:
+      - url: ${COCKPIT_METRICS_PUSH_URL}
+        headers:
+          "X-Token": ${COCKPIT_METRICS_TOKEN}
+
+integrations:
+  statsd_exporter:
+    enabled: true
+    listen_udp: :8125
+    listen_tcp: ""
+    mapping_config:
+      mappings:
+        - match: kong.service.*.request.count
+          match_metric_type: counter
+          name: "kong_statsd_requests_proxy"
+          labels:
+            service: $1
+          job: "kong_metrics"
+
+        - match: kong.service.*.kong_latency
+          match_metric_type: observer
+          name: "kong_statsd_latency_ms"
+          timer_type: histogram
+          labels:
+            service: $1
+          job: "kong_metrics"
+
+        - match: kong.service.*.upstream_latency
+          match_metric_type: observer
+          name: "kong_statsd_upstream_latency_ms"
+          timer_type: histogram
+          labels:
+            service: $1
+          job: "kong_metrics"
+
+        - match: kong.service.*.latency
+          match_metric_type: observer
+          name: "kong_statsd_request_latency_ms"
+          timer_type: histogram
+          labels:
+            service: $1
+          job: "kong_metrics"
+
+        - match: kong.service.*.user.*.request.count
+          match_metric_type: counter
+          name: "kong_statsd_request_count_per_consumer"
+          labels:
+            service: $1
+            consumer: $2
+          job: "kong_metrics"
+
+        - match: kong.service.*.status.*
+          match_metric_type: counter
+          name: "kong_statsd_status_count"
+          labels:
+            service: $1
+            code: $2
+          job: "kong_metrics"
+
+        - match: kong.service.*.user.*.status.*
+          match_metric_type: counter
+          name: "kong_statsd_status_per_consumer"
+          labels:
+            service: $1
+            consumer: $2
+            code: $3
+          job: "kong_metrics"
+
+        - match: kong.service.*.workspace.*.status.*
+          match_metric_type: counter
+          name: "kong_statsd_status_per_workspace"
+          labels:
+            service: $1
+            workspace: $2
+            code: $3
+          job: "kong_metrics"
+
+        # Changed in Kong 3.0: kong.service -> kong.route
+        # TODO: test this
+        - match: kong.route.*.user.*.status.*
+          match_metric_type: counter
+          name: "kong_statsd_status_per_route_per_consumer"
+          labels:
+            route: $1
+            consumer: $2
+            code: $3
+          job: "kong_metrics"
+
+        - match: kong.node.*.shdict.*.free_space
+          match_metric_type: gauge
+          name: "kong_statsd_memory_lua_shared_dict_free_bytes"
+          labels:
+            kong_node: "$1"
+            shared_dict: "$2"
+          job: "kong_metrics"
+
+        - match: kong.node.*.shdict.*.capacity
+          match_metric_type: gauge
+          name: "kong_statsd_memory_lua_shared_dict_total_bytes"
+          labels:
+            kong_node: "$1"
+            shared_dict: "$2"
+          job: "kong_metrics"
