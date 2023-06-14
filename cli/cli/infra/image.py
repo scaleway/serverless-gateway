@@ -1,5 +1,5 @@
 IMAGE_REGISTRY = "docker.io"
 IMAGE_ORG = "scaleway"
 IMAGE_NAME = "serverless-gateway"
-IMAGE_VERSION = "0.2"
+IMAGE_VERSION = "0.2.0"
 IMAGE_TAG = f"{IMAGE_REGISTRY}/{IMAGE_ORG}/{IMAGE_NAME}:{IMAGE_VERSION}"
