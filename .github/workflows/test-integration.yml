@@ -2,7 +2,10 @@ name: tests with deployed gateway
 
 on:
   push:
-    branches: [main]
+    branches: [main,prod]
+  pull_request:
+    branches: [main,prod]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   setup-fixtures:
@@ -94,7 +97,31 @@ jobs:
         env:
           DEPLOY_ENV: "scw"
 
-      - name: Delete gateway namespace
+  teardown-gateway:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    needs:
+      - run-tests
+
+    # Tolerate errors if no resources found to clean up
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/setup-cli
+        with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+
+      - uses: ./.github/actions/setup-poetry
+
+      - name: Delete namespace
         working-directory: cli
         run: poetry run scwgw delete-namespace
-        if: always()
+
+      - name: Delete database
+        working-directory: cli
+        run: poetry run scwgw delete-db

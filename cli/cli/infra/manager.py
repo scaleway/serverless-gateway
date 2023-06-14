@@ -1,16 +1,15 @@
 from concurrent import futures
 
 import click
-from loguru import logger
+import scaleway.cockpit.v1beta1 as cpt
 import scaleway.container.v1beta1 as cnt
 import scaleway.function.v1beta1 as fnc
 import scaleway.rdb.v1 as rdb
 import scaleway.secret.v1alpha1 as sec
-import scaleway.cockpit.v1beta1 as cpt
+from loguru import logger
 from scaleway import Client, ScalewayException
 
-from cli import conf
-from cli import infra
+from cli import conf, infra
 
 
 class InfraManager:
@@ -22,7 +21,6 @@ class InfraManager:
         References:
             `Scaleway API documentation`_
             `Scaleway Python SDK`_
-
 
         .. _Scaleway API documentation:_ https://www.scaleway.com/en/developers/api/
         .. _Scaleway Python SDK:_ https://github.com/scaleway/scaleway-sdk-python
@@ -62,6 +60,7 @@ class InfraManager:
                 bold=True,
             )
             raise click.Abort()
+
         return namespace
 
     def _get_container_or_abort(self, admin: bool = False) -> cnt.Container:
@@ -76,12 +75,12 @@ class InfraManager:
         if not container:
             container_name = "Admin" if admin else "Gateway"
             click.secho(
-                f"{container_name} container not found"
-                "Run `scw-gw create-containers` to deploy the gateway",
+                f"{container_name} container not found.",
                 fg="red",
                 bold=True,
             )
             raise click.Abort()
+
         return container
 
     def _get_admin_container_or_abort(self) -> cnt.Container:
@@ -97,6 +96,7 @@ class InfraManager:
                 bold=True,
             )
             raise click.Abort()
+
         return instance
 
     def _get_database_endpoint_or_abort(
@@ -110,6 +110,7 @@ class InfraManager:
                 bold=True,
             )
             raise click.Abort()
+
         endpoint = endpoints[0]
         address = endpoint.ip or endpoint.hostname
         if not address:
@@ -119,6 +120,7 @@ class InfraManager:
                 bold=True,
             )
             raise click.Abort()
+
         return address, endpoint.port
 
     def _get_db_password_or_abort(self) -> str:
@@ -127,9 +129,7 @@ class InfraManager:
             return password
         except ScalewayException as exception:
             if exception.status_code == 404:
-                click.secho(
-                    "Database password not found in Scaleway Secret Manager", fg="red"
-                )
+                click.secho("Database password not found in Secret Manager", fg="red")
                 raise click.Abort()
             raise exception
 
@@ -151,6 +151,7 @@ class InfraManager:
         if instance:
             click.secho(f"Database {instance_name} already exists")
             return
+
         click.secho(f"Creating database instance {instance_name}...")
 
         if not password:
@@ -162,6 +163,7 @@ class InfraManager:
             infra.secrets.create_db_password_secret(self.secrets, password)
 
         infra.rdb.create_database_instance(self.rdb, password)
+        click.secho("Database created", fg="green", bold="true")
 
     def check_db(self):
         """Check the status of the database instance."""
@@ -172,10 +174,22 @@ class InfraManager:
         """Wait for the database instance to be ready."""
         instance = self._get_database_instance_or_abort()
         instance = self.rdb.wait_for_instance(instance_id=instance.id)
-        if instance.status is not rdb.InstanceStatus.READY:
+
+        if instance.status != rdb.InstanceStatus.READY:
             click.secho("Database is not ready", fg="red", bold="true")
             raise click.Abort()
+
         click.secho("Database ready", fg="green", bold=True)
+
+    def delete_db(self) -> None:
+        """Delete the database instance."""
+        # Delete the secret
+        infra.secrets.delete_db_password_secret(self.secrets)
+
+        # Delete the database
+        instance = self._get_database_instance_or_abort()
+        self.rdb.delete_instance(instance_id=instance.id)
+        click.secho("Database deleted", fg="green", bold=True)
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -199,6 +213,7 @@ class InfraManager:
                 bold="true",
             )
             raise click.Abort()
+
         click.secho(f"Namespace status: {namespace.status}", bold=True)
 
     def await_namespace(self):
@@ -212,9 +227,11 @@ class InfraManager:
                 bold=True,
             )
             raise click.Abort()
+
         if namespace.status != cnt.NamespaceStatus.READY:
             click.secho("Namespace is not ready", fg="red", bold=True)
             raise click.Abort()
+
         click.secho("Namespace ready", fg="green", bold=True)
 
     def delete_namespace(self):
@@ -243,9 +260,7 @@ class InfraManager:
             )
         else:
             click.secho(
-                f"Creating admin container {admin_container_name}...",
-                fg="green",
-                bold="true",
+                f"Creating admin container {admin_container_name}",
             )
             created_container = infra.cnt.create_kong_admin_container(
                 self.containers, namespace.id, db_host, db_port, db_password
@@ -261,12 +276,19 @@ class InfraManager:
             click.secho(f"Container {container_name} already exists")
             return
 
-        click.secho(f"Creating container {container_name}", fg="green", bold="true")
+        click.secho(f"Creating container {container_name}")
 
         token, metrics_push_url = None, None
         if forward_metrics:
-            click.echo("Creating Cockpit token to forward metrics...")
-            token = infra.cpt.create_metrics_token(self.cockpit)
+            # Check if token exists
+            token = infra.cpt.get_metrics_token(self.cockpit)
+            if token:
+                click.echo("Cockpit token already exists, recreating")
+                infra.cpt.delete_metrics_token(self.cockpit, token)
+            else:
+                click.echo("Creating Cockpit token")
+
+            token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
         created_container = infra.cnt.create_kong_container(
@@ -275,9 +297,10 @@ class InfraManager:
             db_host,
             db_port,
             db_password,
-            metrics_token=token,
+            metrics_token=token_key,
             metrics_push_url=metrics_push_url,
         )
+
         click.secho(f"Deploying container {container_name}")
         self.containers.deploy_container(container_id=created_container.id)
 
@@ -317,12 +340,23 @@ class InfraManager:
         """Delete the containers."""
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
+
         click.secho(f"Deleting container {admin_container.name}")
         self.containers.delete_container(container_id=admin_container.id)
+
         click.secho(f"Deleting container {container.name}")
         self.containers.delete_container(container_id=container.id)
 
+    def get_function_endpoint(
+        self, namespace_name: str, function_name: str
+    ) -> str | None:
+        """Get the endpoint of a function."""
+        return infra.fnc.get_function_endpoint_by_name(
+            self.functions, namespace_name, function_name
+        )
+
     def create_admin_container_token(self) -> str:
+        """Create a token to access the private admin container."""
         admin_container = self._get_admin_container_or_abort()
         token = self.containers.create_token(container_id=admin_container.id)
         return token.token
@@ -358,9 +392,12 @@ class InfraManager:
 
         token, metrics_push_url = None, None
         if container.environment_variables.get("FORWARD_METRICS"):
+            token = infra.cpt.get_metrics_token(self.cockpit)
+            if token:
+                infra.cpt.delete_metrics_token(self.cockpit, token)
+
             click.echo("Creating Cockpit token to forward metrics...")
-            infra.cpt.delete_metrics_token_by_name(self.cockpit)
-            token = infra.cpt.create_metrics_token(self.cockpit)
+            token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
         infra.cnt.update_kong_container(
@@ -369,7 +406,7 @@ class InfraManager:
             db_host,
             db_port,
             db_password,
-            metrics_token=token,
+            metrics_token=token_key,
             metrics_push_url=metrics_push_url,
         )
 

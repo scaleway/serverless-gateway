@@ -9,9 +9,10 @@ if t.TYPE_CHECKING:
     from cli.infra import InfraManager
 
 USER_HOME = os.path.expanduser("~")
-CONFIG_FILE = os.path.join(USER_HOME, ".config", "scw", "gateway.yml")
+CONFIG_DIR = os.path.join(USER_HOME, ".config", "scw")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "gateway.yml")
 
-# Name is fixed for Scaleway managed database
+# Name is fixed for all managed databases
 DB_DATABASE_NAME = "rdb"
 DB_DATABASE_NAME_LOCAL = "kong"
 
@@ -76,5 +77,7 @@ class InfraConfiguration:
 
     def save(self) -> None:
         """Save the configuration to a file."""
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+
         with open(CONFIG_FILE, mode="wt", encoding="utf-8") as file:
             yaml.safe_dump(asdict(self), file)

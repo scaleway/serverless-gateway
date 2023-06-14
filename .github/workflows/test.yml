@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main,prod]
     types: [opened, synchronize, reopened, ready_for_review]
 
 defaults:
@@ -33,13 +33,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - uses: ./.github/actions/setup-cli
-        with:
-          access-key: "foo"
-          secret-key: "bar"
-          project-id: "00000000-0000-0000-0000-000000000000"
-          organization-id: "00000000-0000-0000-0000-000000000000"
 
       - uses: ./.github/actions/setup-poetry
 

@@ -21,7 +21,7 @@ NO_METRICS_OPTION = click.option(
 
 @click.group()
 def cli():
-    """CLI for managing the gateway on Scaleway.
+    """CLI for managing the gateway.
 
     See the README for more information.
     """
@@ -47,18 +47,20 @@ def remote_config():
 def get_routes():
     """Returns the routes configured on the gateway"""
     manager = GatewayManager()
-    routes = manager.get_routes()
-    print(routes)
+    manager.print_routes()
 
 
 @cli.command()
 @click.argument("relative_url")
 @click.argument("target")
-def add_route(relative_url, target):
+@click.option(
+    "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
+)
+def add_route(relative_url, target, cors):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
-    route = Route(relative_url, target)
+    route = Route(relative_url, target, cors=cors)
     manager.add_route(route)
 
 
@@ -99,7 +101,7 @@ def delete_containers():
 
 
 @cli.command()
-def get_gateway_endpoint():
+def get_endpoint():
     """Returns the endpoint for the gateway"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
@@ -108,7 +110,7 @@ def get_gateway_endpoint():
 
 
 @cli.command()
-def get_gateway_admin_endpoint():
+def get_admin_endpoint():
     """Returns the endpoint for the gateway admin"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
@@ -124,12 +126,20 @@ def get_gateway_admin_endpoint():
 def create_db(db_password: str | None, no_save: bool):
     """Creates the database for the gateway.
 
-    If --no-save is passed, the password will not be saved to Scaleway Secret Manager.
+    If --no-save is passed, the password will not be saved to Secret Manager.
     The password will therefore need to be provided for other commands.
     """
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     manager.create_db(password=db_password, save_password=not no_save)
+
+
+@cli.command()
+def delete_db():
+    """Deletes the database for the gateway."""
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+    manager.delete_db()
 
 
 @cli.command()
@@ -218,20 +228,22 @@ def set_custom_domain():
 
 
 @cli.command()
+@click.option(
+    "--no-redeploy",
+    is_flag=True,
+    default=False,
+    help="Don't redeploy the container, just update.",
+)
 @DB_PASSWORD_OPTION
 def update_containers(
+    no_redeploy: bool,
     db_password: str | None,
 ):
     """Updates the containers"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
-    manager.update_container(db_password=db_password)
 
-
-@cli.command()
-@DB_PASSWORD_OPTION
-def update_container_no_deploy(db_password: str | None):
-    """Updates the containers without redeploying"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.update_container_without_deploy(db_password=db_password)
+    if no_redeploy:
+        manager.update_container_without_deploy(db_password=db_password)
+    else:
+        manager.update_container(db_password=db_password)

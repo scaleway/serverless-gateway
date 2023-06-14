@@ -6,32 +6,20 @@ It lets you manage routing from a single base URL, as well as handle transversal
 
 It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
 
-## :page_with_curl: Summary
+## :page_with_curl: Contents
 
-- [Scaleway Serverless Gateway :door:](#scaleway-serverless-gateway-door)
-  - [:page\_with\_curl: Summary](#page_with_curl-summary)
-  - [:rocket: Features](#rocket-features)
-  - [:computer: Quick-start](#computer-quick-start)
-    - [Updating your gateway](#updating-your-gateway)
-    - [Deleting your gateway](#deleting-your-gateway)
-  - [Custom domains](#custom-domains)
-  - [Serverless functions](#serverless-functions)
-  - [:hammer: Architecture](#hammer-architecture)
-    - [Authentication](#authentication)
-    - [Configuring routes](#configuring-routes)
-  - [:mortar\_board: Contributing](#mortar_board-contributing)
-  - [:mailbox: Reach Us](#mailbox-reach-us)
-
-## :rocket: Features
-
-The Serverless Gateway:
-
-- Adds routing via a single base URL
-- Adds routing based on HTTP methods
-- Adds permissive CORS by default, to support accessing routes from a browser
-- Gives access to a serverless [Kong Gateway](https://docs.konghq.com/gateway/latest/) deployment
-
-The Serverless Gateway integrates fully with the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
+- [:rocket: Features](#rocket-features)
+- [:computer: Quick-start](#computer-quick-start)
+- [Observability](docs/observability.md)
+- [Custom domains](docs/domains.md)
+- [Adding authnetication](docs/auth.md)
+- [Adding CORS](docs/cors.md)
+- [Accessing Kong directly](docs/kong.md)
+- [Serverless functions](docs/serverless.md)
+- [Modifying the gateway](docs/custom.md)
+- [:hammer: Architecture](docs/architecture.md)
+- [:mortar\_board: Contributing](#mortar_board-contributing)
+- [:mailbox: Reach Us](#mailbox-reach-us)
 
 ## :computer: Quick-start
 
@@ -45,144 +33,52 @@ Once done, the following steps can be run from the root of the project, and will
 
 The gateway image itself is packaged via our public [Serverless Gateway Docker image](https://hub.docker.com/r/scaleway/serverless-gateway).
 
-*1. Deploy your gateway*
+### Deploy your gateway
 
 To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
 
 ```console
 # Create the database
 scwgw create-db
+scwgw await-db
 
 # Create the namespace
 scwgw create-namespace
-
-# Wait for the namespace to be ready
 scwgw await-namespace
 
 # Create and deploy the containers
 scwgw create-containers
-
-# Wait for the containers to be ready
 scwgw await-containers
 
-# Wait for the database to be ready
-scwgw await-db
-```
+# Activate observability integration
+scwgw setup-metrics
 
-*2. Set up your config*
-
-Configure your local CLI to use all the newly deployed resources:
-
-```console
+# Configure your CLI to use the newly deployed resources
 scwgw remote-config
 ```
 
-*3. Add a route*
+### Add a route
 
-You can add a route to any URL, here we will use the `worldtimeapi`.
-
-```console
-# Curl the URL directly
-curl http://worldtimeapi.org/api/timezone/Europe/Paris
-
-# Set up gateway params
-scwgw add-route /time http://worldtimeapi.org/api/timezone/Europe/Paris
-
-# Now curl through your gateway
-curl http://${GATEWAY_HOST}/time
-```
-
-*4. List routes*
-
-You can list the routes configured on your gateway with:
+To check your gateway is working, you can add and remove a route:
 
 ```console
+# Check no routes are configured initially
 scwgw get-routes
+
+# Check the response directly from a given URL
+TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
+curl $TARGET_URL
+
+# Add a route to this URL in your gateway
+scwgw add-route /time $TARGET_URL
+
+# List routes to see that it's been configured
+scwgw get-routes
+
+# Curl the URL via the gateway
+GATEWAY_ENDPOINT=$(scwgw get-endpoint)
+curl https://${GATEWAY_ENDPOINT}/time
 ```
-
-### Updating your gateway
-
-If you make changes to your gateway in this repo, you can run the following to update it:
-
-```console
-# Update without redeploy
-scwgw update-container-no-redeploy
-
-# Update with redeploy
-scwgw update-container
-```
-
-### Deleting your gateway
-
-To clear up everything related to your gateway, you can run:
-
-```console
-# Delete the namespace, which implicitly deletes the container
-scwgw delete-namespace
-
-# Delete the bucket used to store tokens
-scwgw delete-bucket
-```
-
-## Custom domains
-
-You can add a custom domain to your gateway as with any other Serverless Container.
-
-You can register a new domain as described in the [Domains and DNS docs](https://www.scaleway.com/en/docs/network/domains-and-dns/quickstart/).
-
-Then you can add your domain name as a global variable to the makefile:
-
-```console
-GATEWAY_CUSTOM_DOMAIN := your-custom-domain-name
-```
-
-Then you can add your domain name to your gateway using:
-
-```console
-scwgw set-custom-domain
-```
-
-## Serverless functions
-
-Serverless Functions and Containers can be added to your gateway as a route just like any other URL.
-
-You can try this using the function included at `endpoints/func-example`.
-
-This function uses [Scaleway's Python Serverless API Framework](https://github.com/scaleway/serverless-api-project), which must be installed for the example to work.
-
-Once set up, you can deploy the functions with:
-
-```console
-scw-serverless deploy endpoints/func-example/handler.py
-```
-
-This will create two URLs, one for the `hello` function and the other one for the `goodbye` function.
-
-## :hammer: Architecture
-
-The gateway is packaged via [a public Docker image on Docker Hub](https://hub.docker.com/r/scaleway/serverless-gateway).
-
-This image contains:
-
-- The Kong gateway
-- A plugin exposing an `/token` endpoint for generating tokens
-- A plugin exposing an `/scw` endpoint for configuring routes
-
-### Authentication
-
-Using the `/token` endpoint on the gateway, we can generate tokens to authenticate against `/scw` calls.
-
-The generated tokens are uploaded to a private bucket configured using the parameters in the `gateway.env` file.
-
-### Configuring routes
-
-The `/scw` endpoint allows us to add and remove routes without having to redeploy the gateway and interrupt service.
-
-Routes have the following fields:
-
-- `relative_url`: the relative URL on the gateway.
-- `target_url`: the URL of the target function or container.
-- `http_method` (optional): the HTTP methods to accept on this endpoint.
 
 ## :mortar_board: Contributing
 
@@ -190,7 +86,7 @@ We welcome all contributions to our open-source projects, please see our [contri
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
 
-## :mailbox: Reach Us
+## :mailbox: Reach us
 
 We love feedback. Feel free to:
 
