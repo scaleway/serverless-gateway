@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "scw-gateway"
-version = "0.1.2"
-description = ""
+version = "0.2.0"
+description = "CLI to deploy and manage a self-hosted Kong gateway on Scaleway Serverless Ecosystem"
 authors = ["Simon Shillaker <sshillaker@scaleway.com>"]
 readme = "README.md"
 packages = [{include = "cli"}]
@@ -42,5 +42,3 @@ testpaths = ["tests"]
 
 [tool.mypy]
 exclude = ["venv", "endpoints"]
-# TODO - enable mypy checking properly and fix issue with kong_pdk
-ignore_missing_imports = true
