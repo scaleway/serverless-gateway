@@ -347,7 +347,16 @@ class InfraManager:
         click.secho(f"Deleting container {container.name}")
         self.containers.delete_container(container_id=container.id)
 
+    def get_function_endpoint(
+        self, namespace_name: str, function_name: str
+    ) -> str | None:
+        """Get the endpoint of a function."""
+        return infra.fnc.get_function_endpoint_by_name(
+            self.functions, namespace_name, function_name
+        )
+
     def create_admin_container_token(self) -> str:
+        """Create a token to access the private admin container."""
         admin_container = self._get_admin_container_or_abort()
         token = self.containers.create_token(container_id=admin_container.id)
         return token.token

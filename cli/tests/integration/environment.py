@@ -9,6 +9,8 @@ FUNC_FIXTURE_NAMESPACE = "function-fixtures"
 
 @dataclass
 class IntegrationEnvironment:
+    """Environment for integration tests."""
+
     gw_admin_url: str
     gw_routes_url: str
     gw_url: str
@@ -41,6 +43,7 @@ class IntegrationEnvironment:
         func_a_endpoint = manager.get_function_endpoint(
             FUNC_FIXTURE_NAMESPACE, FUNC_FIXTURE_NAME
         )
+        assert func_a_endpoint
         func_a_url = f"https://{func_a_endpoint}:443"
 
         gw_admin_endpoint = manager.get_gateway_admin_endpoint()
