@@ -50,23 +50,9 @@ jobs:
 
       - uses: ./.github/actions/setup-poetry
 
-      - name: Create gateway database
+      - name: Deploy the gateway
         working-directory: cli
-        run: |
-          poetry run scwgw create-db
-          poetry run scwgw await-db
-
-      - name: Create gateway namespace
-        working-directory: cli
-        run: |
-          poetry run scwgw create-namespace
-          poetry run scwgw await-namespace
-
-      - name: Create gateway container
-        working-directory: cli
-        run: |
-          poetry run scwgw create-containers
-          poetry run scwgw await-containers
+        run: poetry run scwgw deploy
 
   run-tests:
     if: github.event.pull_request.draft == false
@@ -115,10 +101,6 @@ jobs:
 
       - uses: ./.github/actions/setup-poetry
 
-      - name: Delete namespace
+      - name: Delete gateway
         working-directory: cli
-        run: poetry run scwgw delete-namespace
-
-      - name: Delete database
-        working-directory: cli
-        run: poetry run scwgw delete-db
+        run: poetry run scwgw delete -y

@@ -55,13 +55,19 @@ def check():
 
 
 @cli.command()
-def delete():
+@click.option(
+    "--yes", "-y", is_flag=True, default=False, help="Skip interactive confirmation"
+)
+def delete(yes=False):
     """Deletes all the gateway components"""
 
-    # Double check
-    if click.confirm(
-        "This will delete all the components of your gateway. Are you sure?"
-    ):
+    do_delete = yes
+    if not do_delete:
+        do_delete = click.confirm(
+            "This will delete all the components of your gateway. Are you sure?"
+        )
+
+    if do_delete:
         scw_client = client.get_scaleway_client()
         manager = InfraManager(scw_client)
 
