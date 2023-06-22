@@ -16,12 +16,3 @@ gw_admin_token: <your admin token>
 ```
 
 You can then make API requests to your admin endpoint using your admin token as the `X-Auth_Token` header.
-
-## Example
-
-```
-# Get the remote config
-scwgw remote-config
-
-#
-```
