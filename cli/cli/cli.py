@@ -1,9 +1,12 @@
 import click
+import sys
 
 from cli import client, conf
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager, cockpit
-from cli.model import Route
+from cli.model import Route, Consumer
+
+from loguru import logger
 
 
 @click.group()
@@ -12,11 +15,15 @@ def cli():
 
     See the README for more information.
     """
+    # Set log level
+    logger.remove()
+    logger.add(sys.stderr, level="INFO")
 
 
 @cli.command()
 def deploy():
     """Deploys all the gateway components"""
+
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
 
@@ -58,7 +65,7 @@ def check():
 @click.option(
     "--yes", "-y", is_flag=True, default=False, help="Skip interactive confirmation"
 )
-def delete(yes=False):
+def delete(yes):
     """Deletes all the gateway components"""
 
     do_delete = yes
@@ -94,7 +101,7 @@ def remote_config():
 
 @cli.command()
 def get_routes():
-    """Returns the routes configured on the gateway"""
+    """Prints the routes configured on the gateway"""
     manager = GatewayManager()
     manager.print_routes()
 
@@ -105,11 +112,12 @@ def get_routes():
 @click.option(
     "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
 )
-def add_route(relative_url, target, cors):
+@click.option("--jwt", is_flag=True, default=False, help="Add JWT auth to the route.")
+def add_route(relative_url, target, cors, jwt):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
-    route = Route(relative_url, target, cors=cors)
+    route = Route(relative_url, target, cors=cors, jwt=jwt)
     manager.add_route(route)
 
 
@@ -125,8 +133,28 @@ def delete_route(relative_url, target):
 
 
 @cli.command()
+def get_consumers():
+    """Prints the consumers configured on the gateway"""
+    manager = GatewayManager()
+    manager.print_consumers()
+
+
+@cli.command()
+@click.argument("iss")
+@click.argument("pubkey")
+@click.option("--username", "-u", default=None, help="Username for the consumer")
+@click.option("--customid", "-c", default=None, help="Custom ID for the consumer")
+def add_consumer(iss, pubkey, username, customid):
+    """Adds a consumer to the gateway"""
+    manager = GatewayManager()
+
+    consumer = Consumer(pubkey, iss, username, customid)
+    manager.add_consumer(consumer)
+
+
+@cli.command()
 def create_admin_token():
-    """Creates a token for the admin container"""
+    """Creates a new token for the admin container"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()

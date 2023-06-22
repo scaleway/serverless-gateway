@@ -6,7 +6,7 @@ import requests
 from loguru import logger
 
 from cli import conf
-from cli.model import Route
+from cli.model import Route, Consumer
 
 
 def response_hook(response: requests.Response, *_args, **_kwargs):
@@ -57,6 +57,8 @@ class GatewayManager:
 
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
+        self.consumers_url = self.admin_url + "/consumers"
+
         self.token = self.config.gw_admin_token
 
         self.session = requests.Session()
@@ -76,6 +78,13 @@ class GatewayManager:
         if route.cors:
             try:
                 self.session.post(url=plugins_url, json=route.cors_json())
+            except requests.HTTPError:
+                # TODO - avoid ignoring this, any way to create or update?
+                pass
+
+        if route.jwt:
+            try:
+                self.session.post(url=plugins_url, json=route.jwt_json())
             except requests.HTTPError:
                 # TODO - avoid ignoring this, any way to create or update?
                 pass
@@ -129,6 +138,52 @@ class GatewayManager:
             )
 
         return routes
+
+    def get_consumers(self) -> List[Route]:
+        resp = self.session.get(url=self.consumers_url)
+        consumer_data = resp.json().get("data")
+
+        consumers = list()
+        for c in consumer_data:
+            consumers.append(
+                Consumer(
+                    username=c["username"],
+                    custom_id=c["custom_id"],
+                )
+            )
+
+        return consumers
+
+    def print_consumers(self):
+        consumers: List[Route] = self.get_consumers()
+        consumers.sort(key=lambda r: r.username)
+
+        click.secho(f"{'USERNAME':<20} {'CUSTOM_ID':<20}", bold=True)
+        for c in consumers:
+            click.secho(f"{c.username:<20} {c.custom_id:<20}")
+
+    def add_consumer(self, consumer: Consumer):
+        if consumer.custom_id and consumer.username:
+            click.secho(
+                "Found both custom ID and username. Should provide only one",
+                bold=True,
+                fg="red",
+            )
+            raise click.Abort()
+        elif not consumer.custom_id and not consumer.username:
+            click.secho(
+                "Found neither custom ID and username. Must provide one",
+                bold=True,
+                fg="red",
+            )
+            raise click.Abort()
+
+        # Add the consumer
+        self.session.post(url=self.consumers_url, json=consumer.consumer_json())
+
+        # Add the JWT
+        jwt_url = f"{self.consumers_url}/{consumer.get_consumer_name()}/jwt"
+        self.session.post(url=jwt_url, json=consumer.jwt_json())
 
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.
