@@ -35,26 +35,10 @@ The gateway image itself is packaged via our public [Serverless Gateway Docker i
 
 ### Deploy your gateway
 
-To deploy your gateway, you need to create a container namespace, and a container in that namespace using the public gateway image:
+To deploy your gateway, you can run:
 
 ```console
-# Create the database
-scwgw create-db
-scwgw await-db
-
-# Create the namespace
-scwgw create-namespace
-scwgw await-namespace
-
-# Create and deploy the containers
-scwgw create-containers
-scwgw await-containers
-
-# Activate observability integration
-scwgw setup-metrics
-
-# Configure your CLI to use the newly deployed resources
-scwgw remote-config
+scwgw deploy
 ```
 
 ### Add a route
@@ -78,6 +62,14 @@ scwgw get-routes
 # Curl the URL via the gateway
 GATEWAY_ENDPOINT=$(scwgw get-endpoint)
 curl https://${GATEWAY_ENDPOINT}/time
+```
+
+### Delete your gateway
+
+To delete your gateway, you can run:
+
+```console
+scwgw delete
 ```
 
 ## :mortar_board: Contributing

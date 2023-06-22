@@ -22,7 +22,7 @@ poetry install
 Inside your poetry shell, you can generate the config and launch the integration tests locally:
 
 ```
-scwgw local-config
+scwgw dev-config
 make test-int
 ```
 

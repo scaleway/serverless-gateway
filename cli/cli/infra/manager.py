@@ -143,7 +143,7 @@ class InfraManager:
         container = self._get_admin_container_or_abort()
         return container.domain_name
 
-    def create_db(self, password: str | None, save_password: bool) -> None:
+    def create_db(self) -> None:
         """Create the database instance."""
 
         instance_name = infra.rdb.DB_INSTANCE_NAME
@@ -154,13 +154,11 @@ class InfraManager:
 
         click.secho(f"Creating database instance {instance_name}...")
 
-        if not password:
-            logger.info("Generating database password")
-            password = infra.secrets.generate_database_password()
+        logger.debug("Generating database password")
+        password = infra.secrets.generate_database_password()
 
-        if save_password:
-            logger.info("Saving database password")
-            infra.secrets.create_db_password_secret(self.secrets, password)
+        logger.debug("Saving database password")
+        infra.secrets.create_db_password_secret(self.secrets, password)
 
         infra.rdb.create_database_instance(self.rdb, password)
         click.secho("Database created", fg="green", bold="true")
@@ -172,6 +170,9 @@ class InfraManager:
 
     def await_db(self) -> None:
         """Wait for the database instance to be ready."""
+
+        click.secho("Waiting for database to be ready...", fg="blue")
+
         instance = self._get_database_instance_or_abort()
         instance = self.rdb.wait_for_instance(instance_id=instance.id)
 
@@ -179,7 +180,7 @@ class InfraManager:
             click.secho("Database is not ready", fg="red", bold="true")
             raise click.Abort()
 
-        click.secho("Database ready", fg="green", bold=True)
+        click.secho("Database ready")
 
     def delete_db(self) -> None:
         """Delete the database instance."""
@@ -189,7 +190,7 @@ class InfraManager:
         # Delete the database
         instance = self._get_database_instance_or_abort()
         self.rdb.delete_instance(instance_id=instance.id)
-        click.secho("Database deleted", fg="green", bold=True)
+        click.secho("Database deleted")
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -218,6 +219,9 @@ class InfraManager:
 
     def await_namespace(self):
         """Wait for the namespace to be ready."""
+
+        click.secho("Waiting for namespace to be ready...", fg="blue")
+
         namespace = self._get_namespace_or_abort()
         namespace = self.containers.wait_for_namespace(namespace_id=namespace.id)
         if namespace.status == cnt.NamespaceStatus.ERROR:
@@ -232,19 +236,18 @@ class InfraManager:
             click.secho("Namespace is not ready", fg="red", bold=True)
             raise click.Abort()
 
-        click.secho("Namespace ready", fg="green", bold=True)
+        click.secho("Namespace ready")
 
     def delete_namespace(self):
         """Delete the namespace."""
         namespace = self._get_namespace_or_abort()
         self.containers.delete_namespace(namespace_id=namespace.id)
-        click.secho("Namespace deleted", fg="green", bold=True)
+        click.secho("Namespace deleted")
 
-    def create_containers(self, db_password: str | None, forward_metrics: bool) -> None:
+    def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
         database_instance = self._get_database_instance_or_abort()
-        if not db_password:
-            db_password = self._get_db_password_or_abort()
+        db_password = self._get_db_password_or_abort()
         db_host, db_port = self._get_database_endpoint_or_abort(database_instance)
 
         # Namespace should be created before creating containers
@@ -276,20 +279,19 @@ class InfraManager:
             click.secho(f"Container {container_name} already exists")
             return
 
-        click.secho(f"Creating container {container_name}")
+        click.secho(
+            f"Creating container {container_name} from tag {infra.image.IMAGE_TAG}"
+        )
 
-        token, metrics_push_url = None, None
-        if forward_metrics:
-            # Check if token exists
-            token = infra.cpt.get_metrics_token(self.cockpit)
-            if token:
-                click.echo("Cockpit token already exists, recreating")
-                infra.cpt.delete_metrics_token(self.cockpit, token)
-            else:
-                click.echo("Creating Cockpit token")
+        # Check if token exists
+        token = infra.cpt.get_metrics_token(self.cockpit)
+        if token:
+            click.echo("Cockpit token already exists, deleting")
+            infra.cpt.delete_metrics_token(self.cockpit, token)
 
-            token_key = infra.cpt.create_metrics_token(self.cockpit)
-            metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
+        click.echo("Creating Cockpit token")
+        token_key = infra.cpt.create_metrics_token(self.cockpit)
+        metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
         created_container = infra.cnt.create_kong_container(
             self.containers,
@@ -314,6 +316,9 @@ class InfraManager:
 
     def await_containers(self):
         """Wait for the containers to be ready."""
+
+        click.secho("Waiting for containers to be ready...", fg="blue")
+
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
@@ -326,7 +331,7 @@ class InfraManager:
             if res.status == cnt.ContainerStatus.ERROR:
                 click.secho(
                     f"Container {res.name} is in error: {res.error_message}"
-                    "Check the logs for more details.",
+                    ". Check the logs for more details.",
                     fg="red",
                     bold=True,
                 )
@@ -334,18 +339,18 @@ class InfraManager:
             if res.status != cnt.ContainerStatus.READY:
                 click.secho(f"Container {res.name} is not ready", fg="red", bold=True)
                 raise click.Abort()
-        click.secho("Containers are ready", fg="green", bold=True)
+        click.secho("Containers are ready")
 
     def delete_containers(self):
         """Delete the containers."""
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        click.secho(f"Deleting container {admin_container.name}")
         self.containers.delete_container(container_id=admin_container.id)
+        click.secho("Admin container deleted")
 
-        click.secho(f"Deleting container {container.name}")
         self.containers.delete_container(container_id=container.id)
+        click.secho("Gateway container deleted")
 
     def get_function_endpoint(
         self, namespace_name: str, function_name: str
@@ -361,9 +366,9 @@ class InfraManager:
         token = self.containers.create_token(container_id=admin_container.id)
         return token.token
 
-    def update_container(self, db_password: str | None):
+    def update_container(self):
         """Update the container."""
-        self.update_container_without_deploy(db_password=db_password)
+        self.update_container_without_deploy()
 
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
@@ -374,15 +379,14 @@ class InfraManager:
         click.secho("Deploying container...")
         self.containers.deploy_container(container_id=container.id)
 
-    def update_container_without_deploy(self, db_password: str | None):
+    def update_container_without_deploy(self):
         """Update the container without deploying it."""
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
         database_instance = self._get_database_instance_or_abort()
         db_host, db_port = self._get_database_endpoint_or_abort(database_instance)
-        if not db_password:
-            db_password = self._get_db_password_or_abort()
+        db_password = self._get_db_password_or_abort()
 
         click.echo(f"Updating container {admin_container.name}")
         infra.cnt.update_kong_admin_container(

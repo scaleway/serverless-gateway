@@ -39,7 +39,7 @@ def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
 
     delete_db_password_secret(api)
 
-    logger.info("Creating secret for database password")
+    logger.debug("Creating secret for database password")
     secret = api.create_secret(
         name=PASSWORD_NAME,
         tags=["scw-gw"],
