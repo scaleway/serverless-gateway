@@ -14,30 +14,23 @@ WRITE_METRICS_SCOPE = sdk.TokenScopes(
 )
 
 
-def ensure_cockpit_activated(scw_client: Client) -> bool:
-    """Ensure Cockpit is activated.
-
-    Prompt the user to activate cockpit if it is not activated.
-    """
+def ensure_cockpit_activated(scw_client: Client):
+    """Ensure Cockpit is activated"""
     api = sdk.CockpitV1Beta1API(scw_client)
+
     try:
         api.get_cockpit()
-        return True
+
+        # If successful, cockpit activated
+        return
     except ScalewayException as err:
         if not err.status_code == 404:
             raise
 
-        should_activate_cockpit = click.confirm(
-            "Cockpit not activated for project. Do you want to activate it?",
-        )
-
-        if not should_activate_cockpit:
-            return False
+        # Activate the cockpit
         cockpit = api.activate_cockpit()
         api.wait_for_cockpit(project_id=cockpit.project_id)
         click.secho("Cockpit activated", fg="green")
-
-        return True
 
 
 def get_metrics_push_url(api: sdk.CockpitV1Beta1API) -> str:

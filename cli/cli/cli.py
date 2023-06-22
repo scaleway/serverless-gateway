@@ -1,22 +1,9 @@
 import click
 
-from cli import client
+from cli import client, conf
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager, cockpit
 from cli.model import Route
-
-DB_PASSWORD_OPTION = click.option(
-    "--db-password",
-    required=False,
-    help="The password to use for the database. Will be generated if not provided.",
-    envvar="DB_PASSWORD",
-)
-NO_METRICS_OPTION = click.option(
-    "--no-metrics",
-    is_flag=True,
-    default=False,
-    help="Disable Kong metrics integration with Cockpit.",
-)
 
 
 @click.group()
@@ -28,8 +15,64 @@ def cli():
 
 
 @cli.command()
-def local_config():
-    """Sets up config for local deployment"""
+def deploy():
+    """Deploys all the gateway components"""
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    click.secho("Creating database", fg="blue")
+    manager.create_db()
+    manager.await_db()
+
+    click.secho("Creating container namespace", fg="blue")
+    manager.create_namespace()
+    manager.await_namespace()
+
+    click.secho("Checking cockpit activated", fg="blue")
+    cockpit.ensure_cockpit_activated(scw_client=scw_client)
+
+    click.secho("Creating containers", fg="blue")
+    manager.create_containers()
+    manager.await_containers()
+
+    click.secho("Setting up configuration", fg="blue")
+    manager.set_up_config(False)
+
+    click.secho("Enabling metrics", fg="blue")
+    gateway = GatewayManager()
+    gateway.setup_global_kong_statsd_plugin()
+
+
+@cli.command()
+def check():
+    """Checks the status of all gateway components"""
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+
+    manager.check_db()
+    manager.check_namespace()
+    manager.check_containers()
+
+
+@cli.command()
+def delete():
+    """Deletes all the gateway components"""
+
+    # Double check
+    if click.confirm(
+        "This will delete all the components of your gateway. Are you sure?"
+    ):
+        scw_client = client.get_scaleway_client()
+        manager = InfraManager(scw_client)
+
+        manager.delete_containers()
+        manager.delete_db()
+        manager.delete_namespace()
+
+
+@cli.command()
+def dev_config():
+    """Sets up config for local development"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     manager.set_up_config(True)
@@ -75,14 +118,6 @@ def delete_route(relative_url, target):
     manager.delete_route(route)
 
 
-# TODO: integrate with existing CLI commands
-@cli.command()
-def setup_metrics():
-    """Adds metrics plugin to the gateway"""
-    gateway = GatewayManager()
-    gateway.setup_global_kong_statsd_plugin()
-
-
 @cli.command()
 def create_admin_token():
     """Creates a token for the admin container"""
@@ -93,16 +128,8 @@ def create_admin_token():
 
 
 @cli.command()
-def delete_containers():
-    """Deletes the containers used for the gateway"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.delete_containers()
-
-
-@cli.command()
 def get_endpoint():
-    """Returns the endpoint for the gateway"""
+    """Prints the endpoint for the gateway"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_endpoint()
@@ -111,7 +138,7 @@ def get_endpoint():
 
 @cli.command()
 def get_admin_endpoint():
-    """Returns the endpoint for the gateway admin"""
+    """Prints the endpoint for the gateway admin"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_admin_endpoint()
@@ -119,104 +146,10 @@ def get_admin_endpoint():
 
 
 @cli.command()
-@DB_PASSWORD_OPTION
-@click.option(
-    "--no-save", is_flag=True, default=False, help="Do not save the password."
-)
-def create_db(db_password: str | None, no_save: bool):
-    """Creates the database for the gateway.
-
-    If --no-save is passed, the password will not be saved to Secret Manager.
-    The password will therefore need to be provided for other commands.
-    """
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.create_db(password=db_password, save_password=not no_save)
-
-
-@cli.command()
-def delete_db():
-    """Deletes the database for the gateway."""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.delete_db()
-
-
-@cli.command()
-def check_db():
-    """Checks the status of the database"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.check_db()
-
-
-@cli.command()
-def await_db():
-    """Waits for the database to be ready"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.await_db()
-
-
-@cli.command()
-def create_namespace():
-    """Creates the container container namespace"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.create_namespace()
-
-
-@cli.command()
-def check_namespace():
-    """Checks the status of the container namespace"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.check_namespace()
-
-
-@cli.command()
-def await_namespace():
-    """Waits for the namespace to be ready"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.await_namespace()
-
-
-@cli.command()
-def delete_namespace():
-    """Deletes the container namespace"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.delete_namespace()
-
-
-@cli.command()
-@DB_PASSWORD_OPTION
-@NO_METRICS_OPTION
-def create_containers(db_password: str | None, no_metrics: bool):
-    """Creates the containers"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    if not no_metrics:
-        # Check that Cockpit is activated
-        no_metrics = not cockpit.ensure_cockpit_activated(scw_client=scw_client)
-    manager.create_containers(db_password=db_password, forward_metrics=not no_metrics)
-
-
-@cli.command()
-def check_containers():
-    """Checks the status of the containers"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.check_containers()
-
-
-@cli.command()
-def await_containers():
-    """Waits for the containers to be ready"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.await_containers()
+def get_admin_token():
+    """Prints the token for accessing the admin container"""
+    c = conf.InfraConfiguration.load()
+    click.secho(c.gw_admin_token)
 
 
 @cli.command()
@@ -234,16 +167,14 @@ def set_custom_domain():
     default=False,
     help="Don't redeploy the container, just update.",
 )
-@DB_PASSWORD_OPTION
 def update_containers(
     no_redeploy: bool,
-    db_password: str | None,
 ):
     """Updates the containers"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
 
     if no_redeploy:
-        manager.update_container_without_deploy(db_password=db_password)
+        manager.update_container_without_deploy()
     else:
-        manager.update_container(db_password=db_password)
+        manager.update_container()
