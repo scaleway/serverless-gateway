@@ -366,9 +366,9 @@ class InfraManager:
         token = self.containers.create_token(container_id=admin_container.id)
         return token.token
 
-    def update_container(self, db_password: str | None):
+    def update_container(self):
         """Update the container."""
-        self.update_container_without_deploy(db_password=db_password)
+        self.update_container_without_deploy()
 
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
@@ -379,15 +379,14 @@ class InfraManager:
         click.secho("Deploying container...")
         self.containers.deploy_container(container_id=container.id)
 
-    def update_container_without_deploy(self, db_password: str | None):
+    def update_container_without_deploy(self):
         """Update the container without deploying it."""
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
         database_instance = self._get_database_instance_or_abort()
         db_host, db_port = self._get_database_endpoint_or_abort(database_instance)
-        if not db_password:
-            db_password = self._get_db_password_or_abort()
+        db_password = self._get_db_password_or_abort()
 
         click.echo(f"Updating container {admin_container.name}")
         infra.cnt.update_kong_admin_container(
