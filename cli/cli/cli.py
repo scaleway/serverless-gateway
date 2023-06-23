@@ -105,11 +105,22 @@ def get_routes():
 @click.option(
     "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
 )
-def add_route(relative_url, target, cors):
+@click.option(
+    "--http-methods",
+    "-m",
+    help="HTTP methods that the route should accept. Defaults to all if not specified.",
+    multiple=True,
+)
+def add_route(relative_url: str, target: str, cors: bool, http_methods: list[str]):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
-    route = Route(relative_url, target, cors=cors)
+    route = Route(
+        relative_url=relative_url,
+        target=target,
+        http_methods=http_methods,
+        cors=cors,
+    )
     manager.add_route(route)
 
 
