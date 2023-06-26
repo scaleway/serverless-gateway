@@ -6,7 +6,7 @@ import requests
 from loguru import logger
 
 from cli import conf
-from cli.model import Route, Consumer
+from cli.model import Route, Consumer, JwtCredential
 
 
 def response_hook(response: requests.Response, *_args, **_kwargs):
@@ -147,8 +147,9 @@ class GatewayManager:
         for c in consumer_data:
             consumers.append(
                 Consumer(
-                    username=c["username"],
-                    custom_id=c["custom_id"],
+                    username=c.get("username"),
+                    custom_id=c.get("custom_id"),
+                    kong_id=c.get("id"),
                 )
             )
 
@@ -158,9 +159,11 @@ class GatewayManager:
         consumers: List[Route] = self.get_consumers()
         consumers.sort(key=lambda r: r.username)
 
-        click.secho(f"{'USERNAME':<20} {'CUSTOM_ID':<20}", bold=True)
+        click.secho(f"{'USERNAME':<20} {'CUSTOM_ID':<20} ID", bold=True)
         for c in consumers:
-            click.secho(f"{c.username:<20} {c.custom_id:<20}")
+            username = c.username if c.username else "None"
+            custom_id = c.custom_id if c.custom_id else "None"
+            click.secho(f"{username:<20} {custom_id:<20} {c.kong_id}")
 
     def add_consumer(self, consumer: Consumer):
         if consumer.custom_id and consumer.username:
@@ -179,11 +182,26 @@ class GatewayManager:
             raise click.Abort()
 
         # Add the consumer
-        self.session.post(url=self.consumers_url, json=consumer.consumer_json())
+        self.session.post(url=self.consumers_url, json=consumer.json())
 
-        # Add the JWT
-        jwt_url = f"{self.consumers_url}/{consumer.get_consumer_name()}/jwt"
-        self.session.post(url=jwt_url, json=consumer.jwt_json())
+    def provision_jwt_cred(self, consumer_name: str) -> dict:
+        jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
+
+        resp = self.session.post(
+            url=jwt_url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        cred_data = resp.json()
+        return cred_data
+
+    def get_jwt_creds(self, consumer_name: str) -> dict:
+        jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
+
+        resp = self.session.get(url=jwt_url)
+
+        creds_data = resp.json()["data"]
+        return creds_data
 
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.

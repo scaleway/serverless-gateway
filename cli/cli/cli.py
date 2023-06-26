@@ -5,6 +5,7 @@ from cli import client, conf
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager, cockpit
 from cli.model import Route, Consumer
+from cli.output import pretty_print_dict
 
 from loguru import logger
 
@@ -140,16 +141,32 @@ def get_consumers():
 
 
 @cli.command()
-@click.argument("iss")
-@click.argument("pubkey")
-@click.option("--username", "-u", default=None, help="Username for the consumer")
-@click.option("--customid", "-c", default=None, help="Custom ID for the consumer")
-def add_consumer(iss, pubkey, username, customid):
+@click.argument("username")
+def add_consumer(username):
     """Adds a consumer to the gateway"""
     manager = GatewayManager()
 
-    consumer = Consumer(pubkey, iss, username, customid)
+    consumer = Consumer(username=username)
     manager.add_consumer(consumer)
+
+
+@cli.command()
+@click.argument("consumer")
+def add_jwt(consumer):
+    """Provisions a JWT credential for a consumer"""
+    manager = GatewayManager()
+    cred = manager.provision_jwt_cred(consumer)
+    pretty_print_dict(cred)
+
+
+@cli.command()
+@click.argument("consumer")
+def get_jwts(consumer):
+    """Lists the JWTs for a consumer"""
+    manager = GatewayManager()
+    creds = manager.get_jwt_creds(consumer)
+    for c in creds:
+        pretty_print_dict(c)
 
 
 @cli.command()

@@ -50,15 +50,14 @@ class Route(object):
 
 @dataclass
 class Consumer(object):
-    pub_key: str
-    iss: str
     username: Optional[str] = None
     custom_id: Optional[str] = None
+    kong_id: Optional[str] = None
 
     def get_consumer_name(self):
         return self.custom_id if self.custom_id else self.username
 
-    def consumer_json(self):
+    def json(self):
         if self.custom_id:
             return {
                 "custom_id": self.custom_id,
@@ -68,9 +67,11 @@ class Consumer(object):
                 "username": self.username,
             }
 
-    def jwt_json(self):
-        return {
-            "algorithm": "RS256",
-            "rsa_public_key": self.pub_key,
-            "key": self.iss,
-        }
+
+@dataclass
+class JwtCredential(object):
+    algorithm: str
+
+    secret: Optional[str] = None
+    id_key: Optional[str] = None
+    pub_key: Optional[str] = None
