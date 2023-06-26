@@ -25,7 +25,7 @@ def response_hook(response: requests.Response, *_args, **_kwargs):
             logger.error(f"Error: \n{json.dumps(body_json, indent=2)}")
         except json.decoder.JSONDecodeError:
             logger.error(f"Error: \n{err.response.text}")
-        raise
+        raise err
 
 
 class GatewayManager:
