@@ -4,9 +4,13 @@ from typing import List
 import click
 import requests
 from loguru import logger
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 from cli import conf
 from cli.model import Route
+
+MAX_RETRIES = 5
 
 
 def response_hook(response: requests.Response, *_args, **_kwargs):
@@ -16,8 +20,11 @@ def response_hook(response: requests.Response, *_args, **_kwargs):
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        body_json = err.response.json()
-        logger.error(f"Error: \n{json.dumps(body_json, indent=2)}")
+        try:  # Try to parse the body as JSON
+            body_json = err.response.json()
+            logger.error(f"Error: \n{json.dumps(body_json, indent=2)}")
+        except json.decoder.JSONDecodeError:
+            logger.error(f"Error: \n{err.response.text}")
         raise
 
 
@@ -59,11 +66,24 @@ class GatewayManager:
         self.services_url = self.admin_url + "/services"
         self.token = self.config.gw_admin_token
 
+        self._create_session()
+
+    def _create_session(self):
         self.session = requests.Session()
         if self.token:
             self.session.headers["X-Auth-Token"] = self.token
         self.session.headers["Content-Type"] = "application/json"
         self.session.hooks["response"].append(response_hook)
+
+        retries = Retry(
+            total=MAX_RETRIES,
+            backoff_factor=2,
+            status=MAX_RETRIES,  # Status max retries
+            # 403: retry for token refresh
+            # 404: retry for Envoy service not found
+            status_forcelist=[500, 404, 403],
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
 
     def add_route(self, route: Route):
         service_url = f"{self.services_url}/{route.name}"
