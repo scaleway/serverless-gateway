@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "scw-gateway"
-version = "0.2.0"
+version = "0.3.0"
 description = "CLI to deploy and manage a self-hosted Kong gateway on Scaleway Serverless Ecosystem"
 authors = ["Simon Shillaker <sshillaker@scaleway.com>"]
 readme = "README.md"
-packages = [{include = "cli"}]
+packages = [{ include = "cli" }]
 
 [tool.poetry.dependencies]
 loguru = "0.6.0"
