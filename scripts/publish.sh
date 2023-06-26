@@ -4,7 +4,7 @@ set -e
 
 pushd cli >> /dev/null
 
-cp -n ../README.md .
+cp -f ../README.md .
 
 poetry build
 poetry publish
