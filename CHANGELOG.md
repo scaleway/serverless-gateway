@@ -11,3 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `deploy` command to deploy all gateway components in a single command
 - Added `--http-methods` flag to `add-route` command to specify http methods
+
+## [0.3.1] - 2023-06-27
+
+### Fixed
+
+- Fixed gateway manager failing after deploying due to token refresh desync
