@@ -159,29 +159,17 @@ class GatewayManager:
             custom_id = c.custom_id if c.custom_id else "None"
             click.secho(f"{username:<20} {custom_id:<20} {c.kong_id}")
 
-    def delete_consumer(self, consumer_name:str):
-        pass
+    def delete_consumer(self, consumer_name: str):
+        consumer_url = f"{self.consumers_url}/{consumer_name}"
+        resp = self.session.delete(url=consumer_url)
+        resp.raise_for_status()
 
-    def add_consumer(self, consumer: Consumer) -> requests.Response:
-        if consumer.custom_id and consumer.username:
-            click.secho(
-                "Found both custom ID and username. Should provide only one",
-                bold=True,
-                fg="red",
-            )
-            raise click.Abort()
-        elif not consumer.custom_id and not consumer.username:
-            click.secho(
-                "Found neither custom ID and username. Must provide one",
-                bold=True,
-                fg="red",
-            )
-            raise click.Abort()
+    def add_consumer(self, consumer_name):
+        consumer = Consumer(username=consumer_name)
+        resp = self.session.post(url=self.consumers_url, json=consumer.json())
+        resp.raise_for_status()
 
-        # Add the consumer
-        return self.session.post(url=self.consumers_url, json=consumer.json())
-
-    def provision_jwt_cred(self, consumer_name: str) -> JwtCredential:
+    def add_jwt_cred(self, consumer_name: str) -> JwtCredential:
         jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
 
         resp = self.session.post(

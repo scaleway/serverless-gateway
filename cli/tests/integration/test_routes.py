@@ -8,7 +8,7 @@ import requests
 from loguru import logger
 
 from cli.gateway import GatewayManager
-from cli.model import Route, Consumer, JwtCredential
+from cli.model import Route, Consumer
 from tests.integration.environment import IntegrationEnvironment
 
 
@@ -83,14 +83,6 @@ class TestEndpoint(object):
 
         resp = self.manager.delete_route(route)
         resp.raise_for_status()
-
-    def add_consumer_to_route(self, name):
-        consumer = Consumer(username=name)
-        resp = self.manager.add_consumer(consumer)
-        resp.raise_for_status()
-
-    def add_jwt_cred_for_consumer(self, name):
-        return self.manager.provision_jwt_cred(name)
 
     def test_direct_call_to_target(self):
         """Asserts that the upstream function is healthy."""
@@ -177,22 +169,56 @@ class TestEndpoint(object):
             assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
 
     def test_add_remove_consumers(self):
-        # Generate a valid token
-        consumer_name = "test-app"
-        self.add_consumer_to_route(consumer_name)
+        consumer_name_a = "alpha"
+        consumer_name_b = "beta"
+
+        # Make sure we've cleaned up
+        self.manager.delete_consumer(consumer_name_a)
+        self.manager.delete_consumer(consumer_name_b)
+
+        # Check list empty initially
+        consumers = self.manager.get_consumers()
+        assert len(consumers) == 0
+
+        # Add two consumers
+        self.manager.add_consumer(consumer_name_a)
+        self.manager.add_consumer(consumer_name_b)
+
+        # Get list and check
+        consumers = self.manager.get_consumers()
+        consumers.sort(key=lambda x: x.username)
+
+        expected = [
+            Consumer(consumer_name_a),
+            Consumer(consumer_name_b),
+        ]
+        assert consumers == expected
+
+        # Delete one, check list again
+        self.manager.delete_consumer(consumer_name_a)
+        consumers = self.manager.get_consumers()
+        expected = [
+            Consumer(consumer_name_b),
+        ]
+        assert consumers == expected
 
     def test_jwt_requires_auth(self):
-        with self.add_route_to_fixture(relative_url="/jwt", jwt=True):
+        consumer_name = "test-app"
+        self.manager.delete_consumer(consumer_name)
+
+        relative_url = "/auth-test"
+        full_url = f"{self.env.gw_url}/{relative_url}/hello"
+        with self.add_route_to_fixture(relative_url=relative_url, jwt=True):
             # Leave time for plugin to be installed
             time.sleep(10)
 
             # Unauthed request should fail
-            no_auth_resp = requests.get(self.env.gw_url + "/jwt/hello")
+            no_auth_resp = requests.get(full_url)
             assert no_auth_resp.status_code == requests.codes.unauthorized
 
             # Request with invalid auth should fail
             bad_auth_resp = requests.get(
-                self.env.gw_url + "/jwt/hello",
+                full_url,
                 headers={
                     "Authorization": "Bearer foobar",
                 },
@@ -200,20 +226,20 @@ class TestEndpoint(object):
             assert bad_auth_resp.status_code == requests.codes.unauthorized
 
             # Generate a valid token
-            consumer_name = "test-app"
-            self.add_consumer_to_route(consumer_name)
-            cred = self.add_jwt_cred_for_consumer(consumer_name)
+            self.manager.add_consumer(consumer_name)
+            cred = self.manager.add_jwt_cred(consumer_name)
 
             encoded = jwt.encode(
                 {"foo": "bar", "iss": cred.iss}, cred.secret, algorithm=cred.algorithm
             )
 
             # Request with valid auth should pass
+            good_auth_headers = {
+                "Authorization": f"Bearer {encoded}",
+            }
             good_auth_resp = requests.get(
-                self.env.gw_url + "/jwt/hello",
-                headers={
-                    "Authorization": f"Bearer {encoded}",
-                },
+                full_url,
+                headers=good_auth_headers,
             )
             assert good_auth_resp.status_code == requests.codes.ok
 

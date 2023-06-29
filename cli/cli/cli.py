@@ -141,13 +141,19 @@ def get_consumers():
 
 
 @cli.command()
-@click.argument("username")
-def add_consumer(username):
+@click.argument("name")
+def add_consumer(name):
     """Adds a consumer to the gateway"""
     manager = GatewayManager()
+    manager.add_consumer(name)
 
-    consumer = Consumer(username=username)
-    manager.add_consumer(consumer)
+
+@cli.command()
+@click.argument("name")
+def delete_consumer(name):
+    """Deletes a consumer from the gateway"""
+    manager = GatewayManager()
+    manager.delete_consumer(name)
 
 
 @cli.command()
@@ -155,7 +161,7 @@ def add_consumer(username):
 def add_jwt_cred(consumer):
     """Provisions a JWT credential for a consumer"""
     manager = GatewayManager()
-    cred = manager.provision_jwt_cred(consumer)
+    cred = manager.add_jwt_cred(consumer)
     manager.print_jwt_cred(cred)
 
 

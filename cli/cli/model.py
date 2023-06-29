@@ -51,31 +51,22 @@ class Route(object):
 @dataclass
 class Consumer(object):
     username: Optional[str] = None
-    custom_id: Optional[str] = None
-    kong_id: Optional[str] = None
 
     @classmethod
     def from_json(cls, json_data: dict):
         c = Consumer(
             username=json_data.get("username"),
-            custom_id=json_data.get("custom_id"),
-            kong_id=json_data.get("id"),
         )
 
         return c
 
-    def get_consumer_name(self):
-        return self.custom_id if self.custom_id else self.username
-
     def json(self):
-        if self.custom_id:
-            return {
-                "custom_id": self.custom_id,
-            }
-        else:
-            return {
-                "username": self.username,
-            }
+        return {
+            "username": self.username,
+        }
+
+    def __eq__(self, other):
+        return other.username == self.username
 
 
 @dataclass

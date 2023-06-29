@@ -23,8 +23,11 @@ Calling it is unauthorized without a token:
 ```shell
 ENDPOINT=https://$(scwgw get-endpoint)
 curl ${ENDPOINT}/app
+```
 
-# output
+and gives output:
+
+```
 {"message":"Unauthorized"}
 ```
 
