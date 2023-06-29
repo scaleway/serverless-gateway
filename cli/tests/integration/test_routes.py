@@ -1,14 +1,14 @@
 import contextlib
 import json
-import jwt
 import time
 
+import jwt
 import pytest
 import requests
 from loguru import logger
 
 from cli.gateway import GatewayManager
-from cli.model import Route, Consumer
+from cli.model import Consumer, Route
 from tests.integration.environment import IntegrationEnvironment
 
 

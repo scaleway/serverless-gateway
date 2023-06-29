@@ -6,7 +6,7 @@ import requests
 from loguru import logger
 
 from cli import conf
-from cli.model import Route, Consumer, JwtCredential
+from cli.model import Consumer, JwtCredential, Route
 
 
 def response_hook(response: requests.Response, *_args, **_kwargs):
@@ -96,7 +96,7 @@ class GatewayManager:
         resp = self.session.delete(url=f"{self.services_url}/{route.name}")
         return resp
 
-    def print_routes(self):
+    def print_routes(self) -> None:
         routes: List[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
@@ -142,6 +142,7 @@ class GatewayManager:
     def get_consumers(self) -> List[Consumer]:
         resp = self.session.get(url=self.consumers_url)
         consumer_data = resp.json().get("data")
+        consumer_data.sort(key=lambda x: x["username"])
 
         consumers = list()
         for c in consumer_data:
@@ -149,9 +150,8 @@ class GatewayManager:
 
         return consumers
 
-    def print_consumers(self):
+    def print_consumers(self) -> None:
         consumers: List[Consumer] = self.get_consumers()
-        consumers.sort(key=lambda r: r.username)
 
         click.secho(f"{'USERNAME':<20}", bold=True)
         for c in consumers:
@@ -178,7 +178,7 @@ class GatewayManager:
 
         return JwtCredential.from_json(resp.json())
 
-    def get_jwt_creds(self, consumer_name: str) -> dict:
+    def get_jwt_creds(self, consumer_name: str) -> List[JwtCredential]:
         jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
 
         resp = self.session.get(url=jwt_url)

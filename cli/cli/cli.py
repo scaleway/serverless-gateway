@@ -1,13 +1,12 @@
-import click
 import sys
+
+import click
+from loguru import logger
 
 from cli import client, conf
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager, cockpit
-from cli.model import Route, Consumer
-from cli.output import pretty_print_dict
-
-from loguru import logger
+from cli.model import Route
 
 
 @click.group()

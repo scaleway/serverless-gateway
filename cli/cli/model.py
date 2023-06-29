@@ -78,9 +78,9 @@ class JwtCredential(object):
     @classmethod
     def from_json(cls, json_data: dict):
         c = JwtCredential(
-            algorithm=json_data.get("algorithm"),
-            iss=json_data.get("key"),
-            secret=json_data.get("secret"),
+            algorithm=str(json_data.get("algorithm")),
+            iss=str(json_data.get("key")),
+            secret=str(json_data.get("secret")),
         )
 
         return c
