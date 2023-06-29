@@ -113,11 +113,25 @@ def get_routes():
     "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
 )
 @click.option("--jwt", is_flag=True, default=False, help="Add JWT auth to the route.")
-def add_route(relative_url, target, cors, jwt):
+@click.option(
+    "--http-methods",
+    "-m",
+    help="HTTP methods that the route should accept. Defaults to all if not specified.",
+    multiple=True,
+)
+def add_route(
+    relative_url: str, target: str, cors: bool, jwt: bool, http_methods: list[str]
+):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
-    route = Route(relative_url, target, cors=cors, jwt=jwt)
+    route = Route(
+        relative_url=relative_url,
+        target=target,
+        cors=cors,
+        jwt=jwt,
+        http_methods=http_methods,
+    )
     manager.add_route(route)
 
 
