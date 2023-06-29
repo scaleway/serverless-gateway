@@ -150,32 +150,45 @@ class TestEndpoint(object):
             )
 
     def test_cors_enabled_for_route(self):
+        methods = "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
+        expected = {
+            "Access-Control-Allow-Origin": "https://www.dummy-url.com",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": methods,
+            "Access-Control-Allow-Credentials": "true",
+            "vary": "Origin",
+        }
+
+        preflight_req_headers = {
+            "Origin": "https://www.dummy-url.com",
+            "Access-Control-Request-Method": "GET",
+        }
+
+        passed = False
+        actual_headers = None
         with self.add_route_to_fixture(relative_url="/func-a", cors=True):
-            preflight_req_headers = {
-                "Origin": "https://www.dummy-url.com",
-                "Access-Control-Request-Method": "GET",
-            }
+            # It takes time to install the plugin, so we must retry
+            for _ in range(5):
+                time.sleep(5)
+                preflight_resp = self._call_endpoint_until_response_code(
+                    self.env.gw_url + "/func-a/hello",
+                    requests.codes.ok,
+                    "OPTIONS",
+                    headers=preflight_req_headers,
+                )
 
-            # Allow time for plugin to be installed
-            preflight_resp = self._call_endpoint_until_response_code(
-                self.env.gw_url + "/func-a/hello",
-                requests.codes.ok,
-                "OPTIONS",
-                headers=preflight_req_headers,
-            )
+                actual_headers = preflight_resp.headers
 
-            assert (
-                preflight_resp.headers.get("Access-Control-Allow-Origin")
-                == "https://www.dummy-url.com"
-            )
+                success = True
+                for k, v in expected.items():
+                    success &= actual_headers.get(k) == v
 
-            assert preflight_resp.headers.get("Access-Control-Allow-Headers") == "*"
+                if success:
+                    passed = True
+                    break
 
-            assert (
-                preflight_resp.headers.get("Access-Control-Allow-Methods")
-                == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
-            )
-            assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
+        if not passed:
+            pytest.fail(f"Expected headers {expected} but got {actual_headers}")
 
     def test_add_remove_consumers(self):
         consumer_name_a = "alpha"
