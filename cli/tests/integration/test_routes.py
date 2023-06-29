@@ -76,6 +76,11 @@ class TestEndpoint(object):
             cors=cors,
             jwt=jwt,
         )
+
+        # Make sure it's deleted first
+        self.manager.delete_route(route)
+
+        # Now add the route
         resp = self.manager.add_route(route)
         resp.raise_for_status()
 
@@ -207,10 +212,10 @@ class TestEndpoint(object):
         self.manager.delete_consumer(consumer_name)
 
         relative_url = "/auth-test"
-        full_url = f"{self.env.gw_url}/{relative_url}/hello"
+        full_url = f"{self.env.gw_url}{relative_url}/hello"
         with self.add_route_to_fixture(relative_url=relative_url, jwt=True):
             # Leave time for plugin to be installed
-            time.sleep(10)
+            time.sleep(20)
 
             # Unauthed request should fail
             no_auth_resp = requests.get(full_url)
