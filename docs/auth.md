@@ -100,4 +100,4 @@ curl ${ENDPOINT}/app \
     -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb21lIjoicGF5bG9hZCIsImlzcyI6Ill5WElBSWxtRmYxRmE0c0xnMndKR0J3SDVFU3NvdkJ5In0.lkxltveJ2ZQjrdQ7D41UWknNgKCAEfeaqO-8K3z2jHk'
 ```
 
-And we will see our request go through to the upstream.
+and we will see our request go through to the upstream.

@@ -153,11 +153,9 @@ class GatewayManager:
         consumers: List[Consumer] = self.get_consumers()
         consumers.sort(key=lambda r: r.username)
 
-        click.secho(f"{'USERNAME':<20} {'CUSTOM_ID':<20} ID", bold=True)
+        click.secho(f"{'USERNAME':<20}", bold=True)
         for c in consumers:
-            username = c.username if c.username else "None"
-            custom_id = c.custom_id if c.custom_id else "None"
-            click.secho(f"{username:<20} {custom_id:<20} {c.kong_id}")
+            click.secho(f"{c.username:<20}")
 
     def delete_consumer(self, consumer_name: str):
         consumer_url = f"{self.consumers_url}/{consumer_name}"
