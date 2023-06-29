@@ -13,13 +13,13 @@ We provide extra CLI support for configuring JWT authorization on your routes, a
 To set up JWT on your routes, we use the [Kong JWT plugin](https://docs.konghq.com/hub/kong-inc/jwt/). We can use the CLI to create a route with JWT and a relative URL `/app`:
 
 ```shell
-scwgw add-route /app https://www.scaleway.com --jwt
+scwgw route add /app https://www.scaleway.com --jwt
 ```
 
 Calling it is unauthorized without a token:
 
 ```shell
-ENDPOINT=https://$(scwgw get-endpoint)
+ENDPOINT=https://$(scwgw infra endpoint)
 curl ${ENDPOINT}/app
 ```
 
@@ -36,13 +36,13 @@ Access to JWT-protected routes is associated to a [_Consumer_](https://docs.kong
 We can add a consumer called `my-app` with:
 
 ```shell
-scwgw add-consumer my-app
+scwgw consumer add my-app
 ```
 
 Then we can generate JWT credentials for this consumer with:
 
 ```shell
-scwgw add-jwt-cred my-app
+scwgw jwt add my-app
 ```
 
 Which gives an output like:
@@ -59,7 +59,7 @@ With the secret generated in this request, users can sign requests to access the
 You can get all JWT credentials for a given consumer with:
 
 ```shell
-scwgw get-jwt-creds my-app
+scwgw jwt list my-app
 ```
 
 ### Signing a request
