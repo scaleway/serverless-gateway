@@ -152,21 +152,19 @@ def add_consumer(username):
 
 @cli.command()
 @click.argument("consumer")
-def add_jwt(consumer):
+def add_jwt_cred(consumer):
     """Provisions a JWT credential for a consumer"""
     manager = GatewayManager()
     cred = manager.provision_jwt_cred(consumer)
-    pretty_print_dict(cred)
+    manager.print_jwt_cred(cred)
 
 
 @cli.command()
 @click.argument("consumer")
-def get_jwts(consumer):
-    """Lists the JWTs for a consumer"""
+def get_jwt_creds(consumer):
+    """Lists the JWT credentials for a consumer"""
     manager = GatewayManager()
-    creds = manager.get_jwt_creds(consumer)
-    for c in creds:
-        pretty_print_dict(c)
+    manager.print_jwt_creds(consumer)
 
 
 @cli.command()

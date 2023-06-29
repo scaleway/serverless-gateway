@@ -1,5 +1,6 @@
 import contextlib
 import json
+import jwt
 import time
 
 import pytest
@@ -7,7 +8,7 @@ import requests
 from loguru import logger
 
 from cli.gateway import GatewayManager
-from cli.model import Route
+from cli.model import Route, Consumer, JwtCredential
 from tests.integration.environment import IntegrationEnvironment
 
 
@@ -65,10 +66,15 @@ class TestEndpoint(object):
         relative_url: str,
         http_methods: list[str] | None = None,
         cors: bool = False,
+        jwt: bool = False,
     ):
         """Context manager to add a route and remove it."""
         route = Route(
-            relative_url, self.env.gw_func_a_url, http_methods=http_methods, cors=cors
+            relative_url,
+            self.env.gw_func_a_url,
+            http_methods=http_methods,
+            cors=cors,
+            jwt=jwt,
         )
         resp = self.manager.add_route(route)
         resp.raise_for_status()
@@ -77,6 +83,14 @@ class TestEndpoint(object):
 
         resp = self.manager.delete_route(route)
         resp.raise_for_status()
+
+    def add_consumer_to_route(self, name):
+        consumer = Consumer(username=name)
+        resp = self.manager.add_consumer(consumer)
+        resp.raise_for_status()
+
+    def add_jwt_cred_for_consumer(self, name):
+        return self.manager.provision_jwt_cred(name)
 
     def test_direct_call_to_target(self):
         """Asserts that the upstream function is healthy."""
@@ -136,10 +150,9 @@ class TestEndpoint(object):
                 hello_path, requests.codes.ok, "PATCH"
             )
 
-    def test_cors_enabled_for_target_function(self):
+    def test_cors_enabled_for_route(self):
         with self.add_route_to_fixture(relative_url="/func-a", cors=True):
-            # Note - because we have to apply plugins *after* we've created the route,
-            # we have to leave time for the update to propagate
+            # Leave time for plugin to be installed
             time.sleep(10)
             preflight_req_headers = {
                 "Origin": "https://www.dummy-url.com",
@@ -162,6 +175,47 @@ class TestEndpoint(object):
                 == "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
             )
             assert preflight_resp.headers["Access-Control-Allow-Credentials"] == "true"
+
+    def test_add_remove_consumers(self):
+        # Generate a valid token
+        consumer_name = "test-app"
+        self.add_consumer_to_route(consumer_name)
+
+    def test_jwt_requires_auth(self):
+        with self.add_route_to_fixture(relative_url="/jwt", jwt=True):
+            # Leave time for plugin to be installed
+            time.sleep(10)
+
+            # Unauthed request should fail
+            no_auth_resp = requests.get(self.env.gw_url + "/jwt/hello")
+            assert no_auth_resp.status_code == requests.codes.unauthorized
+
+            # Request with invalid auth should fail
+            bad_auth_resp = requests.get(
+                self.env.gw_url + "/jwt/hello",
+                headers={
+                    "Authorization": "Bearer foobar",
+                },
+            )
+            assert bad_auth_resp.status_code == requests.codes.unauthorized
+
+            # Generate a valid token
+            consumer_name = "test-app"
+            self.add_consumer_to_route(consumer_name)
+            cred = self.add_jwt_cred_for_consumer(consumer_name)
+
+            encoded = jwt.encode(
+                {"foo": "bar", "iss": cred.iss}, cred.secret, algorithm=cred.algorithm
+            )
+
+            # Request with valid auth should pass
+            good_auth_resp = requests.get(
+                self.env.gw_url + "/jwt/hello",
+                headers={
+                    "Authorization": f"Bearer {encoded}",
+                },
+            )
+            assert good_auth_resp.status_code == requests.codes.ok
 
     @pytest.mark.parametrize(
         "target",

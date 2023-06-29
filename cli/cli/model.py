@@ -54,6 +54,16 @@ class Consumer(object):
     custom_id: Optional[str] = None
     kong_id: Optional[str] = None
 
+    @classmethod
+    def from_json(cls, json_data: dict):
+        c = Consumer(
+            username=json_data.get("username"),
+            custom_id=json_data.get("custom_id"),
+            kong_id=json_data.get("id"),
+        )
+
+        return c
+
     def get_consumer_name(self):
         return self.custom_id if self.custom_id else self.username
 
@@ -71,7 +81,15 @@ class Consumer(object):
 @dataclass
 class JwtCredential(object):
     algorithm: str
+    iss: str
+    secret: str
 
-    secret: Optional[str] = None
-    id_key: Optional[str] = None
-    pub_key: Optional[str] = None
+    @classmethod
+    def from_json(cls, json_data: dict):
+        c = JwtCredential(
+            algorithm=json_data.get("algorithm"),
+            iss=json_data.get("key"),
+            secret=json_data.get("secret"),
+        )
+
+        return c

@@ -41,37 +41,29 @@ scwgw add-consumer my-app
 Then we can generate JWT credentials for this consumer with:
 
 ```shell
-scwgw add-jwt my-app
+scwgw add-jwt-cred my-app
 ```
 
 Which gives an output:
 
 ```shell
-{
- 'algorithm': 'HS256',
- 'consumer': {'id': 'd4c0c3ab-ea83-494b-aed2-3717647426c4'},
- 'created_at': 1687794681,
- 'id': '2573bab2-2d49-4b31-b96a-4c5a8080407e',
- 'key': 'YyXIAIlmFf1Fa4sLg2wJGBwH5ESsovBy',
- 'rsa_public_key': None,
- 'secret': 'o2eQQg2xF5FITEz17VatRlqrZzQMpMZg',
- 'tags': None
-}
+ALGORITHM     SECRET                                 ISS
+HS256         o2eQQg2xF5FITEz17VatRlqrZzQMpMZg       YyXIAIlmFf1Fa4sLg2wJGBwH5ESsovBy
 ```
 
 You can get all JWT credentials for the consumer with:
 
 ```shell
-scwgw get-jwts my-app
+scwgw get-jwt-creds my-app
 ```
 
 With the secret generated in this request, users can sign requests to access the API.
 
-*NOTE* that the `key` field on this credential is needed for the _issuer_ (`iss`) field in all tokens.
+*NOTE* that you must provide the ISS value in an `iss` field in all encoded tokens.
 
 ### Signing a request
 
-Signing requests is the responsibility of the client for your API. We can demonstrate an example here using [`PyJWT`](https://github.com/jpadilla/pyjwt).
+Using credentials to sign requests is the responsibility of the client making the request. However, we can demonstrate an example here using [`PyJWT`](https://github.com/jpadilla/pyjwt).
 
 Taking the secret generated above, we can create an encoded request as follows:
 
@@ -80,7 +72,6 @@ import jwt
 
 SECRET = "o2eQQg2xF5FITEz17VatRlqrZzQMpMZg"
 
-# Note we are using the same algorithm as the credentials
 encoded = jwt.encode(
   {
     "some": "payload",

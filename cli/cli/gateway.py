@@ -67,7 +67,7 @@ class GatewayManager:
         self.session.headers["Content-Type"] = "application/json"
         self.session.hooks["response"].append(response_hook)
 
-    def add_route(self, route: Route):
+    def add_route(self, route: Route) -> requests.Response:
         service_url = f"{self.services_url}/{route.name}"
         route_url = f"{self.routes_url}/{route.name}"
 
@@ -139,24 +139,18 @@ class GatewayManager:
 
         return routes
 
-    def get_consumers(self) -> List[Route]:
+    def get_consumers(self) -> List[Consumer]:
         resp = self.session.get(url=self.consumers_url)
         consumer_data = resp.json().get("data")
 
         consumers = list()
         for c in consumer_data:
-            consumers.append(
-                Consumer(
-                    username=c.get("username"),
-                    custom_id=c.get("custom_id"),
-                    kong_id=c.get("id"),
-                )
-            )
+            consumers.append(Consumer.from_json(c))
 
         return consumers
 
     def print_consumers(self):
-        consumers: List[Route] = self.get_consumers()
+        consumers: List[Consumer] = self.get_consumers()
         consumers.sort(key=lambda r: r.username)
 
         click.secho(f"{'USERNAME':<20} {'CUSTOM_ID':<20} ID", bold=True)
@@ -165,7 +159,10 @@ class GatewayManager:
             custom_id = c.custom_id if c.custom_id else "None"
             click.secho(f"{username:<20} {custom_id:<20} {c.kong_id}")
 
-    def add_consumer(self, consumer: Consumer):
+    def delete_consumer(self, consumer_name:str):
+        pass
+
+    def add_consumer(self, consumer: Consumer) -> requests.Response:
         if consumer.custom_id and consumer.username:
             click.secho(
                 "Found both custom ID and username. Should provide only one",
@@ -182,26 +179,42 @@ class GatewayManager:
             raise click.Abort()
 
         # Add the consumer
-        self.session.post(url=self.consumers_url, json=consumer.json())
+        return self.session.post(url=self.consumers_url, json=consumer.json())
 
-    def provision_jwt_cred(self, consumer_name: str) -> dict:
+    def provision_jwt_cred(self, consumer_name: str) -> JwtCredential:
         jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
 
         resp = self.session.post(
             url=jwt_url,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
+        resp.raise_for_status()
 
-        cred_data = resp.json()
-        return cred_data
+        return JwtCredential.from_json(resp.json())
 
     def get_jwt_creds(self, consumer_name: str) -> dict:
         jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
 
         resp = self.session.get(url=jwt_url)
+        resp.raise_for_status()
 
         creds_data = resp.json()["data"]
-        return creds_data
+        creds = list()
+        for d in creds_data:
+            creds.append(JwtCredential.from_json(d))
+
+        return creds
+
+    def print_jwt_cred(self, cred: JwtCredential, header=True):
+        if header:
+            click.secho(f"{'ALGORITHM':<15} {'SECRET':<40} {'ISS':<40}", bold=True)
+        click.secho(f"{cred.algorithm:<15} {cred.secret:<40} {cred.iss:<40}")
+
+    def print_jwt_creds(self, consumer_name):
+        creds = self.get_jwt_creds(consumer_name)
+
+        for i, c in enumerate(creds):
+            self.print_jwt_cred(c, header=i == 0)
 
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.
