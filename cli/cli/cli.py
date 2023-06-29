@@ -172,7 +172,7 @@ def delete_consumer(name):
 @cli.command()
 @click.argument("consumer")
 def add_jwt_cred(consumer):
-    """Provisions a JWT credential for a consumer"""
+    """Adds a JWT credential to a consumer"""
     manager = GatewayManager()
     cred = manager.add_jwt_cred(consumer)
     manager.print_jwt_cred(cred)

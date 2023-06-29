@@ -215,18 +215,21 @@ class TestEndpoint(object):
         self.manager.delete_consumer(consumer_name_b)
 
     def test_jwt_requires_auth(self):
+        # Set up the consumer
         consumer_name = "test-app"
         self.manager.delete_consumer(consumer_name)
+        self.manager.add_consumer(consumer_name)
 
+        # Set up the route
         relative_url = "/auth-test"
         full_url = f"{self.env.gw_url}{relative_url}/hello"
         with self.add_route_to_fixture(relative_url=relative_url, jwt=True):
-            # Unauthed request should fail, leave time for plugin to be installed
+            # Unauthed request should return unauthorized
             self._call_endpoint_until_response_code(
                 full_url, requests.codes.unauthorized
             )
 
-            # Request with invalid auth should fail
+            # Request with invalid auth should also be unauthorized
             bad_auth_resp = requests.get(
                 full_url,
                 headers={
@@ -235,15 +238,15 @@ class TestEndpoint(object):
             )
             assert bad_auth_resp.status_code == requests.codes.unauthorized
 
-            # Generate a valid token
-            self.manager.add_consumer(consumer_name)
+            # Generate a credential
             cred = self.manager.add_jwt_cred(consumer_name)
 
+            # Use the credential to create a JWT
             encoded = jwt.encode(
                 {"foo": "bar", "iss": cred.iss}, cred.secret, algorithm=cred.algorithm
             )
 
-            # Request with valid auth should pass
+            # Check a request with this token is authorized
             good_auth_headers = {
                 "Authorization": f"Bearer {encoded}",
             }
@@ -253,6 +256,7 @@ class TestEndpoint(object):
             )
             assert good_auth_resp.status_code == requests.codes.ok
 
+        # Delete the consumer
         self.manager.delete_consumer(consumer_name)
 
     @pytest.mark.parametrize(

@@ -111,7 +111,7 @@ class GatewayManager:
 
         return resp
 
-    def delete_route(self, route: Route):
+    def delete_route(self, route: Route) -> requests.Response:
         self.session.delete(url=f"{self.routes_url}/{route.name}")
         resp = self.session.delete(url=f"{self.services_url}/{route.name}")
         return resp
@@ -164,11 +164,7 @@ class GatewayManager:
         consumer_data = resp.json().get("data")
         consumer_data.sort(key=lambda x: x["username"])
 
-        consumers = list()
-        for c in consumer_data:
-            consumers.append(Consumer.from_json(c))
-
-        return consumers
+        return [Consumer.from_json(c) for c in consumer_data]
 
     def print_consumers(self) -> None:
         consumers: List[Consumer] = self.get_consumers()
@@ -205,11 +201,7 @@ class GatewayManager:
         resp.raise_for_status()
 
         creds_data = resp.json()["data"]
-        creds = list()
-        for d in creds_data:
-            creds.append(JwtCredential.from_json(d))
-
-        return creds
+        return [JwtCredential.from_json(d) for d in creds_data]
 
     def print_jwt_cred(self, cred: JwtCredential, header=True):
         if header:
