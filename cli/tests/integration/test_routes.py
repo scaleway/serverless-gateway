@@ -23,12 +23,14 @@ class TestEndpoint(object):
         TestEndpoint.manager = GatewayManager()
 
     @staticmethod
-    def _call_endpoint_until_response_code(url, code, method: str = "GET"):
+    def _call_endpoint_until_response_code(
+        url, code, method: str = "GET", headers=None
+    ):
         max_retries = 10
         sleep_time = 2
 
         for _ in range(max_retries):
-            resp = requests.request(method=method, url=url)
+            resp = requests.request(method=method, url=url, headers=headers)
             if resp.status_code == code:
                 logger.info(f"Got {resp.status_code} from {url}")
                 return resp
@@ -149,15 +151,17 @@ class TestEndpoint(object):
 
     def test_cors_enabled_for_route(self):
         with self.add_route_to_fixture(relative_url="/func-a", cors=True):
-            # Leave time for plugin to be installed
-            time.sleep(10)
             preflight_req_headers = {
                 "Origin": "https://www.dummy-url.com",
                 "Access-Control-Request-Method": "GET",
             }
 
-            preflight_resp = requests.options(
-                self.env.gw_url + "/func-a/hello", headers=preflight_req_headers
+            # Allow time for plugin to be installed
+            preflight_resp = self._call_endpoint_until_response_code(
+                self.env.gw_url + "/func-a/hello",
+                requests.codes.ok,
+                "OPTIONS",
+                headers=preflight_req_headers,
             )
 
             assert (
@@ -207,6 +211,9 @@ class TestEndpoint(object):
         ]
         assert consumers == expected
 
+        # Delete the other
+        self.manager.delete_consumer(consumer_name_b)
+
     def test_jwt_requires_auth(self):
         consumer_name = "test-app"
         self.manager.delete_consumer(consumer_name)
@@ -214,12 +221,10 @@ class TestEndpoint(object):
         relative_url = "/auth-test"
         full_url = f"{self.env.gw_url}{relative_url}/hello"
         with self.add_route_to_fixture(relative_url=relative_url, jwt=True):
-            # Leave time for plugin to be installed
-            time.sleep(20)
-
-            # Unauthed request should fail
-            no_auth_resp = requests.get(full_url)
-            assert no_auth_resp.status_code == requests.codes.unauthorized
+            # Unauthed request should fail, leave time for plugin to be installed
+            self._call_endpoint_until_response_code(
+                full_url, requests.codes.unauthorized
+            )
 
             # Request with invalid auth should fail
             bad_auth_resp = requests.get(
@@ -247,6 +252,8 @@ class TestEndpoint(object):
                 headers=good_auth_headers,
             )
             assert good_auth_resp.status_code == requests.codes.ok
+
+        self.manager.delete_consumer(consumer_name)
 
     @pytest.mark.parametrize(
         "target",
