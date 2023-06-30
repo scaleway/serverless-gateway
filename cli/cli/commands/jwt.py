@@ -1,4 +1,5 @@
 import click
+
 from cli.gateway import GatewayManager
 
 
@@ -14,12 +15,12 @@ def add(consumer):
     """Adds a JWT credential to a consumer"""
     manager = GatewayManager()
     cred = manager.add_jwt_cred(consumer)
-    manager.print_jwt_cred(cred)
+    manager.print_jwt_creds([cred])
 
 
 @jwt.command()
 @click.argument("consumer")
-def list(consumer):
+def ls(consumer):
     """Lists the JWT credentials for a consumer"""
     manager = GatewayManager()
-    manager.print_jwt_creds(consumer)
+    manager.print_jwt_creds_for_consumer(consumer)

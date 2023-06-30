@@ -1,4 +1,5 @@
 import click
+
 from cli.gateway import GatewayManager
 
 
@@ -9,7 +10,7 @@ def consumer():
 
 
 @consumer.command()
-def list():
+def ls():
     """Print the consumers configured on the gateway"""
     manager = GatewayManager()
     manager.print_consumers()

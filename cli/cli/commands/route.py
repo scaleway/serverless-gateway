@@ -1,10 +1,9 @@
 import click
-from cli.gateway import GatewayManager
-from cli.model import Route
-from cli import client
-from cli.infra import InfraManager
 
-from typing import List
+from cli import client
+from cli.gateway import GatewayManager
+from cli.infra import InfraManager
+from cli.model import Route
 
 
 @click.group()
@@ -14,7 +13,7 @@ def route():
 
 
 @route.command()
-def list():
+def ls():
     """Print the routes configured on the gateway"""
     manager = GatewayManager()
     manager.print_routes()
@@ -33,7 +32,7 @@ def list():
     help="HTTP methods that the route should accept. Defaults to all if not specified.",
     multiple=True,
 )
-def add(relative_url: str, target: str, cors: bool, jwt: bool, http_methods: List[str]):
+def add(relative_url: str, target: str, cors: bool, jwt: bool, http_methods: list[str]):
     """Add a route to the gateway"""
     manager = GatewayManager()
 
