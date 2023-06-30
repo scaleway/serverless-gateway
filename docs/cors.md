@@ -18,7 +18,7 @@ scwgw route add /cors $TARGET_URL --cors
 scwgw route add /no-cors $TARGET_URL
 
 # List routes to see that it's been configured
-scwgw route list
+scwgw route ls
 
 # Curl the routes with and without CORS to see the difference in headers
 GATEWAY_ENDPOINT=$(scwgw infra endpoint)

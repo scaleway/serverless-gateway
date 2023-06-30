@@ -47,7 +47,7 @@ To check your gateway is working, you can add and remove a route:
 
 ```console
 # Check no routes are configured initially
-scwgw route list
+scwgw route ls
 
 # Check the response directly from a given URL
 TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
@@ -57,7 +57,7 @@ curl $TARGET_URL
 scwgw route add /time $TARGET_URL
 
 # List routes to see that it's been configured
-scwgw route list
+scwgw route ls
 
 # Curl the URL via the gateway
 GATEWAY_ENDPOINT=$(scwgw infra endpoint)

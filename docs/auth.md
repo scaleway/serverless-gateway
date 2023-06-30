@@ -59,7 +59,7 @@ With the secret generated in this request, users can sign requests to access the
 You can get all JWT credentials for a given consumer with:
 
 ```shell
-scwgw jwt list my-app
+scwgw jwt ls my-app
 ```
 
 ### Signing a request
