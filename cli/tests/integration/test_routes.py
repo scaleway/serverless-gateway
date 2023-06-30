@@ -260,14 +260,15 @@ class TestEndpoint(object):
             )
 
             # Check a request with this token is authorized
+            # Give time for credential to propagate
             good_auth_headers = {
                 "Authorization": f"Bearer {encoded}",
             }
-            good_auth_resp = requests.get(
+            self._call_endpoint_until_response_code(
                 full_url,
+                requests.codes.ok,
                 headers=good_auth_headers,
             )
-            assert good_auth_resp.status_code == requests.codes.ok
 
         # Delete the consumer
         self.manager.delete_consumer(consumer_name)
