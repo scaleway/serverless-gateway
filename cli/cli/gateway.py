@@ -8,7 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from cli import conf
-from cli.model import Route
+from cli.model import Consumer, JwtCredential, Route
 
 MAX_RETRIES = 5
 
@@ -64,6 +64,8 @@ class GatewayManager:
 
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
+        self.consumers_url = self.admin_url + "/consumers"
+
         self.token = self.config.gw_admin_token
 
         self._create_session()
@@ -85,7 +87,7 @@ class GatewayManager:
         )
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
 
-    def add_route(self, route: Route):
+    def add_route(self, route: Route) -> requests.Response:
         service_url = f"{self.services_url}/{route.name}"
         route_url = f"{self.routes_url}/{route.name}"
 
@@ -100,14 +102,21 @@ class GatewayManager:
                 # TODO - avoid ignoring this, any way to create or update?
                 pass
 
+        if route.jwt:
+            try:
+                self.session.post(url=plugins_url, json=route.jwt_json())
+            except requests.HTTPError:
+                # TODO - avoid ignoring this, any way to create or update?
+                pass
+
         return resp
 
-    def delete_route(self, route: Route):
+    def delete_route(self, route: Route) -> requests.Response:
         self.session.delete(url=f"{self.routes_url}/{route.name}")
         resp = self.session.delete(url=f"{self.services_url}/{route.name}")
         return resp
 
-    def print_routes(self):
+    def print_routes(self) -> None:
         routes: List[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
@@ -149,6 +158,61 @@ class GatewayManager:
             )
 
         return routes
+
+    def get_consumers(self) -> List[Consumer]:
+        resp = self.session.get(url=self.consumers_url)
+        consumer_data = resp.json().get("data")
+        consumer_data.sort(key=lambda x: x["username"])
+
+        return [Consumer.from_json(c) for c in consumer_data]
+
+    def print_consumers(self) -> None:
+        consumers: List[Consumer] = self.get_consumers()
+
+        click.secho(f"{'USERNAME':<20}", bold=True)
+        for c in consumers:
+            click.secho(f"{c.username:<20}")
+
+    def delete_consumer(self, consumer_name: str):
+        consumer_url = f"{self.consumers_url}/{consumer_name}"
+        resp = self.session.delete(url=consumer_url)
+        resp.raise_for_status()
+
+    def add_consumer(self, consumer_name):
+        consumer = Consumer(username=consumer_name)
+        resp = self.session.post(url=self.consumers_url, json=consumer.json())
+        resp.raise_for_status()
+
+    def add_jwt_cred(self, consumer_name: str) -> JwtCredential:
+        jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
+
+        resp = self.session.post(
+            url=jwt_url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        resp.raise_for_status()
+
+        return JwtCredential.from_json(resp.json())
+
+    def get_jwt_creds(self, consumer_name: str) -> List[JwtCredential]:
+        jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
+
+        resp = self.session.get(url=jwt_url)
+        resp.raise_for_status()
+
+        creds_data = resp.json()["data"]
+        return [JwtCredential.from_json(d) for d in creds_data]
+
+    def print_jwt_cred(self, cred: JwtCredential, header=True):
+        if header:
+            click.secho(f"{'ALGORITHM':<15} {'SECRET':<40} {'ISS':<40}", bold=True)
+        click.secho(f"{cred.algorithm:<15} {cred.secret:<40} {cred.iss:<40}")
+
+    def print_jwt_creds(self, consumer_name):
+        creds = self.get_jwt_creds(consumer_name)
+
+        for i, c in enumerate(creds):
+            self.print_jwt_cred(c, header=i == 0)
 
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.

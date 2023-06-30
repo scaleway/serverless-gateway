@@ -1,4 +1,7 @@
+import sys
+
 import click
+from loguru import logger
 
 from cli import client, conf
 from cli.gateway import GatewayManager
@@ -12,11 +15,15 @@ def cli():
 
     See the README for more information.
     """
+    # Set log level
+    logger.remove()
+    logger.add(sys.stderr, level="INFO")
 
 
 @cli.command()
 def deploy():
     """Deploys all the gateway components"""
+
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
 
@@ -58,7 +65,7 @@ def check():
 @click.option(
     "--yes", "-y", is_flag=True, default=False, help="Skip interactive confirmation"
 )
-def delete(yes=False):
+def delete(yes):
     """Deletes all the gateway components"""
 
     do_delete = yes
@@ -94,7 +101,7 @@ def remote_config():
 
 @cli.command()
 def get_routes():
-    """Returns the routes configured on the gateway"""
+    """Prints the routes configured on the gateway"""
     manager = GatewayManager()
     manager.print_routes()
 
@@ -105,21 +112,25 @@ def get_routes():
 @click.option(
     "--cors", is_flag=True, default=False, help="Add permissive cors to the route."
 )
+@click.option("--jwt", is_flag=True, default=False, help="Add JWT auth to the route.")
 @click.option(
     "--http-methods",
     "-m",
     help="HTTP methods that the route should accept. Defaults to all if not specified.",
     multiple=True,
 )
-def add_route(relative_url: str, target: str, cors: bool, http_methods: list[str]):
+def add_route(
+    relative_url: str, target: str, cors: bool, jwt: bool, http_methods: list[str]
+):
     """Adds a route to the gateway"""
     manager = GatewayManager()
 
     route = Route(
         relative_url=relative_url,
         target=target,
-        http_methods=http_methods,
         cors=cors,
+        jwt=jwt,
+        http_methods=http_methods,
     )
     manager.add_route(route)
 
@@ -136,8 +147,48 @@ def delete_route(relative_url, target):
 
 
 @cli.command()
+def get_consumers():
+    """Prints the consumers configured on the gateway"""
+    manager = GatewayManager()
+    manager.print_consumers()
+
+
+@cli.command()
+@click.argument("name")
+def add_consumer(name):
+    """Adds a consumer to the gateway"""
+    manager = GatewayManager()
+    manager.add_consumer(name)
+
+
+@cli.command()
+@click.argument("name")
+def delete_consumer(name):
+    """Deletes a consumer from the gateway"""
+    manager = GatewayManager()
+    manager.delete_consumer(name)
+
+
+@cli.command()
+@click.argument("consumer")
+def add_jwt_cred(consumer):
+    """Adds a JWT credential to a consumer"""
+    manager = GatewayManager()
+    cred = manager.add_jwt_cred(consumer)
+    manager.print_jwt_cred(cred)
+
+
+@cli.command()
+@click.argument("consumer")
+def get_jwt_creds(consumer):
+    """Lists the JWT credentials for a consumer"""
+    manager = GatewayManager()
+    manager.print_jwt_creds(consumer)
+
+
+@cli.command()
 def create_admin_token():
-    """Creates a token for the admin container"""
+    """Creates a new token for the admin container"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
