@@ -17,7 +17,7 @@ Installation
 
     pip install scw-gateway
 
-This will install `scwgw`:
+This will install ``scwgw``:
 
 .. code-block:: console
 
