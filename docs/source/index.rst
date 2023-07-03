@@ -15,7 +15,7 @@ Installation
 
 .. code-block:: console
 
-    pip install serverless-gateway
+    pip install scw-gateway
 
 This will install `scwgw`:
 
