@@ -10,16 +10,10 @@ It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving y
 
 - [:rocket: Features](#rocket-features)
 - [:computer: Quick-start](#computer-quick-start)
-- [Observability](docs/observability.md)
-- [Custom domains](docs/domains.md)
-- [Adding authnetication](docs/auth.md)
-- [Adding CORS](docs/cors.md)
-- [Accessing Kong directly](docs/kong.md)
-- [Serverless functions](docs/serverless.md)
-- [Modifying the gateway](docs/custom.md)
-- [:hammer: Architecture](docs/architecture.md)
 - [:mortar\_board: Contributing](#mortar_board-contributing)
 - [:mailbox: Reach Us](#mailbox-reach-us)
+
+Please see [the docs](https://serverless-gateway.readthedocs.io) for full documentation and features.
 
 ## :computer: Quick-start
 
