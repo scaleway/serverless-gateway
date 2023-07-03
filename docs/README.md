@@ -1,18 +1,17 @@
 # Gateway docs
 
-To build the docs:
+To build the docs you will need a Python environment with the following packages installed (via `pip`):
+
+- `sphinx`
+- `sphinx-rtd-theme`
+- `myst-parser`
+
+## Local build
 
 ```bash
-# Set up Python environment
 cd docs
-python3 -m venv venv
-source venv/bin/activate
 
-pip install -r requirements.txt
-
-# Make docs
 make html
 
-# Open
 xdg-open _build/html/index.html
 ```
