@@ -1,17 +1,13 @@
 # Gateway docs
 
-To build the docs you will need a Python environment with the following packages installed (via `pip`):
-
-- `sphinx`
-- `sphinx-rtd-theme`
-- `myst-parser`
-
-## Local build
+To build the docs (from the root of this project):
 
 ```bash
-cd docs
+cd cli
+poetry install --with doc
+poetry shell
 
+cd ../docs
 make html
-
-xdg-open _build/html/index.html
+xdg-open build/html/index.html
 ```
