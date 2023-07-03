@@ -8,6 +8,10 @@ To build the docs you will need a Python environment with the following packages
 
 ## Local build
 
-```
+```bash
+cd docs
+
 make html
+
+xdg-open _build/html/index.html
 ```
