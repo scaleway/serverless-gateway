@@ -5,7 +5,7 @@ The Kong API runs in a private [Scaleway Serverless Container](https://www.scale
 Once you have set up your gateway and configured your local config with:
 
 ```
-scwgw remote-config
+scwgw infra config
 ```
 
 You can find the URL and token for accessing the admin endpoint in your config file at `~/.config/scw/gateway.yml`:

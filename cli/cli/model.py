@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 
 @dataclass
-class Route(object):
+class Route:
     relative_url: str
     target: str
 
-    http_methods: Optional[List[str]] = None
+    http_methods: Optional[list[str]] = None
     cors: Optional[bool] = False
     jwt: Optional[bool] = False
 
@@ -49,7 +49,7 @@ class Route(object):
 
 
 @dataclass
-class Consumer(object):
+class Consumer:
     username: Optional[str] = None
 
     @classmethod
@@ -70,7 +70,7 @@ class Consumer(object):
 
 
 @dataclass
-class JwtCredential(object):
+class JwtCredential:
     algorithm: str
     iss: str
     secret: str

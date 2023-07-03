@@ -44,7 +44,7 @@ jobs:
         run: until curl http://localhost:8080/ping; do sleep 3; done
 
       - name: Set up local config
-        run: poetry run scwgw dev-config
+        run: poetry run scwgw dev config
         working-directory: cli
 
       - name: Run the tests

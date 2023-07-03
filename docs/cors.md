@@ -14,14 +14,14 @@ TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
 curl -X OPTIONS -I $TARGET_URL
 
 # Add routes with and without cors
-scwgw add-route /cors $TARGET_URL --cors
-scwgw add-route /no-cors $TARGET_URL
+scwgw route add /cors $TARGET_URL --cors
+scwgw route add /no-cors $TARGET_URL
 
 # List routes to see that it's been configured
-scwgw get-routes
+scwgw route ls
 
 # Curl the routes with and without CORS to see the difference in headers
-GATEWAY_ENDPOINT=$(scwgw get-endpoint)
+GATEWAY_ENDPOINT=$(scwgw infra endpoint)
 curl -X OPTIONS -I https://${GATEWAY_ENDPOINT}/cors
 curl -X OPTIONS -I https://${GATEWAY_ENDPOINT}/no-cors
 ```

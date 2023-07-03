@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 import click
 import requests
@@ -117,7 +116,7 @@ class GatewayManager:
         return resp
 
     def print_routes(self) -> None:
-        routes: List[Route] = self.get_routes()
+        routes: list[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
         click.secho(
@@ -127,7 +126,7 @@ class GatewayManager:
             http_methods = r.http_methods if r.http_methods else "All"
             click.secho(f"{r.relative_url:<25} {r.target:<40} {http_methods:<10}")
 
-    def get_routes(self) -> List[Route]:
+    def get_routes(self) -> list[Route]:
         resp = self.session.get(url=self.routes_url)
         route_data = {r.get("name"): r for r in resp.json().get("data")}
 
@@ -159,7 +158,7 @@ class GatewayManager:
 
         return routes
 
-    def get_consumers(self) -> List[Consumer]:
+    def get_consumers(self) -> list[Consumer]:
         resp = self.session.get(url=self.consumers_url)
         consumer_data = resp.json().get("data")
         consumer_data.sort(key=lambda x: x["username"])
@@ -167,7 +166,7 @@ class GatewayManager:
         return [Consumer.from_json(c) for c in consumer_data]
 
     def print_consumers(self) -> None:
-        consumers: List[Consumer] = self.get_consumers()
+        consumers: list[Consumer] = self.get_consumers()
 
         click.secho(f"{'USERNAME':<20}", bold=True)
         for c in consumers:
@@ -194,7 +193,7 @@ class GatewayManager:
 
         return JwtCredential.from_json(resp.json())
 
-    def get_jwt_creds(self, consumer_name: str) -> List[JwtCredential]:
+    def get_jwt_creds(self, consumer_name: str) -> list[JwtCredential]:
         jwt_url = f"{self.consumers_url}/{consumer_name}/jwt"
 
         resp = self.session.get(url=jwt_url)
@@ -203,16 +202,14 @@ class GatewayManager:
         creds_data = resp.json()["data"]
         return [JwtCredential.from_json(d) for d in creds_data]
 
-    def print_jwt_cred(self, cred: JwtCredential, header=True):
-        if header:
-            click.secho(f"{'ALGORITHM':<15} {'SECRET':<40} {'ISS':<40}", bold=True)
-        click.secho(f"{cred.algorithm:<15} {cred.secret:<40} {cred.iss:<40}")
+    def print_jwt_creds(self, creds: list[JwtCredential], header=True):
+        click.secho(f"{'ALGORITHM':<15} {'SECRET':<40} {'ISS':<40}", bold=True)
+        for c in creds:
+            click.secho(f"{c.algorithm:<15} {c.secret:<40} {c.iss:<40}")
 
-    def print_jwt_creds(self, consumer_name):
+    def print_jwt_creds_for_consumer(self, consumer_name):
         creds = self.get_jwt_creds(consumer_name)
-
-        for i, c in enumerate(creds):
-            self.print_jwt_cred(c, header=i == 0)
+        self.print_jwt_creds(creds)
 
     def setup_global_kong_statsd_plugin(self) -> str:
         """Install the kong statsd plugin on the kong admin API.

@@ -38,7 +38,7 @@ The gateway image itself is packaged via our public [Serverless Gateway Docker i
 To deploy your gateway, you can run:
 
 ```console
-scwgw deploy
+scwgw infra deploy
 ```
 
 ### Add a route
@@ -47,20 +47,20 @@ To check your gateway is working, you can add and remove a route:
 
 ```console
 # Check no routes are configured initially
-scwgw get-routes
+scwgw route ls
 
 # Check the response directly from a given URL
 TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
 curl $TARGET_URL
 
 # Add a route to this URL in your gateway
-scwgw add-route /time $TARGET_URL
+scwgw route add /time $TARGET_URL
 
 # List routes to see that it's been configured
-scwgw get-routes
+scwgw route ls
 
 # Curl the URL via the gateway
-GATEWAY_ENDPOINT=$(scwgw get-endpoint)
+GATEWAY_ENDPOINT=$(scwgw infra endpoint)
 curl https://${GATEWAY_ENDPOINT}/time
 ```
 
@@ -69,7 +69,7 @@ curl https://${GATEWAY_ENDPOINT}/time
 To delete your gateway, you can run:
 
 ```console
-scwgw delete
+scwgw infra delete
 ```
 
 ## :mortar_board: Contributing

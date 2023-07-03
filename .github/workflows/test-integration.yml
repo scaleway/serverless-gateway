@@ -52,7 +52,7 @@ jobs:
 
       - name: Deploy the gateway
         working-directory: cli
-        run: poetry run scwgw deploy
+        run: poetry run scwgw infra deploy
 
   run-tests:
     if: github.event.pull_request.draft == false
@@ -75,7 +75,7 @@ jobs:
       - name: Run integration tests
         working-directory: cli
         run: |
-          poetry run scwgw remote-config
+          poetry run scwgw infra config
           poetry run pytest tests/integration
         env:
           DEPLOY_ENV: "scw"
@@ -103,4 +103,4 @@ jobs:
 
       - name: Delete gateway
         working-directory: cli
-        run: poetry run scwgw delete -y
+        run: poetry run scwgw infra delete -y
