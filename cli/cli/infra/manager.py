@@ -414,6 +414,36 @@ class InfraManager:
             metrics_push_url=metrics_push_url,
         )
 
-    def set_custom_domain(self):
+    def print_domains_for_container(self) -> None:
+        """Prints the custom domains set on the container"""
+        container = self._get_container_or_abort()
+        domains = self.containers.list_domains_all(container_id=container.id)
+
+        click.secho(f"{'HOSTNAME':<40} {'URL':<45} {'STATUS':<10}", bold=True)
+        for d in domains:
+            click.secho(f"{d.hostname:<40} {d.url:<45} {d.status:<10}")
+
+    def add_custom_domain(self, domain: str):
         """Set a custom domain for the container."""
-        raise NotImplementedError
+        container = self._get_container_or_abort()
+        domains = self.containers.list_domains_all(container_id=container.id)
+
+        for d in domains:
+            if d.hostname == domain:
+                click.echo("Container domain already exists, deleting")
+                self.containers.delete_domain(domain_id=d.id)
+
+        click.echo(f"Adding domain {domain}")
+        domain = self.containers.create_domain(
+            hostname=domain, container_id=container.id
+        )
+
+    def delete_custom_domain(self, domain: str):
+        """Delete a custom domain for the container."""
+        container = self._get_container_or_abort()
+        domains = self.containers.list_domains_all(container_id=container.id)
+
+        for d in domains:
+            if d.hostname == domain:
+                click.echo(f"Deleting domain {domain}")
+                self.containers.delete_domain(domain_id=d.id)

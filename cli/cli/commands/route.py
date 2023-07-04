@@ -1,8 +1,6 @@
 import click
 
-from cli import client
 from cli.gateway import GatewayManager
-from cli.infra import InfraManager
 from cli.model import Route
 
 
@@ -55,11 +53,3 @@ def delete(relative_url, target):
 
     route = Route(relative_url, target)
     manager.delete_route(route)
-
-
-@route.command()
-def custom_domain():
-    """Set the custom domain for the gateway"""
-    scw_client = client.get_scaleway_client()
-    manager = InfraManager(scw_client)
-    manager.set_custom_domain()

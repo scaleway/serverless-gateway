@@ -1,3 +1,4 @@
+import click
 import scaleway.container.v1beta1 as sdk
 
 from cli.conf import DB_DATABASE_NAME
