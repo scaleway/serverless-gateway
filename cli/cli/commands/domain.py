@@ -30,7 +30,7 @@ def add(domain):
 @domain.command()
 @click.argument("domain")
 def delete(domain):
-    """Removes a domain from the gateway"""
+    """Remove a domain from the gateway"""
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     manager.delete_custom_domain(domain)
