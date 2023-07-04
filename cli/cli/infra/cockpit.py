@@ -1,4 +1,10 @@
+from contextlib import contextmanager
+from typing import Generator
+
 import click
+import requests
+from requests.auth import HTTPBasicAuth
+
 import scaleway.cockpit.v1beta1 as sdk
 from scaleway import Client, ScalewayException
 
@@ -12,6 +18,14 @@ WRITE_METRICS_SCOPE = sdk.TokenScopes(
     setup_logs_rules=False,
     setup_alerts=False,
 )
+
+# We create a temporary user to import the dashboard
+# This user will be deleted after the import
+GRAFANA_TEMPOARY_USER_LOGIN = "tmp-sls-gw-dashboard"
+KONG_STATSD_DASHBOARD_ID = "16897"
+
+# TODO: this could be modified by the user
+METRICS_DATASOURCE_NAME = "Metrics"
 
 
 def ensure_cockpit_activated(scw_client: Client):
@@ -44,6 +58,17 @@ def get_metrics_push_url(api: sdk.CockpitV1Beta1API) -> str:
     return cockpit.endpoints.metrics_url + "/api/v1/push"
 
 
+def get_grafana_api_url(api: sdk.CockpitV1Beta1API) -> str:
+    """Get the Cockpit metrics push URL."""
+    cockpit = api.get_cockpit()
+
+    if not cockpit.endpoints:
+        # Should never happen
+        raise RuntimeError("Cockpit has no endpoints")
+
+    return cockpit.endpoints.grafana_url
+
+
 def get_metrics_token(api: sdk.CockpitV1Beta1API) -> sdk.Token | None:
     """Get the Cockpit token used to write metrics."""
     tokens = api.list_tokens_all()
@@ -72,3 +97,89 @@ def create_metrics_token(api: sdk.CockpitV1Beta1API) -> str:
 def delete_metrics_token(api: sdk.CockpitV1Beta1API, token: sdk.Token) -> None:
     """Delete a Cockpit token."""
     api.delete_token(token_id=token.id)
+
+
+@contextmanager
+def temporary_grafana_user(
+    api: sdk.CockpitV1Beta1API,
+) -> Generator[sdk.GrafanaUser, None, None]:
+    """Create a temporary grafana user"""
+    user = None
+    try:
+        user = api.create_grafana_user(
+            login=GRAFANA_TEMPOARY_USER_LOGIN, role=sdk.GrafanaUserRole.EDITOR
+        )
+        yield user
+    finally:
+        if user:
+            api.delete_grafana_user(grafana_user_id=user.id)
+
+
+def get_metrics_data_source_uid(
+    api: sdk.CockpitV1Beta1API, user: sdk.GrafanaUser
+) -> str:
+    """Get the data source uid for the Metrics data source"""
+
+    url = get_grafana_api_url(api)
+
+    if not user.password:
+        raise RuntimeError(f"provided user {user.login} has no password")
+    basic = HTTPBasicAuth(username=user.login, password=user.password)
+
+    resp = requests.get(
+        url=url + f"/api/datasources/name/{METRICS_DATASOURCE_NAME}",
+        auth=basic,
+        timeout=5,
+    )
+    resp.raise_for_status()
+
+    return resp.json().get("uid")
+
+
+def import_kong_statsd_dashboard(
+    api: sdk.CockpitV1Beta1API, user: sdk.GrafanaUser
+) -> str:
+    """Import the Kong StatsD dashboard into Grafana
+
+    Returns the url of the imported dashboard
+    """
+    url = get_grafana_api_url(api)
+
+    if not user.password:
+        raise RuntimeError(f"provided user {user.login} has no password")
+    basic = HTTPBasicAuth(username=user.login, password=user.password)
+
+    # We first get the dashboard from gnet as a json to import it
+    resp = requests.get(
+        url=url + f"/api/gnet/dashboards/{KONG_STATSD_DASHBOARD_ID}",
+        auth=basic,
+        timeout=5,
+    )
+    resp.raise_for_status()
+
+    dashboard_json = resp.json().get("json")
+    if not dashboard_json:
+        raise RuntimeError("could not find dashboard json")
+
+    # We create the input for the data source
+    dashboard_input = {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "pluginId": "prometheus",
+        "value": get_metrics_data_source_uid(api=api, user=user),
+    }
+
+    # We import the dashboard
+    resp = requests.post(
+        url=url + "/api/dashboards/import",
+        auth=basic,
+        json={
+            "dashboard": dashboard_json,
+            "overwrite": True,
+            "inputs": [dashboard_input],
+        },
+        timeout=5,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return url + data.get("importedUrl")

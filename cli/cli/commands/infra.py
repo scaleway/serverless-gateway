@@ -40,6 +40,9 @@ def deploy():
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
 
+    click.secho("Setting up Grafana", fg="blue")
+    manager.import_kong_dashboard()
+
 
 @infra.command()
 def check():
