@@ -55,7 +55,7 @@ def test_get_metrics_push_url(api: sdk.CockpitV1Beta1API):
 
 
 # For some reason, running the next test against a recently created cockpit
-# fails with a 500 error. Because a user is necessary for the next test, we
+# fails with a 500 error. Because a user is necessary for the next few tests,
 # run them against the default project cockpit instead.
 # TODO: investigate
 def test_temporary_grafana_user():
