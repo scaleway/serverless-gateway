@@ -434,9 +434,7 @@ class InfraManager:
                 self.containers.delete_domain(domain_id=d.id)
 
         click.echo(f"Adding domain {domain}")
-        domain = self.containers.create_domain(
-            hostname=domain, container_id=container.id
-        )
+        self.containers.create_domain(hostname=domain, container_id=container.id)
 
     def delete_custom_domain(self, domain: str):
         """Delete a custom domain for the container."""
