@@ -3,9 +3,8 @@ from typing import Generator
 
 import click
 import requests
-from requests.auth import HTTPBasicAuth
-
 import scaleway.cockpit.v1beta1 as sdk
+from requests.auth import HTTPBasicAuth
 from scaleway import ScalewayException
 
 METRICS_TOKEN_NAME = "scw-gw-write-metrics"

@@ -2,7 +2,7 @@ import click
 
 from cli import client, conf
 from cli.gateway import GatewayManager
-from cli.infra import InfraManager, cockpit
+from cli.infra import InfraManager
 
 
 @click.group()

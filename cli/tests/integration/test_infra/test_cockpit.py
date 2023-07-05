@@ -1,13 +1,12 @@
-import pytest
-from typing import Generator
 import uuid
+from typing import Generator
+
+import pytest
 import requests
 from requests.auth import HTTPBasicAuth
-
-from scaleway import ScalewayException
+from scaleway import Client, ScalewayException
 from scaleway.account import v2 as account
 from scaleway.cockpit import v1beta1 as sdk
-from scaleway import Client
 
 import cli.infra.cockpit as cpt
 
