@@ -39,12 +39,7 @@ def scw_project() -> Generator[sdk.CockpitV1Beta1API, None, None]:
 
 
 def test_ensure_cockpit_activated(api: sdk.CockpitV1Beta1API):
-    client = Client.from_config_file_and_env()
-    client.default_project_id = scw_project.id
-    api = sdk.CockpitV1Beta1API(client)
-
     cpt.ensure_cockpit_activated(api=api)
-
     cockpit = api.get_cockpit(project_id=scw_project.id)
     assert cockpit is not None
 
