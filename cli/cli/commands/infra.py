@@ -27,7 +27,7 @@ def deploy():
     manager.await_namespace()
 
     click.secho("Checking cockpit activated", fg="blue")
-    cockpit.ensure_cockpit_activated(scw_client=scw_client)
+    manager.ensure_cockpit_activated()
 
     click.secho("Creating containers", fg="blue")
     manager.create_containers()

@@ -6,7 +6,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 import scaleway.cockpit.v1beta1 as sdk
-from scaleway import Client, ScalewayException
+from scaleway import ScalewayException
 
 METRICS_TOKEN_NAME = "scw-gw-write-metrics"
 WRITE_METRICS_SCOPE = sdk.TokenScopes(
@@ -28,20 +28,17 @@ KONG_STATSD_DASHBOARD_ID = "16897"
 METRICS_DATASOURCE_NAME = "Metrics"
 
 
-def ensure_cockpit_activated(scw_client: Client):
+def ensure_cockpit_activated(api: sdk.CockpitV1Beta1API) -> None:
     """Ensure Cockpit is activated"""
-    api = sdk.CockpitV1Beta1API(scw_client)
-
     try:
         api.get_cockpit()
-
         # If successful, cockpit activated
         return
     except ScalewayException as err:
         if not err.status_code == 404:
             raise
-
         # Activate the cockpit
+        click.secho("Activating Cockpit...", fg="yellow")
         cockpit = api.activate_cockpit()
         api.wait_for_cockpit(project_id=cockpit.project_id)
         click.secho("Cockpit activated", fg="green")
@@ -58,7 +55,7 @@ def get_metrics_push_url(api: sdk.CockpitV1Beta1API) -> str:
     return cockpit.endpoints.metrics_url + "/api/v1/push"
 
 
-def get_grafana_api_url(api: sdk.CockpitV1Beta1API) -> str:
+def get_grafana_url(api: sdk.CockpitV1Beta1API) -> str:
     """Get the Cockpit metrics push URL."""
     cockpit = api.get_cockpit()
 
@@ -115,20 +112,14 @@ def temporary_grafana_user(
             api.delete_grafana_user(grafana_user_id=user.id)
 
 
-def get_metrics_data_source_uid(
-    api: sdk.CockpitV1Beta1API, user: sdk.GrafanaUser
-) -> str:
-    """Get the data source uid for the Metrics data source"""
+def get_metrics_data_source_uid(grafana_url: str, auth: HTTPBasicAuth) -> str:
+    """Get the data source uid for the Metrics data source
 
-    url = get_grafana_api_url(api)
-
-    if not user.password:
-        raise RuntimeError(f"provided user {user.login} has no password")
-    basic = HTTPBasicAuth(username=user.login, password=user.password)
+    This data source is create by Cockpit for external data."""
 
     resp = requests.get(
-        url=url + f"/api/datasources/name/{METRICS_DATASOURCE_NAME}",
-        auth=basic,
+        url=grafana_url + f"/api/datasources/name/{METRICS_DATASOURCE_NAME}",
+        auth=auth,
         timeout=5,
     )
     resp.raise_for_status()
@@ -143,7 +134,7 @@ def import_kong_statsd_dashboard(
 
     Returns the url of the imported dashboard
     """
-    url = get_grafana_api_url(api)
+    url = get_grafana_url(api)
 
     if not user.password:
         raise RuntimeError(f"provided user {user.login} has no password")
@@ -166,7 +157,7 @@ def import_kong_statsd_dashboard(
         "name": "DS_PROMETHEUS",
         "type": "datasource",
         "pluginId": "prometheus",
-        "value": get_metrics_data_source_uid(api=api, user=user),
+        "value": get_metrics_data_source_uid(grafana_url=url, auth=basic),
     }
 
     # We import the dashboard
