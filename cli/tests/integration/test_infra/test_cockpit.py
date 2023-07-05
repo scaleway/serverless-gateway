@@ -12,7 +12,7 @@ import cli.infra.cockpit as cpt
 
 
 @pytest.fixture(scope="module")
-def scw_project() -> Generator[sdk.CockpitV1Beta1API, None, None]:
+def api() -> Generator[sdk.CockpitV1Beta1API, None, None]:
     """Return the project."""
     client = Client.from_config_file_and_env()
     api = account.AccountV2API(client)
