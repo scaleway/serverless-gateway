@@ -40,8 +40,9 @@ def scw_project() -> Generator[sdk.CockpitV1Beta1API, None, None]:
 
 def test_ensure_cockpit_activated(api: sdk.CockpitV1Beta1API):
     cpt.ensure_cockpit_activated(api=api)
-    cockpit = api.get_cockpit(project_id=scw_project.id)
+    cockpit = api.get_cockpit()
     assert cockpit is not None
+    assert cockpit.status == sdk.CockpitStatus.READY
 
 
 def test_get_metrics_push_url(api: sdk.CockpitV1Beta1API):
