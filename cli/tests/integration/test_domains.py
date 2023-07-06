@@ -4,10 +4,13 @@ import requests
 from scaleway import ScalewayException
 
 from cli import client
+import pytest
+
 from cli.infra import InfraManager
 from tests.integration.common import GatewayTest
 
 
+@pytest.mark.deployed
 class TestDomains(GatewayTest):
     def test_adding_domain(self):
         scw_client = client.get_scaleway_client()
