@@ -1,4 +1,4 @@
-# Custom domain
+# Custom domains
 
 Instead of using the default domain assigned to your gateway, you can add your own custom domains.
 

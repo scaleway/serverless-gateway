@@ -16,8 +16,7 @@ class TestDomains(GatewayTest):
         scw_client = client.get_scaleway_client()
         manager = InfraManager(scw_client)
 
-        # Add custom domain using nip.io
-        # https://nip.io/
+        # Add custom domain using nip.io: https://nip.io/
         gw_ip = manager.get_gateway_ip()
         custom_domain = f"{gw_ip}.nip.io"
 
@@ -44,19 +43,21 @@ class TestDomains(GatewayTest):
         # Add a route
         relative_url = "/cd-test"
         with self.add_route_to_fixture(relative_url):
-            # Check call directly
+            # Call directly
             default_url = f"{self.env.gw_url}{relative_url}/hello"
             resp_default = self.call_endpoint_until_response_code(
                 default_url,
                 requests.codes.ok,
             )
 
+            # Call via domain
             full_url = f"https://{custom_domain}{relative_url}/hello"
             resp_domain = self.call_endpoint_until_response_code(
                 full_url,
                 requests.codes.ok,
             )
 
+            # Check responses are the same
             assert resp_default.content == resp_domain.content
 
         # Remove the domain from the gateway
