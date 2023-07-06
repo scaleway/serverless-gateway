@@ -1,11 +1,10 @@
 import time
 
+import pytest
 import requests
 from scaleway import ScalewayException
 
 from cli import client
-import pytest
-
 from cli.infra import InfraManager
 from tests.integration.common import GatewayTest
 
