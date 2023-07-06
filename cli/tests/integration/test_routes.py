@@ -1,96 +1,14 @@
-import contextlib
-import json
 import time
 
 import jwt
 import pytest
 import requests
-from loguru import logger
 
-from cli.gateway import GatewayManager
 from cli.model import Consumer, Route
-from tests.integration.environment import IntegrationEnvironment
+from tests.integration.common import GatewayTest
 
 
-class TestEndpoint(object):
-    env: IntegrationEnvironment
-    manager: GatewayManager
-
-    @staticmethod
-    @pytest.fixture(autouse=True, scope="class")
-    def setup(integration_env: IntegrationEnvironment):
-        TestEndpoint.env = integration_env
-        TestEndpoint.manager = GatewayManager()
-
-    @staticmethod
-    def _call_endpoint_until_response_code(
-        url, code, method: str = "GET", headers=None
-    ):
-        max_retries = 10
-        sleep_time = 2
-
-        for _ in range(max_retries):
-            resp = requests.request(method=method, url=url, headers=headers)
-            if resp.status_code == code:
-                logger.info(f"Got {resp.status_code} from {url}")
-                return resp
-
-            logger.info(
-                f"Got {resp.status_code} from {url}, retrying, message: {resp.text}"
-            )
-            time.sleep(sleep_time)
-
-        # Here we have failed
-        raise RuntimeError(f"Did not get {code} from {url} in {max_retries} tries")
-
-    @staticmethod
-    def _call_endpoint_until_gw_message(url, message):
-        max_retries = 5
-        sleep_time = 2
-
-        for _ in range(max_retries):
-            resp = requests.get(url)
-            if json.loads(resp.content)["message"] == message:
-                recieved_message = json.loads(resp.content)["message"]
-                logger.info(f"Got {recieved_message} from {url}")
-                return resp
-
-            recieved_message = json.loads(resp.content)["message"]
-            logger.info(f"Got {recieved_message} from {url}, retrying")
-            time.sleep(sleep_time)
-
-        # Here we have failed
-        raise RuntimeError(f"Did not get {message} from {url} in {max_retries} tries")
-
-    @contextlib.contextmanager
-    def add_route_to_fixture(
-        self,
-        relative_url: str,
-        http_methods: list[str] | None = None,
-        cors: bool = False,
-        jwt: bool = False,
-    ):
-        """Context manager to add a route and remove it."""
-        route = Route(
-            relative_url,
-            self.env.gw_func_a_url,
-            http_methods=http_methods,
-            cors=cors,
-            jwt=jwt,
-        )
-
-        # Make sure it's deleted first
-        self.manager.delete_route(route)
-
-        # Now add the route
-        resp = self.manager.add_route(route)
-        resp.raise_for_status()
-
-        yield relative_url
-
-        resp = self.manager.delete_route(route)
-        resp.raise_for_status()
-
+class TestEndpoint(GatewayTest):
     def test_direct_call_to_target(self):
         """Asserts that the upstream function is healthy."""
         response = requests.get(self.env.host_func_a_url + "/hello")
@@ -108,7 +26,7 @@ class TestEndpoint(object):
         resp = self.manager.add_route(route)
         resp.raise_for_status()
 
-        response_gw = self._call_endpoint_until_response_code(
+        response_gw = self.call_endpoint_until_response_code(
             self.env.gw_url + "/func-a/hello", requests.codes.ok
         )
 
@@ -126,7 +44,7 @@ class TestEndpoint(object):
         resp.raise_for_status()
 
         # Keep calling until we get a requests.codes.not_found
-        response_gw = self._call_endpoint_until_response_code(
+        response_gw = self.call_endpoint_until_response_code(
             self.env.gw_url + "/func-a/hello", requests.codes.not_found
         )
 
@@ -137,15 +55,13 @@ class TestEndpoint(object):
             hello_path = self.env.gw_url + "/func-a/hello"
 
             # Should not be accessible with GET
-            self._call_endpoint_until_response_code(
+            self.call_endpoint_until_response_code(
                 hello_path, requests.codes.not_found, "GET"
             )
 
-            self._call_endpoint_until_response_code(
-                hello_path, requests.codes.ok, "PUT"
-            )
+            self.call_endpoint_until_response_code(hello_path, requests.codes.ok, "PUT")
 
-            self._call_endpoint_until_response_code(
+            self.call_endpoint_until_response_code(
                 hello_path, requests.codes.ok, "PATCH"
             )
 
@@ -170,7 +86,7 @@ class TestEndpoint(object):
             # It takes time to install the plugin, so we must retry
             for _ in range(5):
                 time.sleep(5)
-                preflight_resp = self._call_endpoint_until_response_code(
+                preflight_resp = self.call_endpoint_until_response_code(
                     self.env.gw_url + "/func-a/hello",
                     requests.codes.ok,
                     "OPTIONS",
@@ -238,7 +154,7 @@ class TestEndpoint(object):
         full_url = f"{self.env.gw_url}{relative_url}/hello"
         with self.add_route_to_fixture(relative_url=relative_url, jwt=True):
             # Unauthed request should return unauthorized
-            self._call_endpoint_until_response_code(
+            self.call_endpoint_until_response_code(
                 full_url, requests.codes.unauthorized
             )
 
@@ -264,7 +180,7 @@ class TestEndpoint(object):
             good_auth_headers = {
                 "Authorization": f"Bearer {encoded}",
             }
-            self._call_endpoint_until_response_code(
+            self.call_endpoint_until_response_code(
                 full_url,
                 requests.codes.ok,
                 headers=good_auth_headers,

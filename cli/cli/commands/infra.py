@@ -92,6 +92,15 @@ def endpoint():
 
 
 @infra.command()
+def ip():
+    """Print the IP for the gateway"""
+    scw_client = client.get_scaleway_client()
+    manager = InfraManager(scw_client)
+    endpoint = manager.get_gateway_ip()
+    click.secho(endpoint)
+
+
+@infra.command()
 def admin_endpoint():
     """Print the endpoint for the gateway admin"""
     scw_client = client.get_scaleway_client()

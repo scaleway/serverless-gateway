@@ -48,6 +48,9 @@ profile = "black"
 log_cli = true
 log_cli_level = "INFO"
 testpaths = ["tests"]
+markers = [
+  "deployed: Integration tests for a fully deployed environment",
+]
 
 [tool.mypy]
 exclude = ["venv", "endpoints"]

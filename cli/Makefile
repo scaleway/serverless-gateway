@@ -24,5 +24,8 @@ test:
 
 .PHONY: test-int
 test-int:
-	poetry run pytest tests/integration
+	poetry run pytest -m "not deployed" tests/integration
 
+.PHONY: test-int-deployed
+test-int-deployed:
+	poetry run pytest tests/integration
