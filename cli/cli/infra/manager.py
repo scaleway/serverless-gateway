@@ -1,3 +1,4 @@
+import socket
 from concurrent import futures
 
 import click
@@ -137,6 +138,12 @@ class InfraManager:
         """Get the endpoint of the gateway."""
         container = self._get_container_or_abort()
         return container.domain_name
+
+    def get_gateway_ip(self) -> str:
+        """Get the IP of the gateway."""
+        container = self._get_container_or_abort()
+        ip = socket.gethostbyname(container.domain_name)
+        return ip
 
     def get_gateway_admin_endpoint(self) -> str:
         """Get the endpoint of the gateway admin."""
@@ -423,25 +430,48 @@ class InfraManager:
         for d in domains:
             click.secho(f"{d.hostname:<40} {d.url:<45} {d.status:<10}")
 
-    def add_custom_domain(self, domain: str):
+    def _get_domain(self, container_id: str, domain_host: str):
+        domains = self.containers.list_domains_all(container_id=container_id)
+        for d in domains:
+            if d.hostname == domain_host:
+                return d
+
+        return None
+
+    def add_custom_domain(self, domain_host: str):
         """Set a custom domain for the container."""
         container = self._get_container_or_abort()
-        domains = self.containers.list_domains_all(container_id=container.id)
 
-        for d in domains:
-            if d.hostname == domain:
-                click.echo("Container domain already exists, deleting")
-                self.containers.delete_domain(domain_id=d.id)
+        existing = self._get_domain(container.id, domain_host)
+        if existing:
+            click.echo("Container domain already exists, deleting")
+            self.containers.delete_domain(domain_id=existing.id)
 
-        click.echo(f"Adding domain {domain}")
-        self.containers.create_domain(hostname=domain, container_id=container.id)
+        click.echo(f"Adding domain {domain_host}")
+        self.containers.create_domain(hostname=domain_host, container_id=container.id)
 
-    def delete_custom_domain(self, domain: str):
+    def await_custom_domain(self, domain_host: str) -> None:
+        """Wait for the custom domain to be ready."""
+        container = self._get_container_or_abort()
+
+        click.secho(f"Waiting for domain {domain_host} to be ready...", fg="blue")
+
+        domain = self._get_domain(container.id, domain_host)
+        domain_waited = self.containers.wait_for_domain(domain_id=domain.id)
+
+        if domain_waited.status != cnt.DomainStatus.READY:
+            click.secho("Domain is not ready", fg="red", bold="true")
+            raise click.Abort()
+
+        click.secho("Domain ready")
+
+    def delete_custom_domain(self, domain_host: str):
         """Delete a custom domain for the container."""
         container = self._get_container_or_abort()
-        domains = self.containers.list_domains_all(container_id=container.id)
 
-        for d in domains:
-            if d.hostname == domain:
-                click.echo(f"Deleting domain {domain}")
-                self.containers.delete_domain(domain_id=d.id)
+        domain = self._get_domain(container.id, domain_host)
+        if domain:
+            click.echo(f"Deleting domain {domain}")
+            self.containers.delete_domain(domain_id=domain.id)
+        else:
+            click.echo(f"Domain {domain} already deleted")

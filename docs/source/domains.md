@@ -41,5 +41,4 @@ You can then check the status of your gateway domains with:
 scwgw domain ls
 ```
 
-Once the status is `ready`, all routes on your gateway will be accessible via `gateway.my-domain.com`.
-
+Once the status of the domain is `ready`, all routes on your gateway will be accessible via `gateway.my-domain.com`.
