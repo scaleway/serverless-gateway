@@ -48,5 +48,5 @@ jobs:
         working-directory: cli
 
       - name: Run the tests
-        run: poetry run pytest tests/integration
+        run: poetry run pytest -m "not deployed" tests/integration
         working-directory: cli
