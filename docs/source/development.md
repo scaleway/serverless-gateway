@@ -26,6 +26,25 @@ scwgw dev config
 make test-int
 ```
 
+## Updating the gateway
+
+After making changes to the underlying containers, you can run the following to update your deployment:
+
+```console
+scwgw dev update-containers
+```
+
+## Observability
+
+The settings for metrics collection can be configured using the following environment variables on your containers:
+
+<!-- markdownlint-disable MD033 -->
+| Variable                  | Description                      | Default |
+|---------------------------|----------------------------------|---------|
+| `METRICS_SCRAPE_INTERVAL` | Time interval to scrape metrics. | 15s     |
+| `COCKPIT_METRICS_PUSH_URL` | Cockpit push metrics endpoint. <br/>Can be found on the Cockpit console page.                           |         |
+| `COCKPIT_METRICS_TOKEN`    | Cockpit metrics push token.  <br/> Requires the `write_metrics` scope.                                 |         |
+
 ## Healthchecks
 
 When the gateway is deployed on Scaleway Containers, Knative will perform health checks on the root path `/`. We have defined a route to handle those calls which specifically only match Knative probes `User-Agent` with the regex `~*kube-probe/.+`.
