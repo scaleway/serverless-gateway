@@ -22,8 +22,9 @@ class GatewayTest:
     scw_client: Client
 
     @pytest.fixture(autouse=True, scope="class")
-    @classmethod
-    def setup(cls: Type["GatewayTest"], integration_env: IntegrationEnvironment):
+    @staticmethod
+    def setup(integration_env: IntegrationEnvironment):
+        cls = GatewayTest
         cls.env = integration_env
         cls.manager = GatewayManager()
         cls.scw_client = client.get_scaleway_client()
