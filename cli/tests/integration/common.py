@@ -1,7 +1,6 @@
 import contextlib
 import json
 import time
-from typing import Type
 
 import pytest
 import requests
