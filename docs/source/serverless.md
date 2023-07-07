@@ -1,15 +1,10 @@
 # Serverless functions
 
-Serverless Functions and Containers can be added to your gateway as a route just like any other URL.
+Routes to [Serverless Functions](https://www.scaleway.com/en/serverless-functions/) and [Containers](https://www.scaleway.com/en/serverless-containers/) can be added to your gateway just like any other URL, and can be a cost-effective, easy way to deploy APIs.
 
-If you are building a Python serverless app, you can also manage and transparently integrate with your gateway using the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project), which makes building and managing complex serverless APIs easy.
+## Python API framework
 
-You can try this using the function included at `endpoints/func-example`.
+If you are building a Python serverless app, you can manage and transparently integrate with your gateway using the [Scaleway Python API framework](https://github.com/scaleway/serverless-api-project). This makes building and managing complex serverless APIs easy.
 
-Once set up, you can deploy the functions with:
+You can see an example using the framework with a gateway in the [API framework examples](https://github.com/scaleway/serverless-api-framework-python/tree/main/examples).
 
-```console
-scw-serverless deploy endpoints/func-example/handler.py
-```
-
-This will create two URLs, one for the `hello` function and the other one for the `goodbye` function.
