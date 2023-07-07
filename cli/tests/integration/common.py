@@ -21,8 +21,8 @@ class GatewayTest:
     infra: InfraManager
     scw_client: Client
 
-    @classmethod
     @pytest.fixture(autouse=True, scope="class")
+    @classmethod
     def setup(cls: Type["GatewayTest"], integration_env: IntegrationEnvironment):
         cls.env = integration_env
         cls.manager = GatewayManager()
