@@ -38,6 +38,7 @@ def api() -> Generator[sdk.CockpitV1Beta1API, None, None]:
             api.delete_project(project_id=project.id)
 
 
+@pytest.mark.deployed
 def test_ensure_cockpit_activated(api: sdk.CockpitV1Beta1API):
     cpt.ensure_cockpit_activated(api=api)
     cockpit = api.get_cockpit()
@@ -45,6 +46,7 @@ def test_ensure_cockpit_activated(api: sdk.CockpitV1Beta1API):
     assert cockpit.status == sdk.CockpitStatus.READY
 
 
+@pytest.mark.deployed
 def test_get_metrics_push_url(api: sdk.CockpitV1Beta1API):
     cpt.ensure_cockpit_activated(api=api)
 
@@ -58,6 +60,7 @@ def test_get_metrics_push_url(api: sdk.CockpitV1Beta1API):
 # fails with a 500 error. Because a user is necessary for the next few tests,
 # run them against the default project cockpit instead.
 # TODO: investigate
+@pytest.mark.deployed
 def test_temporary_grafana_user():
     client = Client.from_config_file_and_env()
     api = sdk.CockpitV1Beta1API(client)
@@ -74,6 +77,7 @@ def test_temporary_grafana_user():
     assert not any(user.login == "tmp-sls-gw-dashboard" for user in users)
 
 
+@pytest.mark.deployed
 def test_get_metrics_data_source_uid():
     client = Client.from_config_file_and_env()
     api = sdk.CockpitV1Beta1API(client)
@@ -91,6 +95,7 @@ def test_get_metrics_data_source_uid():
         assert uid.startswith("PA")
 
 
+@pytest.mark.deployed
 def test_import_kong_statsd_dashboard():
     client = Client.from_config_file_and_env()
     api = sdk.CockpitV1Beta1API(client)
