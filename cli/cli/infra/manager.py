@@ -1,5 +1,6 @@
 import socket
 from concurrent import futures
+import typing as t
 
 import click
 import scaleway.cockpit.v1beta1 as cpt
@@ -9,8 +10,11 @@ import scaleway.rdb.v1 as rdb
 import scaleway.secret.v1alpha1 as sec
 from loguru import logger
 from scaleway import Client, ScalewayException
+from scaleway_core.utils import WaitForOptions
 
 from cli import conf, infra
+from ..console import console
+from rich.progress import Progress
 
 
 class InfraManager:
@@ -55,10 +59,9 @@ class InfraManager:
         namespace_name = infra.cnt.CONTAINER_NAMESPACE
         namespace = infra.cnt.get_namespace_by_name(self.containers, namespace_name)
         if not namespace:
-            click.secho(
+            console.print(
                 f"Namespace {namespace_name} not found",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
             raise click.Abort()
 
@@ -75,10 +78,9 @@ class InfraManager:
 
         if not container:
             container_name = "Admin" if admin else "Gateway"
-            click.secho(
+            console.print(
                 f"{container_name} container not found.",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
             raise click.Abort()
 
@@ -91,11 +93,12 @@ class InfraManager:
         instance_name = infra.rdb.DB_INSTANCE_NAME
         instance = infra.rdb.get_database_instance_by_name(self.rdb, instance_name)
         if not instance:
-            click.secho(
+            console.print(
                 f"Database instance {instance_name} not found",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
+            raise click.Abort()
+        if instance.status == rdb.InstanceStatus.DELETING:
             raise click.Abort()
 
         return instance
@@ -105,20 +108,18 @@ class InfraManager:
     ) -> tuple[str, int]:
         endpoints = database_instance.endpoints
         if not endpoints:
-            click.secho(
+            console.print(
                 f"Database instance {database_instance.name} has no endpoints",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
             raise click.Abort()
 
         endpoint = endpoints[0]
         address = endpoint.ip or endpoint.hostname
         if not address:
-            click.secho(
+            console.print(
                 f"Database instance {database_instance.name} has no address",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
             raise click.Abort()
 
@@ -130,7 +131,9 @@ class InfraManager:
             return password
         except ScalewayException as exception:
             if exception.status_code == 404:
-                click.secho("Database password not found in Secret Manager", fg="red")
+                console.print(
+                    "Database password not found in Secret Manager", style="red"
+                )
                 raise click.Abort()
             raise exception
 
@@ -156,10 +159,10 @@ class InfraManager:
         instance_name = infra.rdb.DB_INSTANCE_NAME
         instance = infra.rdb.get_database_instance_by_name(self.rdb, instance_name)
         if instance:
-            click.secho(f"Database {instance_name} already exists")
+            console.print(f"Database {instance_name} already exists")
             return
 
-        click.secho(f"Creating database instance {instance_name}...")
+        console.print(f"Creating database instance {instance_name}...")
 
         logger.debug("Generating database password")
         password = infra.secrets.generate_database_password()
@@ -168,26 +171,31 @@ class InfraManager:
         infra.secrets.create_db_password_secret(self.secrets, password)
 
         infra.rdb.create_database_instance(self.rdb, password)
-        click.secho("Database created", fg="green", bold="true")
+        console.print("Database created", style="bold green")
 
     def check_db(self):
         """Check the status of the database instance."""
         instance = self._get_database_instance_or_abort()
-        click.secho(f"Database status: {instance.status}", bold=True)
+        console.print(f"Database status: {instance.status}", style="bold")
 
-    def await_db(self) -> None:
+    def await_db(self, on_tick: t.Callable[[rdb.Instance], None]) -> None:
         """Wait for the database instance to be ready."""
-
-        click.secho("Waiting for database to be ready...", fg="blue")
-
         instance = self._get_database_instance_or_abort()
-        instance = self.rdb.wait_for_instance(instance_id=instance.id)
+        if instance.status == rdb.InstanceStatus.READY:
+            return
+
+        options = WaitForOptions()
+        options.stop = lambda instance: on_tick(instance) or (
+            instance.status not in rdb.INSTANCE_TRANSIENT_STATUSES
+        )
+        instance = self.rdb.wait_for_instance(
+            instance_id=instance.id,
+            options=options,
+        )
 
         if instance.status != rdb.InstanceStatus.READY:
-            click.secho("Database is not ready", fg="red", bold="true")
+            console.print("Database is not ready", style="bold red")
             raise click.Abort()
-
-        click.secho("Database ready")
 
     def delete_db(self) -> None:
         """Delete the database instance."""
@@ -197,7 +205,7 @@ class InfraManager:
         # Delete the database
         instance = self._get_database_instance_or_abort()
         self.rdb.delete_instance(instance_id=instance.id)
-        click.secho("Database deleted")
+        console.print("Database deleted")
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -205,51 +213,49 @@ class InfraManager:
         namespace = infra.cnt.get_namespace_by_name(self.containers, namespace_name)
 
         if namespace:
-            click.secho("Namespace already exists")
+            console.print("Namespace already exists")
             return
 
-        click.secho(f"Creating namespace {namespace_name}...")
+        console.print(f"Creating namespace {namespace_name}...")
         infra.cnt.create_namespace(self.containers)
 
     def check_namespace(self):
         """Check the status of the namespace."""
         namespace = self._get_namespace_or_abort()
         if namespace.status == cnt.NamespaceStatus.ERROR:
-            click.secho(
+            console.print(
                 f"Namespace in error: {namespace.error_message}",
-                fg="red",
-                bold="true",
+                style="bold red",
             )
             raise click.Abort()
 
-        click.secho(f"Namespace status: {namespace.status}", bold=True)
+        console.print(f"Namespace status: {namespace.status}", style="bold")
 
     def await_namespace(self):
         """Wait for the namespace to be ready."""
 
-        click.secho("Waiting for namespace to be ready...", fg="blue")
+        console.print("Waiting for namespace to be ready...", style="blue")
 
         namespace = self._get_namespace_or_abort()
         namespace = self.containers.wait_for_namespace(namespace_id=namespace.id)
         if namespace.status == cnt.NamespaceStatus.ERROR:
-            click.secho(
+            console.print(
                 f"Namespace in error: {namespace.error_message}",
-                fg="red",
-                bold=True,
+                style="bold red",
             )
             raise click.Abort()
 
         if namespace.status != cnt.NamespaceStatus.READY:
-            click.secho("Namespace is not ready", fg="red", bold=True)
+            console.print("Namespace is not ready", style="bold red")
             raise click.Abort()
 
-        click.secho("Namespace ready")
+        console.print("Namespace ready")
 
     def delete_namespace(self):
         """Delete the namespace."""
         namespace = self._get_namespace_or_abort()
         self.containers.delete_namespace(namespace_id=namespace.id)
-        click.secho("Namespace deleted")
+        console.print("Namespace deleted")
 
     def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
@@ -265,17 +271,17 @@ class InfraManager:
             self.containers, namespace.id, admin_container_name
         )
         if admin_container:
-            click.secho(
+            console.print(
                 f"Admin container {admin_container_name} already exists",
             )
         else:
-            click.secho(
+            console.print(
                 f"Creating admin container {admin_container_name}",
             )
             created_container = infra.cnt.create_kong_admin_container(
                 self.containers, namespace.id, db_host, db_port, db_password
             )
-            click.echo(f"Deploying container {admin_container_name}")
+            console.print(f"Deploying container {admin_container_name}")
             self.containers.deploy_container(container_id=created_container.id)
 
         container_name = infra.cnt.CONTAINER_NAME
@@ -283,20 +289,20 @@ class InfraManager:
             self.containers, namespace.id, container_name
         )
         if container:
-            click.secho(f"Container {container_name} already exists")
+            console.print(f"Container {container_name} already exists")
             return
 
-        click.secho(
+        console.print(
             f"Creating container {container_name} from tag {infra.image.IMAGE_TAG}"
         )
 
         # Check if token exists
         token = infra.cpt.get_metrics_token(self.cockpit)
         if token:
-            click.echo("Cockpit token already exists, deleting")
+            console.print("Cockpit token already exists, deleting")
             infra.cpt.delete_metrics_token(self.cockpit, token)
 
-        click.echo("Creating Cockpit token")
+        console.print("Creating Cockpit token")
         token_key = infra.cpt.create_metrics_token(self.cockpit)
         metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
@@ -310,7 +316,7 @@ class InfraManager:
             metrics_push_url=metrics_push_url,
         )
 
-        click.secho(f"Deploying container {container_name}")
+        console.print(f"Deploying container {container_name}")
         self.containers.deploy_container(container_id=created_container.id)
 
     def check_containers(self):
@@ -318,35 +324,73 @@ class InfraManager:
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        click.secho(f"Admin container status: {admin_container.status}", bold=True)
-        click.secho(f"Container status: {container.status}", bold=True)
+        console.print(f"Admin container status: {admin_container.status}", style="bold")
+        console.print(f"Container status: {container.status}", style="bold")
 
-    def await_containers(self):
+    def _handle_container_not_ready(self, container: cnt.Container) -> None:
+        """Handle a container that is not ready."""
+        if container.status == cnt.ContainerStatus.ERROR:
+            console.print(
+                f"Container {container.name} is in error: {container.error_message}",
+                style="bold red",
+            )
+            raise click.Abort()
+
+        if container.status != cnt.ContainerStatus.READY:
+            console.print(f"Container {container.name} is not ready", style="bold red")
+            raise click.Abort()
+
+    def await_containers(
+        self,
+        on_gateway_tick: t.Callable[[cnt.Container], None],
+        on_admin_tick: t.Callable[[cnt.Container], None],
+    ):
         """Wait for the containers to be ready."""
 
-        click.secho("Waiting for containers to be ready...", fg="blue")
+        console.print("Waiting for containers to be ready...", style="blue")
 
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        # Execute in parallel
-        results = futures.ThreadPoolExecutor(max_workers=2).map(
-            lambda id: self.containers.wait_for_container(container_id=id),
-            (admin_container.id, container.id),
+        admin_options = WaitForOptions()
+        admin_options.stop = (
+            lambda container: on_admin_tick(container)
+            or container.status not in cnt.CONTAINER_TRANSIENT_STATUSES
         )
-        for res in results:
-            if res.status == cnt.ContainerStatus.ERROR:
-                click.secho(
-                    f"Container {res.name} is in error: {res.error_message}"
-                    ". Check the logs for more details.",
-                    fg="red",
-                    bold=True,
-                )
-                raise click.Abort()
-            if res.status != cnt.ContainerStatus.READY:
-                click.secho(f"Container {res.name} is not ready", fg="red", bold=True)
-                raise click.Abort()
-        click.secho("Containers are ready")
+
+        container_options = WaitForOptions()
+        container_options.stop = (
+            lambda container: on_gateway_tick(container)
+            or container.status not in cnt.CONTAINER_TRANSIENT_STATUSES
+        )
+
+        # Execute in parallel
+        executor = futures.ThreadPoolExecutor(max_workers=2)
+        admin_future = executor.submit(
+            lambda id: self.containers.wait_for_container(
+                container_id=id, options=admin_options
+            ),
+            admin_container.id,
+        )
+        container_future = executor.submit(
+            lambda id: self.containers.wait_for_container(
+                container_id=id, options=container_options
+            ),
+            container.id,
+        )
+
+        # Wait for both futures to complete
+        futures.wait(
+            [admin_future, container_future], return_when=futures.ALL_COMPLETED
+        )
+
+        admin_container = admin_future.result()
+        self._handle_container_not_ready(admin_container)
+
+        container = container_future.result()
+        self._handle_container_not_ready(container)
+
+        console.print("Containers are ready")
 
     def delete_containers(self):
         """Delete the containers."""
@@ -354,10 +398,10 @@ class InfraManager:
         container = self._get_container_or_abort()
 
         self.containers.delete_container(container_id=admin_container.id)
-        click.secho("Admin container deleted")
+        console.print("Admin container deleted")
 
         self.containers.delete_container(container_id=container.id)
-        click.secho("Gateway container deleted")
+        console.print("Gateway container deleted")
 
     def get_function_endpoint(
         self, namespace_name: str, function_name: str
@@ -380,10 +424,10 @@ class InfraManager:
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        click.secho("Deploying admin container...")
+        console.print("Deploying admin container...")
         self.containers.deploy_container(container_id=admin_container.id)
 
-        click.secho("Deploying container...")
+        console.print("Deploying container...")
         self.containers.deploy_container(container_id=container.id)
 
     def update_container_without_deploy(self):
@@ -395,11 +439,11 @@ class InfraManager:
         db_host, db_port = self._get_database_endpoint_or_abort(database_instance)
         db_password = self._get_db_password_or_abort()
 
-        click.echo(f"Updating container {admin_container.name}")
+        console.print(f"Updating container {admin_container.name}")
         infra.cnt.update_kong_admin_container(
             self.containers, admin_container.id, db_host, db_port, db_password
         )
-        click.echo(f"Updating container {container.name}")
+        console.print(f"Updating container {container.name}")
 
         token, metrics_push_url = None, None
         if container.environment_variables.get("FORWARD_METRICS"):
@@ -407,7 +451,7 @@ class InfraManager:
             if token:
                 infra.cpt.delete_metrics_token(self.cockpit, token)
 
-            click.echo("Creating Cockpit token to forward metrics...")
+            console.print("Creating Cockpit token to forward metrics...")
             token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 

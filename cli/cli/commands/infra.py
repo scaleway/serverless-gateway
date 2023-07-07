@@ -1,8 +1,11 @@
 import click
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 
 from cli import client, conf
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
+from cli.console import console
+from cli.commands.human import progress
 
 
 @click.group()
@@ -18,25 +21,46 @@ def deploy():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
 
-    click.secho("Creating database", fg="blue")
-    manager.create_db()
-    manager.await_db()
+    progress_columns = progress.get_ultraviolet_styled_progress_columns()
 
-    click.secho("Creating container namespace", fg="blue")
-    manager.create_namespace()
-    manager.await_namespace()
+    with Progress(
+        SpinnerColumn(),
+        *progress_columns,
+        TimeElapsedColumn(),
+        console=console,
+        transient=False,
+    ) as p:
+        manager.create_db()
+        manager.await_db(on_tick=progress.database_deployment_progress_cb(p))
 
-    click.secho("Checking cockpit activated", fg="blue")
+    console.print("Checking cockpit activated", style="blue")
     manager.ensure_cockpit_activated()
 
-    click.secho("Creating containers", fg="blue")
-    manager.create_containers()
-    manager.await_containers()
+    with console.status("Creating container namespace"):
+        manager.create_namespace()
+        manager.await_namespace()
 
-    click.secho("Setting up configuration", fg="blue")
+    with Progress(
+        SpinnerColumn(),
+        *progress_columns,
+        TimeElapsedColumn(),
+        console=console,
+        transient=False,
+    ) as p:
+        manager.create_containers()
+        manager.await_containers(
+            on_gateway_tick=progress.container_deployment_progress_cb(
+                p, container_name="gateway"
+            ),
+            on_admin_tick=progress.container_deployment_progress_cb(
+                p, container_name="admin"
+            ),
+        )
+
+    console.print("Setting up configuration", style="blue")
     manager.set_up_config(False)
 
-    click.secho("Enabling metrics", fg="blue")
+    console.print("Enabling metrics", style="blue")
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
 
