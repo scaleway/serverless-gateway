@@ -1,4 +1,4 @@
-# Scaleway Serverless Gateway :globe_with_meridians:
+# Scaleway Serverless Gateway :spider_web:
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
