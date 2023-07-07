@@ -1,6 +1,7 @@
 import contextlib
 import json
 import time
+from typing import Type
 
 import pytest
 import requests
@@ -20,13 +21,13 @@ class GatewayTest:
     infra: InfraManager
     scw_client: Client
 
-    @staticmethod
+    @classmethod
     @pytest.fixture(autouse=True, scope="class")
-    def setup(integration_env: IntegrationEnvironment):
-        GatewayTest.env = integration_env
-        GatewayTest.manager = GatewayManager()
-        GatewayTest.scw_client = client.get_scaleway_client()
-        GatewayTest.infra = InfraManager(GatewayTest.scw_client)
+    def setup(cls: Type["GatewayTest"], integration_env: IntegrationEnvironment):
+        cls.env = integration_env
+        cls.manager = GatewayManager()
+        cls.scw_client = client.get_scaleway_client()
+        cls.infra = InfraManager(GatewayTest.scw_client)
 
     @contextlib.contextmanager
     def add_route_to_fixture(
