@@ -1,6 +1,6 @@
 import os
-from typing import Generator
 import uuid
+from typing import Generator
 
 import pytest
 from scaleway import Client

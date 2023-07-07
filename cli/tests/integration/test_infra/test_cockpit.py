@@ -1,4 +1,5 @@
 from typing import Type
+
 import pytest
 import requests
 from requests.auth import HTTPBasicAuth
@@ -12,6 +13,9 @@ import cli.infra.cockpit as cpt
 @pytest.mark.deployed
 class TestCockpit:
     """Test suite for cockpit integration."""
+
+    api: sdk.CockpitV1Beta1API
+    default_project_api: sdk.CockpitV1Beta1API
 
     @pytest.fixture(autouse=True, scope="class")
     @classmethod
