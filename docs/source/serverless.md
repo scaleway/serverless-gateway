@@ -1,6 +1,6 @@
 # Serverless functions
 
-Serverless Functions and Containers can be added to your gateway as a route just like any other URL.
+Routes to [Serverless Functions](https://www.scaleway.com/en/serverless-functions/) and [Containers](https://www.scaleway.com/en/serverless-containers/) can be added to your gateway just like any other URL, and can be a cost-effective, easy way to deploy APIs.
 
 ## Python API framework
 

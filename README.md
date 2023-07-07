@@ -1,5 +1,10 @@
 # Scaleway Serverless Gateway :door:
 
+[![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
+[![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
+[![Build status](https://github.com/scaleway/serverless-gateway/actions/workflows/build.yml/badge.svg)](https://github.com/scaleway/serverless-gateway/actions/workflows/build.yml/badge.svg)
+[![License](https://img.shields.io/pypi/l/scw-gateway.svg)](https://github.com/scaleway/serverless-gateway/blob/main/LICENSE)
+
 The Scaleway Serverless Gateway is a self-hosted API gateway that runs on Scaleway [Serverless Containers](https://www.scaleway.com/en/serverless-containers/).
 
 It lets you manage routing from a single base URL, as well as handle transversal concerns such as CORS and authentication.
