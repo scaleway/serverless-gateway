@@ -1,12 +1,12 @@
 import click
-from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 import scaleway.rdb.v1 as rdb
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 
 from cli import client, conf
+from cli.commands.human import progress
+from cli.console import console
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
-from cli.console import console
-from cli.commands.human import progress
 
 
 @click.group()
@@ -41,17 +41,17 @@ def deploy():
     console.print("Checking cockpit activated", style="blue")
     manager.ensure_cockpit_activated()
 
-    with console.status("Creating container namespace"):
+    with console.status(
+        "Creating container namespace",
+        spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
+    ):
         manager.create_namespace()
         manager.await_namespace()
 
-    with Progress(
-        SpinnerColumn(),
-        *progress_columns,
-        TimeElapsedColumn(),
-        console=console,
-        transient=False,
-    ) as p:
+    with console.status(
+        "Deploying containers",
+        spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
+    ):
         manager.create_containers()
         manager.await_containers()
 

@@ -1,6 +1,6 @@
 import socket
-from concurrent import futures
 import typing as t
+from concurrent import futures
 
 import click
 import scaleway.cockpit.v1beta1 as cpt
@@ -8,12 +8,13 @@ import scaleway.container.v1beta1 as cnt
 import scaleway.function.v1beta1 as fnc
 import scaleway.rdb.v1 as rdb
 import scaleway.secret.v1alpha1 as sec
-from rich.table import Table
 from loguru import logger
+from rich.table import Table
 from scaleway import Client, ScalewayException
 from scaleway_core.utils import WaitForOptions
 
 from cli import conf, infra
+
 from ..console import console
 
 
@@ -185,7 +186,7 @@ class InfraManager:
         if instance.status == rdb.InstanceStatus.READY:
             return
 
-        options = WaitForOptions()
+        options: WaitForOptions[rdb.Instance, bool] = WaitForOptions()
         options.stop = lambda instance: on_tick(instance) or (
             instance.status not in rdb.INSTANCE_TRANSIENT_STATUSES
         )

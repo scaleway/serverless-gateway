@@ -1,12 +1,12 @@
 import typing as t
 
-from rich.style import Style
-from rich.progress import Progress, BarColumn, ProgressColumn
-
 import scaleway.rdb.v1 as rdb
+from rich.progress import BarColumn, Progress, ProgressColumn
+from rich.style import Style
 
 # Colors from the Ultraviolet design system
-# Reference: https://brand.ultraviolet.scaleway.com/6dd9b5c45/p/85075b-colors--gradients/b/337612
+# Reference:
+# https://brand.ultraviolet.scaleway.com/6dd9b5c45/p/85075b-colors--gradients/b/337612
 ULTRAVIOLET_PRIMARY_PURPLE = "#4F0599"
 ULTRAVIOLET_SECONDARY_PURPLE = "#8430D9"
 ULTRAVIOLET_GREEN = "#45D29F"

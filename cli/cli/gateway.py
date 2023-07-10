@@ -1,6 +1,5 @@
 import json
 
-import click
 import requests
 from loguru import logger
 from requests.adapters import HTTPAdapter
@@ -8,8 +7,8 @@ from rich.table import Table
 from urllib3 import Retry
 
 from cli import conf
-from cli.model import Consumer, JwtCredential, Route
 from cli.console import console
+from cli.model import Consumer, JwtCredential, Route
 
 MAX_RETRIES = 5
 
