@@ -475,7 +475,6 @@ class InfraManager:
             self.containers.delete_domain(domain_id=domain.id)
         else:
             click.echo(f"Domain {domain} already deleted")
-        raise NotImplementedError
 
     def ensure_cockpit_activated(self):
         """Check if the cockpit is activated."""
