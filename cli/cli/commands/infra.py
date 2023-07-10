@@ -1,5 +1,6 @@
 import click
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+import scaleway.rdb.v1 as rdb
 
 from cli import client, conf
 from cli.gateway import GatewayManager
@@ -23,15 +24,19 @@ def deploy():
 
     progress_columns = progress.get_ultraviolet_styled_progress_columns()
 
-    with Progress(
-        SpinnerColumn(),
-        *progress_columns,
-        TimeElapsedColumn(),
-        console=console,
-        transient=False,
-    ) as p:
-        manager.create_db()
-        manager.await_db(on_tick=progress.database_deployment_progress_cb(p))
+    instance = manager.create_db()
+    # This avoids showing the progress bar if the instance is already running
+    if instance.status in rdb.INSTANCE_TRANSIENT_STATUSES:
+        with Progress(
+            SpinnerColumn(),
+            *progress_columns,
+            TimeElapsedColumn(),
+            console=console,
+            transient=False,
+        ) as progres_bar:
+            manager.await_db(
+                on_tick=progress.database_deployment_progress_cb(progres_bar)
+            )
 
     console.print("Checking cockpit activated", style="blue")
     manager.ensure_cockpit_activated()
@@ -48,14 +53,7 @@ def deploy():
         transient=False,
     ) as p:
         manager.create_containers()
-        manager.await_containers(
-            on_gateway_tick=progress.container_deployment_progress_cb(
-                p, container_name="gateway"
-            ),
-            on_admin_tick=progress.container_deployment_progress_cb(
-                p, container_name="admin"
-            ),
-        )
+        manager.await_containers()
 
     console.print("Setting up configuration", style="blue")
     manager.set_up_config(False)
@@ -64,7 +62,7 @@ def deploy():
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
 
-    click.secho("Setting up Grafana", fg="blue")
+    console.print("Setting up Grafana", style="blue")
     manager.import_kong_dashboard()
 
 

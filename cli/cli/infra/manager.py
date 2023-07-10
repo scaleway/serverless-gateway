@@ -153,14 +153,14 @@ class InfraManager:
         container = self._get_admin_container_or_abort()
         return container.domain_name
 
-    def create_db(self) -> None:
+    def create_db(self) -> rdb.Instance:
         """Create the database instance."""
 
         instance_name = infra.rdb.DB_INSTANCE_NAME
         instance = infra.rdb.get_database_instance_by_name(self.rdb, instance_name)
         if instance:
             console.print(f"Database {instance_name} already exists")
-            return
+            return instance
 
         console.print(f"Creating database instance {instance_name}...")
 
@@ -170,8 +170,9 @@ class InfraManager:
         logger.debug("Saving database password")
         infra.secrets.create_db_password_secret(self.secrets, password)
 
-        infra.rdb.create_database_instance(self.rdb, password)
+        instance = infra.rdb.create_database_instance(self.rdb, password)
         console.print("Database created", style="bold green")
+        return instance
 
     def check_db(self):
         """Check the status of the database instance."""
@@ -216,7 +217,6 @@ class InfraManager:
             console.print("Namespace already exists")
             return
 
-        console.print(f"Creating namespace {namespace_name}...")
         infra.cnt.create_namespace(self.containers)
 
     def check_namespace(self):
@@ -340,11 +340,7 @@ class InfraManager:
             console.print(f"Container {container.name} is not ready", style="bold red")
             raise click.Abort()
 
-    def await_containers(
-        self,
-        on_gateway_tick: t.Callable[[cnt.Container], None],
-        on_admin_tick: t.Callable[[cnt.Container], None],
-    ):
+    def await_containers(self):
         """Wait for the containers to be ready."""
 
         console.print("Waiting for containers to be ready...", style="blue")
@@ -352,30 +348,14 @@ class InfraManager:
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        admin_options = WaitForOptions()
-        admin_options.stop = (
-            lambda container: on_admin_tick(container)
-            or container.status not in cnt.CONTAINER_TRANSIENT_STATUSES
-        )
-
-        container_options = WaitForOptions()
-        container_options.stop = (
-            lambda container: on_gateway_tick(container)
-            or container.status not in cnt.CONTAINER_TRANSIENT_STATUSES
-        )
-
         # Execute in parallel
         executor = futures.ThreadPoolExecutor(max_workers=2)
         admin_future = executor.submit(
-            lambda id: self.containers.wait_for_container(
-                container_id=id, options=admin_options
-            ),
+            lambda id: self.containers.wait_for_container(container_id=id),
             admin_container.id,
         )
         container_future = executor.submit(
-            lambda id: self.containers.wait_for_container(
-                container_id=id, options=container_options
-            ),
+            lambda id: self.containers.wait_for_container(container_id=id),
             container.id,
         )
 
