@@ -20,13 +20,14 @@ class GatewayTest:
     infra: InfraManager
     scw_client: Client
 
-    @staticmethod
     @pytest.fixture(autouse=True, scope="class")
+    @staticmethod
     def setup(integration_env: IntegrationEnvironment):
-        GatewayTest.env = integration_env
-        GatewayTest.manager = GatewayManager()
-        GatewayTest.scw_client = client.get_scaleway_client()
-        GatewayTest.infra = InfraManager(GatewayTest.scw_client)
+        cls = GatewayTest
+        cls.env = integration_env
+        cls.manager = GatewayManager()
+        cls.scw_client = client.get_scaleway_client()
+        cls.infra = InfraManager(GatewayTest.scw_client)
 
     @contextlib.contextmanager
     def add_route_to_fixture(

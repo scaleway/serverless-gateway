@@ -2,7 +2,7 @@ import click
 
 from cli import client, conf
 from cli.gateway import GatewayManager
-from cli.infra import InfraManager, cockpit
+from cli.infra import InfraManager
 
 
 @click.group()
@@ -27,7 +27,7 @@ def deploy():
     manager.await_namespace()
 
     click.secho("Checking cockpit activated", fg="blue")
-    cockpit.ensure_cockpit_activated(scw_client=scw_client)
+    manager.ensure_cockpit_activated()
 
     click.secho("Creating containers", fg="blue")
     manager.create_containers()
@@ -39,6 +39,9 @@ def deploy():
     click.secho("Enabling metrics", fg="blue")
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
+
+    click.secho("Setting up Grafana", fg="blue")
+    manager.import_kong_dashboard()
 
 
 @infra.command()

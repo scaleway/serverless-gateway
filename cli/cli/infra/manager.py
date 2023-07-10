@@ -475,3 +475,15 @@ class InfraManager:
             self.containers.delete_domain(domain_id=domain.id)
         else:
             click.echo(f"Domain {domain} already deleted")
+        raise NotImplementedError
+
+    def ensure_cockpit_activated(self):
+        """Check if the cockpit is activated."""
+        infra.cpt.ensure_cockpit_activated(self.cockpit)
+
+    def import_kong_dashboard(self):
+        """Import the kong dashboard via the Grafana API."""
+        # We need to create a temporary user to import the dashboard
+        with infra.cpt.temporary_grafana_user(api=self.cockpit) as user:
+            url = infra.cpt.import_kong_statsd_dashboard(api=self.cockpit, user=user)
+            click.secho(f"Kong dashboard available at:\n {url}", fg="green")
