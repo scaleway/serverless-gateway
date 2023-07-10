@@ -4,10 +4,12 @@ import click
 import requests
 from loguru import logger
 from requests.adapters import HTTPAdapter
+from rich.table import Table
 from urllib3 import Retry
 
 from cli import conf
 from cli.model import Consumer, JwtCredential, Route
+from cli.console import console
 
 MAX_RETRIES = 5
 
@@ -119,12 +121,11 @@ class GatewayManager:
         routes: list[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
-        click.secho(
-            f"{'RELATIVE URL':<25} {'TARGET':<40} {'HTTP_METHODS':<10}", bold=True
-        )
+        table = Table("RELATIVE URL", "TARGET", "HTTP METHODS", title="Gateway Routes")
         for r in routes:
-            http_methods = r.http_methods if r.http_methods else "All"
-            click.secho(f"{r.relative_url:<25} {r.target:<40} {http_methods:<10}")
+            http_methods = " ".join(r.http_methods) if r.http_methods else "All"
+            table.add_row(r.relative_url, r.target, http_methods)
+        console.print(table)
 
     def get_routes(self) -> list[Route]:
         resp = self.session.get(url=self.routes_url)
@@ -168,9 +169,10 @@ class GatewayManager:
     def print_consumers(self) -> None:
         consumers: list[Consumer] = self.get_consumers()
 
-        click.secho(f"{'USERNAME':<20}", bold=True)
+        table = Table("CONSUMER", title="Consumers")
         for c in consumers:
-            click.secho(f"{c.username:<20}")
+            table.add_row(c.username)
+        console.print(table)
 
     def delete_consumer(self, consumer_name: str):
         consumer_url = f"{self.consumers_url}/{consumer_name}"
@@ -202,10 +204,13 @@ class GatewayManager:
         creds_data = resp.json()["data"]
         return [JwtCredential.from_json(d) for d in creds_data]
 
-    def print_jwt_creds(self, creds: list[JwtCredential], header=True):
-        click.secho(f"{'ALGORITHM':<15} {'SECRET':<40} {'ISS':<40}", bold=True)
+    def print_jwt_creds(self, creds: list[JwtCredential]):
+        """Print JWT credentials for a consumer."""
+
+        table = Table("ALGORITHM", "SECRET", "ISS", title="JWT Credentials")
         for c in creds:
-            click.secho(f"{c.algorithm:<15} {c.secret:<40} {c.iss:<40}")
+            table.add_row(c.algorithm, c.secret, c.iss)
+        console.print(table)
 
     def print_jwt_creds_for_consumer(self, consumer_name):
         creds = self.get_jwt_creds(consumer_name)

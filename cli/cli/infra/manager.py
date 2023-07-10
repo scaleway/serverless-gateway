@@ -8,13 +8,13 @@ import scaleway.container.v1beta1 as cnt
 import scaleway.function.v1beta1 as fnc
 import scaleway.rdb.v1 as rdb
 import scaleway.secret.v1alpha1 as sec
+from rich.table import Table
 from loguru import logger
 from scaleway import Client, ScalewayException
 from scaleway_core.utils import WaitForOptions
 
 from cli import conf, infra
 from ..console import console
-from rich.progress import Progress
 
 
 class InfraManager:
@@ -450,9 +450,10 @@ class InfraManager:
         container = self._get_container_or_abort()
         domains = self.containers.list_domains_all(container_id=container.id)
 
-        click.secho(f"{'HOSTNAME':<40} {'URL':<45} {'STATUS':<10}", bold=True)
-        for d in domains:
-            click.secho(f"{d.hostname:<40} {d.url:<45} {d.status:<10}")
+        table = Table("HOSTNAME", "URL", "STATUS", title="Domains")
+        for domain in domains:
+            table.add_row(domain.hostname, domain.url, domain.status)
+        console.print(table)
 
     def _get_domain(self, container_id: str, domain_host: str):
         domains = self.containers.list_domains_all(container_id=container_id)
@@ -478,16 +479,16 @@ class InfraManager:
         """Wait for the custom domain to be ready."""
         container = self._get_container_or_abort()
 
-        click.secho(f"Waiting for domain {domain_host} to be ready...", fg="blue")
+        console.log(f"Waiting for domain {domain_host} to be ready...", style="blue")
 
         domain = self._get_domain(container.id, domain_host)
         domain_waited = self.containers.wait_for_domain(domain_id=domain.id)
 
         if domain_waited.status != cnt.DomainStatus.READY:
-            click.secho("Domain is not ready", fg="red", bold="true")
+            console.print("Domain is not ready", style="bold red")
             raise click.Abort()
 
-        click.secho("Domain ready")
+        console.print("Domain ready")
 
     def delete_custom_domain(self, domain_host: str):
         """Delete a custom domain for the container."""

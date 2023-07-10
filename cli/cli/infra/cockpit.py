@@ -7,6 +7,8 @@ import scaleway.cockpit.v1beta1 as sdk
 from requests.auth import HTTPBasicAuth
 from scaleway import ScalewayException
 
+from cli.console import console
+
 METRICS_TOKEN_NAME = "scw-gw-write-metrics"
 WRITE_METRICS_SCOPE = sdk.TokenScopes(
     query_metrics=False,
@@ -40,7 +42,7 @@ def ensure_cockpit_activated(api: sdk.CockpitV1Beta1API) -> None:
         click.secho("Activating Cockpit...", fg="yellow")
         cockpit = api.activate_cockpit()
         api.wait_for_cockpit(project_id=cockpit.project_id)
-        click.secho("Cockpit activated", fg="green")
+        console.print("Cockpit activated", style="green")
 
 
 def get_metrics_push_url(api: sdk.CockpitV1Beta1API) -> str:

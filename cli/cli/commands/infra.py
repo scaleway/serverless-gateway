@@ -28,7 +28,7 @@ def deploy():
     # This avoids showing the progress bar if the instance is already running
     if instance.status in rdb.INSTANCE_TRANSIENT_STATUSES:
         with Progress(
-            SpinnerColumn(),
+            SpinnerColumn(style=progress.ULTRAVIOLET_GREEN_STYLE),
             *progress_columns,
             TimeElapsedColumn(),
             console=console,
@@ -113,7 +113,7 @@ def endpoint():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_endpoint()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
@@ -122,7 +122,7 @@ def ip():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_ip()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
@@ -131,14 +131,14 @@ def admin_endpoint():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_admin_endpoint()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
 def admin_token():
     """Print the token for accessing the admin container"""
     c = conf.InfraConfiguration.load()
-    click.secho(c.gw_admin_token)
+    console.print(c.gw_admin_token)
 
 
 @infra.command()
@@ -147,4 +147,4 @@ def new_admin_token():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
-    click.secho(token)
+    console.print(token)
