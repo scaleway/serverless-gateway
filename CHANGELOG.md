@@ -22,8 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added CLI support to easily manage JWT authentification to the routes. Please refer to the [auth documentation](./docs/auth.md) for more information on usage.
+- Added CLI support to easily manage JWT authentification to the routes. Please refer to the [auth documentation](https://serverless-gateway.readthedocs.io/en/latest/auth.html) for more information on usage.
 
 ### Changed
 
 - Grouped CLI commands thematically. The gateway infastructure management is now split from the gateway configuration via different CLI command group.
+
+## [0.5.0] - 2023-07-11
+
+### Added
+
+- Documentation is now available on [readthedocs](https://serverless-gateway.readthedocs.io/en/latest/).
+- Added utilties to manage custom domains for your gateway. Please refer to the [custom domain documentation](https://serverless-gateway.readthedocs.io/en/latest/domains.html) for more information on usage.
+- Kong statsd dashboard will now be automatically imported to your Cockpit when using the `deploy` command.
+- Improved CLI experience by adding some more progress feedback.
