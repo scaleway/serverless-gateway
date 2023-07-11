@@ -1,6 +1,10 @@
 import click
+import scaleway.rdb.v1 as rdb
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 
 from cli import client, conf
+from cli.commands.human import progress
+from cli.console import console
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
 
@@ -18,29 +22,47 @@ def deploy():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
 
-    click.secho("Creating database", fg="blue")
-    manager.create_db()
-    manager.await_db()
+    progress_columns = progress.get_ultraviolet_styled_progress_columns()
 
-    click.secho("Creating container namespace", fg="blue")
-    manager.create_namespace()
-    manager.await_namespace()
+    instance = manager.create_db()
+    # This avoids showing the progress bar if the instance is already running
+    if instance.status in rdb.INSTANCE_TRANSIENT_STATUSES:
+        with Progress(
+            SpinnerColumn(style=progress.ULTRAVIOLET_GREEN_STYLE),
+            *progress_columns,
+            TimeElapsedColumn(),
+            console=console,
+            transient=False,
+        ) as progres_bar:
+            manager.await_db(
+                on_tick=progress.database_deployment_progress_cb(progres_bar)
+            )
 
-    click.secho("Checking cockpit activated", fg="blue")
+    console.print("Checking cockpit activated", style="blue")
     manager.ensure_cockpit_activated()
 
-    click.secho("Creating containers", fg="blue")
-    manager.create_containers()
-    manager.await_containers()
+    with console.status(
+        "Creating container namespace",
+        spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
+    ):
+        manager.create_namespace()
+        manager.await_namespace()
 
-    click.secho("Setting up configuration", fg="blue")
+    with console.status(
+        "Deploying containers",
+        spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
+    ):
+        manager.create_containers()
+        manager.await_containers()
+
+    console.print("Setting up configuration", style="blue")
     manager.set_up_config(False)
 
-    click.secho("Enabling metrics", fg="blue")
+    console.print("Enabling metrics", style="blue")
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
 
-    click.secho("Setting up Grafana", fg="blue")
+    console.print("Setting up Grafana", style="blue")
     manager.import_kong_dashboard()
 
 
@@ -91,7 +113,7 @@ def endpoint():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_endpoint()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
@@ -100,7 +122,7 @@ def ip():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_ip()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
@@ -109,14 +131,14 @@ def admin_endpoint():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     endpoint = manager.get_gateway_admin_endpoint()
-    click.secho(endpoint)
+    console.print(endpoint)
 
 
 @infra.command()
 def admin_token():
     """Print the token for accessing the admin container"""
     c = conf.InfraConfiguration.load()
-    click.secho(c.gw_admin_token)
+    console.print(c.gw_admin_token)
 
 
 @infra.command()
@@ -125,4 +147,4 @@ def new_admin_token():
     scw_client = client.get_scaleway_client()
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
-    click.secho(token)
+    console.print(token)
