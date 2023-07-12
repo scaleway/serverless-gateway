@@ -530,7 +530,7 @@ class InfraManager:
         """Print a summary of the gateway components."""
         c = conf.InfraConfiguration.load()
 
-        console.rule("[bold]Scaleway Serverless gateway")
+        console.rule("[bold]Scaleway Serverless Gateway")
 
         console.print("\nYour gateway is configured at the following URLs:")
         console.print(f"Kong Gateway:         {c.gw_url}")
