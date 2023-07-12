@@ -14,11 +14,11 @@ from cli.commands.route import route as route_commands
 
 @click.group()
 @click.option(
-    "--verbose",
+    "--debug",
     is_flag=True,
-    help="Enables verbose mode.",
+    help="Enables debug mode.",
     default=False,
-    envvar="VERBOSE",
+    envvar="DEBUG",
 )
 @click.option(
     "--log-level",
@@ -28,7 +28,7 @@ from cli.commands.route import route as route_commands
     help="Set the log level.",
     envvar="LOG_LEVEL",
 )
-def cli(verbose: bool, log_level: str) -> None:
+def cli(debug: bool, log_level: str) -> None:
     """CLI for managing the Scaleway Gateway.
     Documentation is available at:
     https://serverless-gateway.readthedocs.io/en/latest/
@@ -46,7 +46,7 @@ def cli(verbose: bool, log_level: str) -> None:
     # Set log level
     logger.remove()
     logger.add(sys.stderr, level=log_level, backtrace=False)
-    if verbose:
+    if debug:
         logger.add(sys.stderr, level="DEBUG", backtrace=True, diagnose=True)
 
 
