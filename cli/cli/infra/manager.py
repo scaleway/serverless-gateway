@@ -273,13 +273,14 @@ class InfraManager:
         admin_container = infra.cnt.get_container_by_name(
             self.containers, namespace.id, admin_container_name
         )
+
         if admin_container:
             console.print(
-                "Creating Kong Admin API container",
+                "Kong Admin API container already exists",
             )
         else:
             console.print(
-                "Creating Kong Gateway container",
+                "Creating Kong Admin API container",
             )
             created_container = infra.cnt.create_kong_admin_container(
                 self.containers, namespace.id, db_host, db_port, db_password
@@ -293,7 +294,7 @@ class InfraManager:
             self.containers, namespace.id, container_name
         )
         if container:
-            logger.debug(f"Container {container_name} already exists")
+            console.print("Kong Gateway container already exists")
             return
 
         # Check if token exists
@@ -306,6 +307,9 @@ class InfraManager:
         token_key = infra.cpt.create_metrics_token(self.cockpit)
         metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
+        console.print(
+            "Creating Kong Gateway container",
+        )
         created_container = infra.cnt.create_kong_container(
             self.containers,
             namespace.id,
@@ -520,17 +524,17 @@ class InfraManager:
         with infra.cpt.temporary_grafana_user(api=self.cockpit) as user:
             url = infra.cpt.import_kong_statsd_dashboard(api=self.cockpit, user=user)
             console.print("\nKong dashboard available at:")
-            console.print(url)
+            console.print(f"{url}\n")
 
     def print_summary(self):
         """Print a summary of the gateway components."""
         c = conf.InfraConfiguration.load()
 
-        console.rule("Scaleway Serverless gateway")
+        console.rule("[bold]Scaleway Serverless gateway")
 
         console.print("\nYour gateway is configured at the following URLs:")
-        console.print(f"Gateway:     {c.gw_url}")
-        console.print(f"Kong admin:  {c.gw_admin_url}")
+        console.print(f"Kong Gateway:         {c.gw_url}")
+        console.print(f"Kong Admin (private): {c.gw_admin_url}")
 
         console.print("\nYou can find metrics for your gateway in your Cockpit at:")
         console.print("https://console.scaleway.com/cockpit/overview")
@@ -541,6 +545,6 @@ class InfraManager:
         console.print("https://serverless-gateway.readthedocs.io/en/latest")
 
         console.print(
-            "\nFor more information on Kong Gateway, you can find the docs here:"
+            "\nFor more information on Kong Gateway in general, you can find the docs here:"
         )
         console.print("https://docs.konghq.com/gateway/latest/\n")

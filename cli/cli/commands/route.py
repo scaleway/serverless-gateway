@@ -2,6 +2,7 @@ import click
 
 from cli.gateway import GatewayManager
 from cli.model import Route
+from cli.console import console
 
 
 @click.group()
@@ -15,6 +16,8 @@ def ls():
     """Print the routes configured on the gateway"""
     manager = GatewayManager()
     manager.print_routes()
+
+    console.print(f"\nRelative URLs are accessible from your gateway base URL:\n{manager.gateway_url}\n")
 
 
 @route.command()
