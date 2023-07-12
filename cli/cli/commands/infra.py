@@ -1,8 +1,11 @@
+import typing as t
+
 import click
 import scaleway.rdb.v1 as rdb
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 
 from cli import client, conf
+from cli.commands import options
 from cli.commands.human import progress
 from cli.console import console
 from cli.gateway import GatewayManager
@@ -11,15 +14,19 @@ from cli.infra import InfraManager
 
 @click.group()
 def infra():
-    """Manage gateway infrastructure"""
-    pass
+    """Manage gateway infrastructure
+
+    # Deploy your Gateway
+    scwgw infra deploy
+    """
 
 
 @infra.command()
-def deploy():
+@options.profile_option
+def deploy(profile: t.Optional[str]):
     """Deploy all the gateway components"""
 
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
 
     progress_columns = progress.get_ultraviolet_styled_progress_columns()
@@ -67,9 +74,10 @@ def deploy():
 
 
 @infra.command()
-def check():
+@options.profile_option
+def check(profile: t.Optional[str] = None):
     """Check the status of all gateway components"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
 
     manager.check_db()
@@ -78,10 +86,9 @@ def check():
 
 
 @infra.command()
-@click.option(
-    "--yes", "-y", is_flag=True, default=False, help="Skip interactive confirmation"
-)
-def delete(yes):
+@options.not_interactive_option
+@options.profile_option
+def delete(yes: bool, profile: t.Optional[str] = None):
     """Delete all the gateway components"""
 
     do_delete = yes
@@ -91,7 +98,7 @@ def delete(yes):
         )
 
     if do_delete:
-        scw_client = client.get_scaleway_client()
+        scw_client = client.get_scaleway_client(profile_name=profile)
         manager = InfraManager(scw_client)
 
         manager.delete_containers()
@@ -100,51 +107,57 @@ def delete(yes):
 
 
 @infra.command()
-def config():
+@options.profile_option
+def config(profile: t.Optional[str]):
     """Set up the gateway config file"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
     manager.set_up_config(False)
 
 
 @infra.command()
-def endpoint():
+@options.profile_option
+def endpoint(profile: t.Optional[str]):
     """Print the endpoint for the gateway"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
-    endpoint = manager.get_gateway_endpoint()
-    console.print(endpoint)
+    gateway_endpoint = manager.get_gateway_endpoint()
+    console.print(gateway_endpoint)
 
 
 @infra.command()
-def ip():
+@options.profile_option
+def ip(profile: t.Optional[str]):  # pylint: disable=invalid-name
     """Print the IP for the gateway"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
-    endpoint = manager.get_gateway_ip()
-    console.print(endpoint)
+    gateway_ip = manager.get_gateway_ip()
+    console.print(gateway_ip)
 
 
 @infra.command()
-def admin_endpoint():
+@options.profile_option
+def admin_endpoint(profile: t.Optional[str]):
     """Print the endpoint for the gateway admin"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
-    endpoint = manager.get_gateway_admin_endpoint()
-    console.print(endpoint)
+    gateway_admin_endpoint = manager.get_gateway_admin_endpoint()
+    console.print(gateway_admin_endpoint)
 
 
 @infra.command()
+@options.profile_option
 def admin_token():
     """Print the token for accessing the admin container"""
-    c = conf.InfraConfiguration.load()
-    console.print(c.gw_admin_token)
+    infra_conf = conf.InfraConfiguration.load()
+    console.print(infra_conf.gw_admin_token)
 
 
 @infra.command()
-def new_admin_token():
+@options.profile_option
+def new_admin_token(profile: t.Optional[str]):
     """Create a new token for the admin container"""
-    scw_client = client.get_scaleway_client()
+    scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
     console.print(token)
