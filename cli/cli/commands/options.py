@@ -1,5 +1,4 @@
 import click
-
 from scaleway_core.profile.env import ENV_KEY_SCW_PROFILE
 
 profile_option = click.option(
