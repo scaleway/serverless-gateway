@@ -15,6 +15,7 @@ from cli.commands.route import route as route_commands
 @click.group()
 @click.option(
     "--debug",
+    "-d",
     is_flag=True,
     help="Enables debug mode.",
     default=False,
