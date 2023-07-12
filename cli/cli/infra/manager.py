@@ -544,7 +544,5 @@ class InfraManager:
         )
         console.print("https://serverless-gateway.readthedocs.io/en/latest")
 
-        console.print(
-            "\nFor more information on Kong Gateway in general, you can find the docs here:"
-        )
+        console.print("\nFor more information on Kong Gateway, see the docs here:")
         console.print("https://docs.konghq.com/gateway/latest/\n")

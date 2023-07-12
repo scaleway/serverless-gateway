@@ -15,9 +15,6 @@ from cli.infra import InfraManager
 @click.group()
 def infra():
     """Manage gateway infrastructure
-
-    # Deploy your Gateway
-    scwgw infra deploy
     """
 
 

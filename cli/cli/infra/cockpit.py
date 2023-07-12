@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import Generator
 
-import click
 import requests
 import scaleway.cockpit.v1beta1 as sdk
 from requests.auth import HTTPBasicAuth
