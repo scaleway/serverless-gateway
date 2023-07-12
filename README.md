@@ -1,4 +1,4 @@
-# Scaleway Serverless Gateway :spider_web:
+# <img src="logo.png" height="32"/> Scaleway Serverless Gateway
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
@@ -10,9 +10,12 @@ It lets you manage routing from a single base URL, as well as handle transversal
 
 It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
 
+You can read all about it in [this blog post](https://www.scaleway.com/en/blog/api-gateway-early-access/).
+
+If you would like to join in the discussion on how we continue developing the project, or give us feedback, then join us on the [#api-gateway-beta](https://app.slack.com/client/T7YEXCR7X/C05H07VBKJ4) channel on the Scaleway Community Slack.
+
 ## :page_with_curl: Contents
 
-- [:rocket: Features](#rocket-features)
 - [:computer: Quick-start](#computer-quick-start)
 - [:mortar\_board: Contributing](#mortar_board-contributing)
 - [:mailbox: Reach Us](#mailbox-reach-us)
@@ -80,5 +83,5 @@ Do not hesitate to raise issues and pull requests we will have a look at them.
 
 We love feedback. Feel free to:
 
-- Open a [Github issue](https://github.com/scaleway/serverless-functions-python/issues/new)
+- Open a [Github issue](https://github.com/scaleway/serverless-gateway/issues/new)
 - Send us a message on the [Scaleway Slack community](https://slack.scaleway.com/), in the [#serverless-functions](https://scaleway-community.slack.com/app_redirect?channel=serverless-functions) channel.

@@ -9,6 +9,7 @@ CONTAINER_NAMESPACE = "scw-sls-gw"
 CONTAINER_NAME = "scw-sls-gw"
 CONTAINER_MIN_SCALE = 1
 CONTAINER_MAX_SCALE = 5
+CONTAINER_CPU_LIMIT = 2000
 CONTAINER_MEMORY_LIMIT = 1024
 
 CONTAINER_ADMIN_NAME = "scw-sls-gw-admin"
@@ -90,6 +91,7 @@ def create_kong_container(
     return api.create_container(
         namespace_id=namespace_id,
         name=CONTAINER_NAME,
+        cpu_limit=CONTAINER_CPU_LIMIT,
         memory_limit=CONTAINER_MEMORY_LIMIT,
         min_scale=CONTAINER_MIN_SCALE,
         max_scale=CONTAINER_MAX_SCALE,

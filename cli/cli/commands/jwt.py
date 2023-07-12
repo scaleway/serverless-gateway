@@ -5,7 +5,7 @@ from cli.gateway import GatewayManager
 
 @click.group()
 def jwt():
-    """Manage JWT credentials"""
+    """Manage JWT credentials for gateway routes"""
     pass
 
 

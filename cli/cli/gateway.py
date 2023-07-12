@@ -34,30 +34,8 @@ class GatewayManager:
     def __init__(self):
         # Local local config
         self.config = conf.InfraConfiguration.load()
-
-        admin_url = [
-            self.config.protocol,
-            "://",
-            self.config.gw_admin_host,
-        ]
-
-        admin_port = self.config.gw_admin_port
-        if admin_port:
-            admin_url.extend([":", str(admin_port)])
-
-        self.admin_url = "".join(admin_url)
-
-        gateway_url = [
-            self.config.protocol,
-            "://",
-            self.config.gw_host,
-        ]
-
-        gateway_port = self.config.gw_port
-        if gateway_port:
-            gateway_url.extend([":", str(gateway_port)])
-
-        self.gateway_url = "".join(gateway_url)
+        self.admin_url = self.config.gw_admin_url
+        self.gateway_url = self.config.gw_url
 
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
@@ -137,10 +115,11 @@ class GatewayManager:
         routes: list[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
-        table = Table("RELATIVE URL", "TARGET", "HTTP METHODS", title="Gateway Routes")
+        table = Table("Relative url", "Target", "HTTP methods")
         for route in routes:
             http_methods = " ".join(route.http_methods) if route.http_methods else "All"
             table.add_row(route.relative_url, route.target, http_methods)
+
         console.print(table)
 
     def get_routes(self) -> list[Route]:
@@ -188,9 +167,10 @@ class GatewayManager:
         """Print all consumers."""
         consumers: list[Consumer] = self.get_consumers()
 
-        table = Table("CONSUMER", title="Consumers")
+        table = Table("Consumer")
         for consumer in consumers:
             table.add_row(consumer.username)
+
         console.print(table)
 
     def delete_consumer(self, consumer_name: str) -> None:
@@ -225,9 +205,10 @@ class GatewayManager:
     def print_jwt_creds(self, creds: list[JwtCredential]):
         """Print JWT credentials for a consumer."""
 
-        table = Table("ALGORITHM", "SECRET", "ISS", title="JWT Credentials")
+        table = Table("Algorithm", "Secret", "ISS")
         for cred in creds:
             table.add_row(cred.algorithm, cred.secret, cred.iss)
+
         console.print(table)
 
     def print_jwt_creds_for_consumer(self, consumer_name):

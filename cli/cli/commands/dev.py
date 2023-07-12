@@ -9,7 +9,7 @@ from cli.infra import InfraManager
 
 @click.group()
 def dev():
-    """Develop locally"""
+    """Develop the Gateway locally"""
 
 
 @dev.command()

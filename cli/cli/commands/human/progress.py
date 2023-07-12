@@ -39,7 +39,7 @@ def database_deployment_progress_cb(
 ) -> t.Callable[[rdb.Instance], None]:
     """Create a callback that handles the database creation progress."""
 
-    db_task = progress.add_task("Deploying database", total=100, start=False)
+    db_task = progress.add_task("Deploying Kong database", total=100, start=False)
 
     def wait_for_database_on_tick(instance: rdb.Instance) -> None:
         progress.start_task(db_task)
@@ -49,13 +49,13 @@ def database_deployment_progress_cb(
         elif instance.status == rdb.InstanceStatus.PROVISIONING:
             # First part of creating is provisioning
             task = progress.tasks[db_task]
-            task.description = "Provisioning database (1/2)"
+            task.description = "Provisioning Kong database (1/2)"
             completed = mix(task.completed, 50, STIFFNESS)
             progress.update(db_task, completed=completed)
         elif instance.status == rdb.InstanceStatus.INITIALIZING:
             # Second part of creating is initializing
             task = progress.tasks[db_task]
-            task.description = "Initializing database (2/2)"
+            task.description = "Initializing Kong database (2/2)"
             completed = mix(task.completed, 100, STIFFNESS * 2)
             progress.update(db_task, completed=completed)
         elif instance.status == rdb.InstanceStatus.ERROR:

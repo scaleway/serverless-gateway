@@ -2,7 +2,10 @@ import os
 import typing as t
 from dataclasses import asdict, dataclass
 
+import click
 import yaml
+
+from cli.console import console
 
 if t.TYPE_CHECKING:
     # Importing conditionally to avoid circular imports
@@ -15,6 +18,20 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "gateway.yml")
 # Name is fixed for all managed databases
 DB_DATABASE_NAME = "rdb"
 DB_DATABASE_NAME_LOCAL = "kong"
+
+# Default time to wait for resources
+RESOURCE_AWAIT_TIMEOUT_MINUTES = 15
+RESOURCE_AWAIT_TIMEOUT_SECONDS = 60 * RESOURCE_AWAIT_TIMEOUT_MINUTES
+
+
+def _check_config_file():
+    if not os.path.exists(CONFIG_FILE):
+        console.print(
+            "No gateway config file found. Have you run your gateway setup? Try:",
+            style="red",
+        )
+        console.print("scwgw infra deploy", style="bold red")
+        raise click.Abort()
 
 
 @dataclass
@@ -71,9 +88,40 @@ class InfraConfiguration:
     @staticmethod
     def load() -> "InfraConfiguration":
         """Read the configuration from the config file."""
+
+        _check_config_file()
+
         with open(CONFIG_FILE, mode="rt", encoding="utf-8") as file:
             conf = yaml.safe_load(file)
             return InfraConfiguration(**conf)
+
+    @property
+    def gw_url(self):
+        gateway_url = [
+            self.protocol,
+            "://",
+            self.gw_host,
+        ]
+
+        gateway_port = self.gw_port
+        if gateway_port:
+            gateway_url.extend([":", str(gateway_port)])
+
+        return "".join(gateway_url)
+
+    @property
+    def gw_admin_url(self):
+        admin_url = [
+            self.protocol,
+            "://",
+            self.gw_admin_host,
+        ]
+
+        admin_port = self.gw_admin_port
+        if admin_port:
+            admin_url.extend([":", str(admin_port)])
+
+        return "".join(admin_url)
 
     def save(self) -> None:
         """Save the configuration to a file."""
