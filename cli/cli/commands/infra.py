@@ -14,8 +14,7 @@ from cli.infra import InfraManager
 
 @click.group()
 def infra():
-    """Manage gateway infrastructure
-    """
+    """Manage gateway infrastructure"""
 
 
 @infra.command()
