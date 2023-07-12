@@ -9,7 +9,7 @@ EXCEPTION_ERROR_STYLE = Style(color="red", bold=True)
 
 
 def display_exception(exception: BaseException) -> None:
-    """Log an exception with loguru."""
+    """Display an exception, with a human-readable message."""
     message = f"{exception.__class__.__name__}: "
     if isinstance(exception, ScalewayException):
         message += parse_scaleway_exception_message(exception)
