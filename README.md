@@ -1,4 +1,4 @@
-# Scaleway Serverless Gateway [![Gateway logo](logo.png)]
+#  <img src="logo.png" height="32"/> Scaleway Serverless Gateway
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
