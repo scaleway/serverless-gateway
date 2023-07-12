@@ -163,7 +163,7 @@ class InfraManager:
             console.print(f"Database {instance_name} already exists")
             return instance
 
-        console.print(f"Creating database instance {instance_name}...")
+        logger.debug(f"Creating database instance {instance_name}...")
 
         logger.debug("Generating database password")
         password = infra.secrets.generate_database_password()
@@ -172,7 +172,6 @@ class InfraManager:
         infra.secrets.create_db_password_secret(self.secrets, password)
 
         instance = infra.rdb.create_database_instance(self.rdb, password)
-        console.print("Database created", style="bold green")
         return instance
 
     def check_db(self):
@@ -190,6 +189,8 @@ class InfraManager:
         options.stop = lambda instance: on_tick(instance) or (
             instance.status not in rdb.INSTANCE_TRANSIENT_STATUSES
         )
+        options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
+
         instance = self.rdb.wait_for_instance(
             instance_id=instance.id,
             options=options,
@@ -235,10 +236,16 @@ class InfraManager:
     def await_namespace(self):
         """Wait for the namespace to be ready."""
 
-        console.print("Waiting for namespace to be ready...", style="blue")
+        console.print("Waiting for Kong container namespace")
 
         namespace = self._get_namespace_or_abort()
-        namespace = self.containers.wait_for_namespace(namespace_id=namespace.id)
+
+        options: WaitForOptions[cnt.Namespace, bool] = WaitForOptions()
+        options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
+
+        namespace = self.containers.wait_for_namespace(
+            namespace_id=namespace.id, options=options
+        )
         if namespace.status == cnt.NamespaceStatus.ERROR:
             console.print(
                 f"Namespace in error: {namespace.error_message}",
@@ -250,13 +257,11 @@ class InfraManager:
             console.print("Namespace is not ready", style="bold red")
             raise click.Abort()
 
-        console.print("Namespace ready")
-
     def delete_namespace(self):
         """Delete the namespace."""
         namespace = self._get_namespace_or_abort()
         self.containers.delete_namespace(namespace_id=namespace.id)
-        console.print("Namespace deleted")
+        console.print("Container namespace deleted")
 
     def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
@@ -293,9 +298,10 @@ class InfraManager:
             console.print(f"Container {container_name} already exists")
             return
 
-        console.print(
-            f"Creating container {container_name} from tag {infra.image.IMAGE_TAG}"
-        )
+        if container_name == admin_container_name:
+            console.print("Creating container for Kong Admin API")
+        else:
+            console.print("Creating container for Kong Gateway")
 
         # Check if token exists
         token = infra.cpt.get_metrics_token(self.cockpit)
@@ -344,19 +350,26 @@ class InfraManager:
     def await_containers(self):
         """Wait for the containers to be ready."""
 
-        console.print("Waiting for containers to be ready...", style="blue")
+        console.print("Waiting for Kong containers")
 
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
+        options: WaitForOptions[cnt.Container, bool] = WaitForOptions()
+        options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
+
         # Execute in parallel
         executor = futures.ThreadPoolExecutor(max_workers=2)
         admin_future = executor.submit(
-            lambda id: self.containers.wait_for_container(container_id=id),
+            lambda id: self.containers.wait_for_container(
+                container_id=id, options=options
+            ),
             admin_container.id,
         )
         container_future = executor.submit(
-            lambda id: self.containers.wait_for_container(container_id=id),
+            lambda id: self.containers.wait_for_container(
+                container_id=id, options=options
+            ),
             container.id,
         )
 
@@ -379,10 +392,10 @@ class InfraManager:
         container = self._get_container_or_abort()
 
         self.containers.delete_container(container_id=admin_container.id)
-        console.print("Admin container deleted")
+        console.print("Kong Admin API container deleted")
 
         self.containers.delete_container(container_id=container.id)
-        console.print("Gateway container deleted")
+        console.print("Kong Gateway container deleted")
 
     def get_function_endpoint(
         self, namespace_name: str, function_name: str
@@ -451,7 +464,7 @@ class InfraManager:
         container = self._get_container_or_abort()
         domains = self.containers.list_domains_all(container_id=container.id)
 
-        table = Table("HOSTNAME", "URL", "STATUS", title="Domains")
+        table = Table("Hostname", "URL", "Status")
         for domain in domains:
             table.add_row(domain.hostname, domain.url, domain.status)
         console.print(table)
@@ -480,10 +493,15 @@ class InfraManager:
         """Wait for the custom domain to be ready."""
         container = self._get_container_or_abort()
 
-        console.log(f"Waiting for domain {domain_host} to be ready...", style="blue")
+        console.log(f"Waiting for domain {domain_host} to be ready")
+
+        options: WaitForOptions[cnt.Domain, bool] = WaitForOptions()
+        options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
 
         domain = self._get_domain(container.id, domain_host)
-        domain_waited = self.containers.wait_for_domain(domain_id=domain.id)
+        domain_waited = self.containers.wait_for_domain(
+            domain_id=domain.id, options=options
+        )
 
         if domain_waited.status != cnt.DomainStatus.READY:
             console.print("Domain is not ready", style="bold red")
@@ -511,4 +529,23 @@ class InfraManager:
         # We need to create a temporary user to import the dashboard
         with infra.cpt.temporary_grafana_user(api=self.cockpit) as user:
             url = infra.cpt.import_kong_statsd_dashboard(api=self.cockpit, user=user)
-            click.secho(f"Kong dashboard available at:\n {url}", fg="green")
+            console.print("Kong dashboard available at:")
+            console.print(url)
+
+    def print_summary(self):
+        """Print a summary of the gateway components."""
+        c = conf.InfraConfiguration.load()
+
+        console.rule("Scaleway Serverless gateway")
+
+        console.print("\nYour gateway is configured at the following URLs:")
+        console.print(f"Gateway:     {c.gw_url}")
+        console.print(f"Kong admin:  {c.gw_admin_url}")
+
+        console.print("\nYou can find metrics for your gateway in your Cockpit at:")
+        console.print("https://console.scaleway.com/cockpit/overview")
+
+        console.print(
+            "\nFor more information on using your gateway, you can find the docs at:"
+        )
+        console.print("https://serverless-gateway.readthedocs.io/en/latest/\n")

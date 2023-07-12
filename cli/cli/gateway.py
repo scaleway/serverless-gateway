@@ -37,30 +37,8 @@ class GatewayManager:
     def __init__(self):
         # Local local config
         self.config = conf.InfraConfiguration.load()
-
-        admin_url = [
-            self.config.protocol,
-            "://",
-            self.config.gw_admin_host,
-        ]
-
-        admin_port = self.config.gw_admin_port
-        if admin_port:
-            admin_url.extend([":", str(admin_port)])
-
-        self.admin_url = "".join(admin_url)
-
-        gateway_url = [
-            self.config.protocol,
-            "://",
-            self.config.gw_host,
-        ]
-
-        gateway_port = self.config.gw_port
-        if gateway_port:
-            gateway_url.extend([":", str(gateway_port)])
-
-        self.gateway_url = "".join(gateway_url)
+        self.admin_url = self.config.gw_admin_url
+        self.gateway_url = self.config.gw_url
 
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
@@ -120,7 +98,7 @@ class GatewayManager:
         routes: list[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
-        table = Table("RELATIVE URL", "TARGET", "HTTP METHODS", title="Gateway Routes")
+        table = Table("Relative url", "Target", "HTTP methods")
         for r in routes:
             http_methods = " ".join(r.http_methods) if r.http_methods else "All"
             table.add_row(r.relative_url, r.target, http_methods)
@@ -168,7 +146,7 @@ class GatewayManager:
     def print_consumers(self) -> None:
         consumers: list[Consumer] = self.get_consumers()
 
-        table = Table("CONSUMER", title="Consumers")
+        table = Table("Consumer")
         for c in consumers:
             table.add_row(c.username)
         console.print(table)
@@ -206,7 +184,7 @@ class GatewayManager:
     def print_jwt_creds(self, creds: list[JwtCredential]):
         """Print JWT credentials for a consumer."""
 
-        table = Table("ALGORITHM", "SECRET", "ISS", title="JWT Credentials")
+        table = Table("Algorithm", "Secret", "ISS")
         for c in creds:
             table.add_row(c.algorithm, c.secret, c.iss)
         console.print(table)

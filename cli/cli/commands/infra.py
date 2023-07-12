@@ -45,32 +45,44 @@ def deploy(profile: t.Optional[str]):
                 on_tick=progress.database_deployment_progress_cb(progres_bar)
             )
 
-    console.print("Checking cockpit activated", style="blue")
+    console.print("Activating cockpit")
     manager.ensure_cockpit_activated()
 
     with console.status(
-        "Creating container namespace",
+        "Creating Kong container namespace",
         spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
     ):
         manager.create_namespace()
         manager.await_namespace()
 
     with console.status(
-        "Deploying containers",
+        "Deploying Kong containers",
         spinner_style=progress.ULTRAVIOLET_GREEN_STYLE,
     ):
         manager.create_containers()
         manager.await_containers()
 
-    console.print("Setting up configuration", style="blue")
+    console.print("Setting up local configuration file")
     manager.set_up_config(False)
 
-    console.print("Enabling metrics", style="blue")
+    console.print("Enabling metrics")
     gateway = GatewayManager()
     gateway.setup_global_kong_statsd_plugin()
 
-    console.print("Setting up Grafana", style="blue")
+    console.print("Setting up Grafana")
     manager.import_kong_dashboard()
+
+    manager.print_summary()
+
+
+@infra.command()
+@options.profile_option
+def summary(profile: t.Optional[str] = None):
+    """Print a summary of the gateway components"""
+    scw_client = client.get_scaleway_client(profile_name=profile)
+    manager = InfraManager(scw_client)
+
+    manager.print_summary()
 
 
 @infra.command()

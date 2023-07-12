@@ -6,7 +6,9 @@ import requests
 import scaleway.cockpit.v1beta1 as sdk
 from requests.auth import HTTPBasicAuth
 from scaleway import ScalewayException
+from scaleway_core.utils import WaitForOptions
 
+from cli import conf
 from cli.console import console
 
 METRICS_TOKEN_NAME = "scw-gw-write-metrics"
@@ -38,10 +40,16 @@ def ensure_cockpit_activated(api: sdk.CockpitV1Beta1API) -> None:
     except ScalewayException as err:
         if not err.status_code == 404:
             raise
+
         # Activate the cockpit
         click.secho("Activating Cockpit...", fg="yellow")
         cockpit = api.activate_cockpit()
-        api.wait_for_cockpit(project_id=cockpit.project_id)
+
+        options: WaitForOptions[sdk.Cockpit, bool] = WaitForOptions()
+        options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
+
+        api.wait_for_cockpit(project_id=cockpit.project_id, options=options)
+
         console.print("Cockpit activated", style="green")
 
 

@@ -17,11 +17,38 @@ Installation
 
     pip install scw-gateway
 
-This will install ``scwgw``:
+This will install ``scwgw``, and you can see the list of available commands with:
 
 .. code-block:: console
 
     scwgw --help
+
+From here you can set up your gateway with:
+
+.. code-block:: console
+
+    scwgw infra deploy
+
+Once the setup process has finished, you can then manage routes as follows:
+
+.. code-block:: console
+
+    # Check no routes are configured initially
+    scwgw route ls
+
+    # Check the response directly from a given URL
+    TARGET_URL=http://worldtimeapi.org/api/timezone/Europe/Paris
+    curl $TARGET_URL
+
+    # Add a route to this URL in your gateway
+    scwgw route add /time $TARGET_URL
+
+    # List routes to see that it's been configured
+    scwgw route ls
+
+    # Curl the URL via the gateway
+    GATEWAY_ENDPOINT=$(scwgw infra endpoint)
+    curl https://${GATEWAY_ENDPOINT}/time
 
 .. Hidden TOC
 
