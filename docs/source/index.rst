@@ -1,5 +1,5 @@
-Serverless Gateway
-========================
+Scaleway Serverless Gateway
+===========================
 
 The Scaleway Serverless Gateway is a self-hosted API gateway that runs on `Scaleway Serverless Containers <https://www.scaleway.com/en/serverless-containers/>`_ and `Scaleway Managed Database <https://www.scaleway.com/en/database/>`_.
 
@@ -60,7 +60,6 @@ Once the setup process has finished, you can then manage routes as follows:
    architecture
    auth
    cors
-   custom
    development
    domains
    kong

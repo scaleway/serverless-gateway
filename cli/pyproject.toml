@@ -40,7 +40,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-scwgw = "cli.cli:cli"
+scwgw = "cli.cli:main"
 
 [tool.isort]
 profile = "black"
@@ -49,9 +49,7 @@ profile = "black"
 log_cli = true
 log_cli_level = "INFO"
 testpaths = ["tests"]
-markers = [
-  "deployed: Integration tests for a fully deployed environment",
-]
+markers = ["deployed: Integration tests for a fully deployed environment"]
 
 [tool.mypy]
 exclude = ["venv", "endpoints"]
