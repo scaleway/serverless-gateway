@@ -1,7 +1,12 @@
-project = "scw_gateway"
+from importlib.metadata import version as get_version
+
+# Refers to the pypi package name
+project = "scw-gateway"
+
 author = "Scaleway Serverless Team"
-project_copyright = f"2023, {author}"
-release = "0.0.1"
+copyright = f"2023, {author}"
+
+release = get_version(project)
 version = release
 
 extensions = [
