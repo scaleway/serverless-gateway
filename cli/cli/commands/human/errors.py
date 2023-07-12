@@ -1,6 +1,6 @@
-from scaleway import ScalewayException
 import requests
 from rich.style import Style
+from scaleway import ScalewayException
 
 from cli.console import console
 from cli.gateway import KongAPIException
