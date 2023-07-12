@@ -160,7 +160,7 @@ class InfraManager:
         instance_name = infra.rdb.DB_INSTANCE_NAME
         instance = infra.rdb.get_database_instance_by_name(self.rdb, instance_name)
         if instance:
-            console.print(f"Database {instance_name} already exists")
+            console.print("Kong database already exists")
             return instance
 
         logger.debug(f"Creating database instance {instance_name}...")
@@ -208,7 +208,7 @@ class InfraManager:
         # Delete the database
         instance = self._get_database_instance_or_abort()
         self.rdb.delete_instance(instance_id=instance.id)
-        console.print("Database deleted")
+        console.print("Kong database deleted")
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -235,9 +235,6 @@ class InfraManager:
 
     def await_namespace(self):
         """Wait for the namespace to be ready."""
-
-        console.print("Waiting for Kong container namespace")
-
         namespace = self._get_namespace_or_abort()
 
         options: WaitForOptions[cnt.Namespace, bool] = WaitForOptions()
@@ -261,7 +258,7 @@ class InfraManager:
         """Delete the namespace."""
         namespace = self._get_namespace_or_abort()
         self.containers.delete_namespace(namespace_id=namespace.id)
-        console.print("Container namespace deleted")
+        console.print("Kong container namespace deleted")
 
     def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
@@ -278,16 +275,17 @@ class InfraManager:
         )
         if admin_container:
             console.print(
-                f"Admin container {admin_container_name} already exists",
+                "Creating Kong Admin API container",
             )
         else:
             console.print(
-                f"Creating admin container {admin_container_name}",
+                "Creating Kong Gateway container",
             )
             created_container = infra.cnt.create_kong_admin_container(
                 self.containers, namespace.id, db_host, db_port, db_password
             )
-            console.print(f"Deploying container {admin_container_name}")
+
+            logger.debug(f"Deploying container {admin_container_name}")
             self.containers.deploy_container(container_id=created_container.id)
 
         container_name = infra.cnt.CONTAINER_NAME
@@ -295,21 +293,16 @@ class InfraManager:
             self.containers, namespace.id, container_name
         )
         if container:
-            console.print(f"Container {container_name} already exists")
+            logger.debug(f"Container {container_name} already exists")
             return
-
-        if container_name == admin_container_name:
-            console.print("Creating container for Kong Admin API")
-        else:
-            console.print("Creating container for Kong Gateway")
 
         # Check if token exists
         token = infra.cpt.get_metrics_token(self.cockpit)
         if token:
-            console.print("Cockpit token already exists, deleting")
+            logger.debug("Cockpit token already exists, deleting")
             infra.cpt.delete_metrics_token(self.cockpit, token)
 
-        console.print("Creating Cockpit token")
+        logger.debug("Creating Cockpit token")
         token_key = infra.cpt.create_metrics_token(self.cockpit)
         metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
@@ -323,7 +316,7 @@ class InfraManager:
             metrics_push_url=metrics_push_url,
         )
 
-        console.print(f"Deploying container {container_name}")
+        logger.debug(f"Deploying container {container_name}")
         self.containers.deploy_container(container_id=created_container.id)
 
     def check_containers(self):
@@ -349,9 +342,6 @@ class InfraManager:
 
     def await_containers(self):
         """Wait for the containers to be ready."""
-
-        console.print("Waiting for Kong containers")
-
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
@@ -418,10 +408,10 @@ class InfraManager:
         admin_container = self._get_admin_container_or_abort()
         container = self._get_container_or_abort()
 
-        console.print("Deploying admin container...")
+        console.print("Deploying Kong Admin API container...")
         self.containers.deploy_container(container_id=admin_container.id)
 
-        console.print("Deploying container...")
+        console.print("Deploying Kong Gateway container")
         self.containers.deploy_container(container_id=container.id)
 
     def update_container_without_deploy(self):
@@ -445,7 +435,7 @@ class InfraManager:
             if token:
                 infra.cpt.delete_metrics_token(self.cockpit, token)
 
-            console.print("Creating Cockpit token to forward metrics...")
+            logger.debug("Creating Cockpit token to forward metrics")
             token_key = infra.cpt.create_metrics_token(self.cockpit)
             metrics_push_url = infra.cpt.get_metrics_push_url(self.cockpit)
 
@@ -529,7 +519,7 @@ class InfraManager:
         # We need to create a temporary user to import the dashboard
         with infra.cpt.temporary_grafana_user(api=self.cockpit) as user:
             url = infra.cpt.import_kong_statsd_dashboard(api=self.cockpit, user=user)
-            console.print("Kong dashboard available at:")
+            console.print("\nKong dashboard available at:")
             console.print(url)
 
     def print_summary(self):
@@ -548,4 +538,9 @@ class InfraManager:
         console.print(
             "\nFor more information on using your gateway, you can find the docs at:"
         )
-        console.print("https://serverless-gateway.readthedocs.io/en/latest/\n")
+        console.print("https://serverless-gateway.readthedocs.io/en/latest")
+
+        console.print(
+            "\nFor more information on Kong Gateway, you can find the docs here:"
+        )
+        console.print("https://docs.konghq.com/gateway/latest/\n")

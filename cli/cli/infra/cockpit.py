@@ -42,15 +42,13 @@ def ensure_cockpit_activated(api: sdk.CockpitV1Beta1API) -> None:
             raise
 
         # Activate the cockpit
-        click.secho("Activating Cockpit...", fg="yellow")
+        console.print("Activating Cockpit")
         cockpit = api.activate_cockpit()
 
         options: WaitForOptions[sdk.Cockpit, bool] = WaitForOptions()
         options.timeout = conf.RESOURCE_AWAIT_TIMEOUT_SECONDS
 
         api.wait_for_cockpit(project_id=cockpit.project_id, options=options)
-
-        console.print("Cockpit activated", style="green")
 
 
 def get_metrics_push_url(api: sdk.CockpitV1Beta1API) -> str:

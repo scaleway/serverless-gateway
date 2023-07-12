@@ -45,7 +45,6 @@ def deploy(profile: t.Optional[str]):
                 on_tick=progress.database_deployment_progress_cb(progres_bar)
             )
 
-    console.print("Activating cockpit")
     manager.ensure_cockpit_activated()
 
     with console.status(
