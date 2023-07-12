@@ -10,6 +10,10 @@ It lets you manage routing from a single base URL, as well as handle transversal
 
 It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
 
+You can read all about it in [this blog post](https://www.scaleway.com/en/blog/api-gateway-early-access/).
+
+If you would like to join in the discussion on how we continue developing the project, or give us feedback, then join us on the [#api-gateway-beta](https://app.slack.com/client/T7YEXCR7X/C05H07VBKJ4) channel on the Scaleway Community Slack.
+
 ## :page_with_curl: Contents
 
 - [:computer: Quick-start](#computer-quick-start)
