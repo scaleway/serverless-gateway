@@ -1,4 +1,4 @@
-#  <img src="logo.png" height="32"/> Scaleway Serverless Gateway
+# <img src="logo.png" height="32"/> Scaleway Serverless Gateway
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
@@ -12,7 +12,6 @@ It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving y
 
 ## :page_with_curl: Contents
 
-- [:rocket: Features](#rocket-features)
 - [:computer: Quick-start](#computer-quick-start)
 - [:mortar\_board: Contributing](#mortar_board-contributing)
 - [:mailbox: Reach Us](#mailbox-reach-us)
