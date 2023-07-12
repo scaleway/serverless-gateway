@@ -192,14 +192,16 @@ class TestEndpoint(GatewayTest):
     @pytest.mark.parametrize(
         "target",
         [
-            ("dummy_url.com",),
-            ("/dummy_url.com",),
+            "dummy_url.com",
+            "/dummy_url.com",
         ],
     )
-    def test_invalid_url_formats(self, target):
-        route = Route("/foo", target)
+    def test_invalid_url_formats(self, target: str):
+        """Test that invalid URLs are rejected."""
 
-        with pytest.raises(requests.HTTPError):
+        route = Route("/foo", target=target)
+
+        with pytest.raises(ValueError):
             self.manager.add_route(route)
 
     @pytest.mark.parametrize(
