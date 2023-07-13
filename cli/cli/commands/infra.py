@@ -155,10 +155,12 @@ def admin_endpoint(profile: t.Optional[str]):
 
 @infra.command()
 @options.profile_option
-def admin_token():
+def admin_token(profile: t.Optional[str]):
     """Print the token for accessing the admin container"""
     infra_conf = conf.InfraConfiguration.load()
-    console.print(infra_conf.gw_admin_token)
+
+    # WARNING: must use raw print here to avoid line-breaks
+    print(infra_conf.gw_admin_token)
 
 
 @infra.command()
@@ -168,4 +170,6 @@ def new_admin_token(profile: t.Optional[str]):
     scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
     token = manager.create_admin_container_token()
-    console.print(token)
+
+    # WARNING: must use raw print here to avoid line-breaks
+    print(token)
