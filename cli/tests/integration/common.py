@@ -29,9 +29,9 @@ class GatewayTest:
     @staticmethod
     def setup(integration_env: IntegrationEnvironment):
         cls = GatewayTest
-        cls.env = integration_env
-        cls.manager = GatewayManager()
         cls.infra = integration_env.infra_manager
+        # Do not load the configuration from a file to avoid side effects
+        cls.manager = GatewayManager(config=integration_env)
 
     @contextlib.contextmanager
     def add_route_to_fixture(
@@ -64,11 +64,12 @@ class GatewayTest:
 
     @staticmethod
     def call_endpoint_until_response_code(url, code, method: str = "GET", headers=None):
+        """Call an endpoint until we get a specific response code."""
         max_retries = 10
         sleep_time = 2
 
         for _ in range(max_retries):
-            resp = requests.request(method=method, url=url, headers=headers)
+            resp = requests.request(method=method, url=url, headers=headers, timeout=5)
             if resp.status_code == code:
                 logger.info(f"Got {resp.status_code} from {url}")
                 return resp
