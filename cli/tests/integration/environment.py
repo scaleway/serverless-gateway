@@ -1,8 +1,9 @@
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Optional
 
 from cli.client import get_scaleway_client
 from cli.conf import InfraConfiguration
+from cli.gateway import GatewayManager
 from cli.infra import InfraManager
 
 FUNC_FIXTURE_NAME = "func-a"
@@ -10,10 +11,11 @@ FUNC_FIXTURE_NAMESPACE = "function-fixtures"
 
 
 @dataclass
-class IntegrationEnvironment(InfraConfiguration):
+class IntegrationEnvironment:
     """Environment for integration tests."""
 
     infra_manager: Optional[InfraManager]
+    gateway_manager: GatewayManager
 
     gw_admin_url: str
     gw_routes_url: str
@@ -32,10 +34,11 @@ class IntegrationEnvironment(InfraConfiguration):
         gw_url = "http://localhost:8080"
 
         config = InfraConfiguration.from_local()
+        gateway_manager = GatewayManager(config=config)
 
         return IntegrationEnvironment(
-            **asdict(config),
             infra_manager=None,
+            gateway_manager=gateway_manager,
             gw_admin_url=gw_admin_url,
             gw_routes_url=gw_admin_url + "/routes",
             gw_url=gw_url,
@@ -61,10 +64,11 @@ class IntegrationEnvironment(InfraConfiguration):
         gw_url = f"https://{gw_endpoint}:443"
 
         config = InfraConfiguration.from_infra(manager)
+        gateway_manager = GatewayManager(config=config)
 
         return IntegrationEnvironment(
-            **asdict(config),
             infra_manager=manager,
+            gateway_manager=gateway_manager,
             gw_admin_url=gw_admin_url,
             gw_routes_url=gw_admin_url + "/routes",
             gw_url=gw_url,

@@ -17,18 +17,19 @@ class GatewayTest:
     """Base class for integration tests."""
 
     env: IntegrationEnvironment
-    manager: GatewayManager
 
     # Optional because it's not available in docker-compose
     infra: Optional[InfraManager]
+    manager: GatewayManager
 
     @pytest.fixture(autouse=True, scope="class")
     @staticmethod
     def setup(integration_env: IntegrationEnvironment):
         cls = GatewayTest
+        cls.env = integration_env
         cls.infra = integration_env.infra_manager
         # Do not load the configuration from a file to avoid side effects
-        cls.manager = GatewayManager(config=integration_env)
+        cls.manager = integration_env.gateway_manager
 
     @contextlib.contextmanager
     def add_route_to_fixture(
