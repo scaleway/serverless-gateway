@@ -3,7 +3,7 @@
 set -e
 
 # We sleep here as we need to give the gateway time to start
-sleep 20
+sleep 30
 
 /bin/grafana-agent                      \
     --config.expand-env                 \
