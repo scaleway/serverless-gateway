@@ -24,7 +24,7 @@ else
     # We need to retry here to give the admin container time to apply database migrations
     for i in 1 2 3 4 5;
     do
-        kong start -v -c /kong-conf/kong.conf && break || sleep 15;
+        kong start -v -c /kong-conf/kong.conf && break || sleep 30;
     done
 fi
 
