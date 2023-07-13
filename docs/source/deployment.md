@@ -13,7 +13,7 @@ To bootstrap the Scaleway CLI and create a config file you can run the following
 scw init
 ```
 
-Alternatively, you can configure the using environment variables:
+Alternatively, you can configure `scwgw` using the following environment variables:
 
 - `SCW_ACCESS_KEY`
 - `SCW_SECRET_KEY`
@@ -34,7 +34,7 @@ This deploy the gateway on your configured Scaleway Project. The deployment will
 
 ## Configuration
 
-The deployment will generate a configuration file in `$HOME/.config/scw/gateway.yml`. This file contains the configuration of the gateway, and will be used by the CLI to manage the gateway.
+The deployment will generate a configuration file in `$HOME/.config/scw/gateway.yml`. This file contains the configuration of the gateway, and will be used by the CLI to manage it.
 
 The configuration file can also be generated using the following command:
 
