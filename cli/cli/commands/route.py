@@ -7,7 +7,7 @@ from cli.model import Route
 
 @click.group()
 def route():
-    """Manage gateway routes"""
+    """Manage routing to upstream services from the gateway"""
     pass
 
 

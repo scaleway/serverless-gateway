@@ -9,7 +9,8 @@ from cli.infra import InfraManager
 
 @click.group()
 def domain():
-    """Manage gateway domains"""
+    """Add alternative URLs for the gateway\n
+    https://serverless-gateway.readthedocs.io/en/latest/domains.html"""
 
 
 @domain.command()

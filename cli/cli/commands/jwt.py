@@ -5,7 +5,8 @@ from cli.gateway import GatewayManager
 
 @click.group()
 def jwt():
-    """Manage JWT credentials for gateway routes"""
+    """Configure credentials for JWT authorization\n
+    https://serverless-gateway.readthedocs.io/en/latest/auth.html"""
     pass
 
 

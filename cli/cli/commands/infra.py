@@ -14,7 +14,8 @@ from cli.infra import InfraManager
 
 @click.group()
 def infra():
-    """Manage gateway infrastructure"""
+    """Set up the components to run the gateway\n
+    https://serverless-gateway.readthedocs.io/en/latest/architecture.html"""
 
 
 @infra.command()

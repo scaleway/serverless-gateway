@@ -9,13 +9,14 @@ from cli.infra import InfraManager
 
 @click.group()
 def dev():
-    """Develop the Gateway locally"""
+    """Develop, modify and update the gateway\n
+    https://serverless-gateway.readthedocs.io/en/latest/development.html"""
 
 
 @dev.command()
 @options.profile_option
 def config(profile: t.Optional[str]):
-    """Set up config for local development"""
+    """Set up config file for local development"""
     scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
     manager.set_up_config(True)
@@ -33,7 +34,7 @@ def update_containers(
     no_redeploy: bool,
     profile: t.Optional[str],
 ):
-    """Update the containers"""
+    """Redeploy the Kong Admin API and Kong Gateway containers"""
     scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
 

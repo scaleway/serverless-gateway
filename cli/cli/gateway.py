@@ -1,4 +1,5 @@
 import typing as t
+from collections import defaultdict
 from dataclasses import dataclass
 
 import requests
@@ -41,6 +42,7 @@ class GatewayManager:
         self.routes_url = self.admin_url + "/routes"
         self.services_url = self.admin_url + "/services"
         self.consumers_url = self.admin_url + "/consumers"
+        self.plugins_url = self.admin_url + "/plugins"
 
         self.token = self.config.gw_admin_token
 
@@ -86,10 +88,13 @@ class GatewayManager:
         resp = self._request(method="PUT", url=service_url, json=route.service_json())
         resp = self._request(method="PUT", url=route_url, json=route.route_json())
 
-        plugins_url = f"{route_url}/plugins"
+        route_plugins_url = f"{route_url}/plugins"
+
         if route.cors:
             try:
-                self._request(method="POST", url=plugins_url, json=route.cors_json())
+                self._request(
+                    method="POST", url=route_plugins_url, json=route.cors_json()
+                )
             except KongAPIException as err:
                 # Ignore if the plugin already exists
                 if err.response.status_code != 409:
@@ -97,7 +102,9 @@ class GatewayManager:
 
         if route.jwt:
             try:
-                self._request(method="POST", url=plugins_url, json=route.jwt_json())
+                self._request(
+                    method="POST", url=route_plugins_url, json=route.jwt_json()
+                )
             except KongAPIException as err:
                 # Ignore if the plugin already exists
                 if err.response.status_code != 409:
@@ -116,23 +123,40 @@ class GatewayManager:
         routes: list[Route] = self.get_routes()
         routes.sort(key=lambda r: r.relative_url)
 
-        table = Table("Relative url", "Target", "HTTP methods")
+        table = Table("Relative url", "Target", "HTTP methods", "JWT", "CORS")
         for route in routes:
+            jwt = "On" if route.jwt else "-"
+            cors = "On" if route.cors else "-"
             http_methods = " ".join(route.http_methods) if route.http_methods else "All"
-            table.add_row(route.relative_url, route.target, http_methods)
+            table.add_row(route.relative_url, route.target, http_methods, jwt, cors)
 
         console.print(table)
 
     def get_routes(self) -> list[Route]:
         """Get all routes from Kong."""
+        # Get routes
         resp = self._request(method="GET", url=self.routes_url)
         route_data = {r.get("name"): r for r in resp.json().get("data")}
 
+        # Get services
         resp = self._request(method="GET", url=self.services_url)
         service_data = {s.get("name"): s for s in resp.json().get("data")}
 
+        # Get plugins
+        resp = self._request(method="GET", url=self.plugins_url)
+        plugins_json = resp.json().get("data")
+
+        # Work out which plugins apply to which routes
+        route_plugins = defaultdict(list)
+        for p in plugins_json:
+            plugin_route = p.get("route")
+            plugin_id = plugin_route.get("id") if plugin_route else None
+            if plugin_id:
+                route_plugins[plugin_id].append(p)
+
         routes = []
         for _, route_json in route_data.items():
+            route_id = route_json["id"]
             route_name = route_json["name"]
             route_path = route_json["paths"][0]
             http_methods = route_json.get("methods")
@@ -146,13 +170,21 @@ class GatewayManager:
             service_protocol = service["protocol"]
             service_url = f"{service_protocol}://{service_host}:{service_port}"
 
-            routes.append(
-                Route(
-                    relative_url=route_path,
-                    target=service_url,
-                    http_methods=http_methods,
-                )
+            r = Route(
+                relative_url=route_path,
+                target=service_url,
+                http_methods=http_methods,
             )
+
+            # Check if route has plugins installed
+            # There will be an entry per route per plugin
+            for p in route_plugins.get(route_id) or []:
+                if p.get("name") == "jwt":
+                    r.jwt = True
+                elif p.get("name") == "cors":
+                    r.cors = True
+
+            routes.append(r)
 
         return routes
 

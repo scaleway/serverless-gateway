@@ -5,7 +5,8 @@ from cli.gateway import GatewayManager
 
 @click.group()
 def consumer():
-    """Manage gateway consumers"""
+    """Register external apps for authorization\n
+    https://serverless-gateway.readthedocs.io/en/latest/auth.html"""
     pass
 
 
