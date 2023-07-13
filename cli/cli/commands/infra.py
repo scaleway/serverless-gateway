@@ -107,7 +107,7 @@ def delete(yes: bool, profile: t.Optional[str] = None):
 
     if not do_delete:
         return
-    
+
     scw_client = client.get_scaleway_client(profile_name=profile)
     manager = InfraManager(scw_client)
 
