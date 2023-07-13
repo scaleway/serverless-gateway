@@ -1,10 +1,9 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from typing import Optional
 
 from cli.client import get_scaleway_client
-from cli.infra import InfraManager
 from cli.conf import InfraConfiguration
-
+from cli.infra import InfraManager
 
 FUNC_FIXTURE_NAME = "func-a"
 FUNC_FIXTURE_NAMESPACE = "function-fixtures"

@@ -6,7 +6,6 @@ from typing import Optional
 import pytest
 import requests
 from loguru import logger
-from scaleway import Client
 
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
@@ -22,7 +21,7 @@ class GatewayTest:
 
     # Optional because it's not available in docker-compose
     infra: Optional[InfraManager]
-    
+
     @pytest.fixture(autouse=True, scope="class")
     @staticmethod
     def setup(integration_env: IntegrationEnvironment):
