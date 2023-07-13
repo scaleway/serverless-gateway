@@ -237,3 +237,57 @@ class TestEndpoint(GatewayTest):
         assert actual_route.target == expected
 
         self.manager.delete_route(route)
+
+    def test_listing_routes(self):
+        dummy_url = self.env.gw_func_a_url
+        routes = [
+            Route(
+                "/alpha",
+                dummy_url,
+                http_methods=["GET", "POST"],
+                cors=False,
+                jwt=False,
+            ),
+            Route(
+                "/beta",
+                dummy_url,
+                cors=True,
+                jwt=False,
+            ),
+            Route(
+                "/gamma",
+                dummy_url,
+                cors=True,
+                jwt=True,
+            ),
+            Route(
+                "/delta",
+                dummy_url,
+                http_methods=["PUT"],
+                cors=False,
+                jwt=True,
+            ),
+        ]
+
+        # Add the routes
+        for r in routes:
+            # Make sure it's deleted first
+            self.manager.delete_route(r)
+
+            # Now add the route
+            resp = self.manager.add_route(r)
+            resp.raise_for_status()
+
+        # List and check
+        actuals = self.manager.get_routes()
+        for r in routes:
+            matches = [a for a in actuals if a.relative_url == r.relative_url]
+            if len(matches) != 1:
+                pytest.fail(f"Did not find a route listed for {r.relative_url}")
+
+            actual = matches[0]
+            assert actual == r
+
+        # Delete the routes
+        for r in routes:
+            self.manager.delete_route(r)
