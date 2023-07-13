@@ -1,14 +1,20 @@
 # Architecture
 
-The gateway is packaged via [a public Docker image on Docker Hub](https://hub.docker.com/r/scaleway/serverless-gateway).
+The gateway is deployed using a number of Scaleway resources, all run in your own account.
 
-It uses the following Scaleway services to run an instance of [Kong Gateway](https://konghq.com/):
+The gateway itself is an instance of [Kong Gateway](https://konghq.com/), which we package in [a Docker image on Docker Hub](https://hub.docker.com/r/scaleway/serverless-gateway).
 
-- [Serverless Containers](https://www.scaleway.com/en/serverless-containers/) - a private container to run the Kong admin, and public containers for the gateway nodes
-- [Managed Databases (Postgres)](https://www.scaleway.com/en/database/) - to hold the Kong database state
-- [Secret Manager](https://www.scaleway.com/en/secret-manager/) - to store the database credentials and share with containers
-- [Observability Cockpit](https://www.scaleway.com/en/cockpit/) - to view metrics from the gateway using [Kong statsd](https://docs.konghq.com/hub/kong-inc/statsd/)
+The following services are used to run the gateway:
 
-Within Kong, we use the following plugins:
+- [Serverless Containers](https://www.scaleway.com/en/serverless-containers/) - two containers are used to run Kong, one is a private container which exposes the Kong Admin API (behind token-based auth), and the other is a public containers for the Kong Gateway nodes. The Kong Gateway container has auto-scaling enabled, so more instances will be created in response to increased load.
+- [Managed Databases (Postgres)](https://www.scaleway.com/en/database/) - a single managed database instance is used to run the Kong database. This is how the different Kong nodes communicate with each other, and where the gateway configuration is stored. You can read more in [the Kong traditional mode docs](https://docs.konghq.com/gateway/3.3.x/production/deployment-topologies/traditional/).
+- [Secret Manager](https://www.scaleway.com/en/secret-manager/) - a Secret Manager key is used to share the database credentials between containers.
+- [Observability Cockpit](https://www.scaleway.com/en/cockpit/) - the Kong Gateway nodes forward metrics to Cockpit using `statsd`, while Cockpit also captures all the logs from the underlying Serverless Containers.
 
-- [`statsd`](https://docs.konghq.com/hub/kong-inc/statsd/) - to export metrics to the Scaleway Cockpit
+The Kong plugins used are:
+
+- [`jwt`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add JWT auth to routes (see [the auth docs](https://serverless-gateway.readthedocs.io/en/latest/auth.html))
+- [`cors`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add CORS headers to responses from routes (see [the CORS docs](https://serverless-gateway.readthedocs.io/en/latest/cors.html))
+- [`statsd`](https://docs.konghq.com/hub/kong-inc/statsd/) - used to export metrics from gateway nodes to the Scaleway Cockpit
+
+You can see an architecture diagram with more explanation in our [blog post](https://www.scaleway.com/en/blog/api-gateway-early-access/).
