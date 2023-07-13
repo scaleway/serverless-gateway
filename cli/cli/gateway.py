@@ -1,3 +1,4 @@
+import typing as t
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -32,9 +33,9 @@ class GatewayManager:
     admin_url: str
     gateway_url: str
 
-    def __init__(self):
+    def __init__(self, config: t.Optional[conf.InfraConfiguration] = None):
         # Local local config
-        self.config = conf.InfraConfiguration.load()
+        self.config = config or conf.InfraConfiguration.load()
         self.admin_url = self.config.gw_admin_url
         self.gateway_url = self.config.gw_url
 
