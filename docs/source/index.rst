@@ -31,7 +31,7 @@ From here you can set up your gateway with:
 
 Once the setup process has finished, you can then manage routes as follows:
 
-.. code-block:: console
+.. code-block:: bash
 
     # Check no routes are configured initially
     scwgw route ls
@@ -60,6 +60,7 @@ Once the setup process has finished, you can then manage routes as follows:
    architecture
    auth
    cors
+   deployment
    development
    domains
    kong

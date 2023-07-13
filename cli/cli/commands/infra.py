@@ -105,13 +105,15 @@ def delete(yes: bool, profile: t.Optional[str] = None):
             "This will delete all the components of your gateway. Are you sure?"
         )
 
-    if do_delete:
-        scw_client = client.get_scaleway_client(profile_name=profile)
-        manager = InfraManager(scw_client)
+    if not do_delete:
+        return
 
-        manager.delete_containers()
-        manager.delete_db()
-        manager.delete_namespace()
+    scw_client = client.get_scaleway_client(profile_name=profile)
+    manager = InfraManager(scw_client)
+
+    manager.delete_containers()
+    manager.delete_db()
+    manager.delete_namespace()
 
 
 @infra.command()

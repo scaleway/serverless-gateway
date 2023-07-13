@@ -16,9 +16,14 @@ If you would like to join in the discussion on how we continue developing the pr
 
 ## :page_with_curl: Contents
 
-- [:computer: Quick-start](#computer-quick-start)
-- [:mortar\_board: Contributing](#mortar_board-contributing)
-- [:mailbox: Reach Us](#mailbox-reach-us)
+- [ Scaleway Serverless Gateway](#-scaleway-serverless-gateway)
+  - [:page\_with\_curl: Contents](#page_with_curl-contents)
+  - [:computer: Quick-start](#computer-quick-start)
+    - [Deploy your gateway](#deploy-your-gateway)
+    - [Add a route](#add-a-route)
+    - [Delete your gateway](#delete-your-gateway)
+  - [:mortar\_board: Contributing](#mortar_board-contributing)
+  - [:mailbox: Reach us](#mailbox-reach-us)
 
 Please see [the docs](https://serverless-gateway.readthedocs.io) for full documentation and features.
 
@@ -41,6 +46,8 @@ To deploy your gateway, you can run:
 ```console
 scwgw infra deploy
 ```
+
+For more information on the deployment process, see the [deployment docs](https://serverless-gateway.readthedocs.io/en/latest/deployment.html).
 
 ### Add a route
 
