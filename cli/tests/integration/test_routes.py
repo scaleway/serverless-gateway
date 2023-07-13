@@ -282,8 +282,9 @@ class TestEndpoint(GatewayTest):
         actuals = self.manager.get_routes()
         for r in routes:
             matches = [a for a in actuals if a.relative_url == r.relative_url]
-            if len(matches) != 1:
-                pytest.fail(f"Did not find a route listed for {r.relative_url}")
+            assert (
+                len(matches) == 1
+            ), f"Did not find a route listed for {r.relative_url}"
 
             actual = matches[0]
             assert actual == r
