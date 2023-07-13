@@ -124,7 +124,7 @@ class TestEndpoint(GatewayTest):
 
         # Get list and check
         consumers = self.manager.get_consumers()
-        consumers.sort(key=lambda x: x.username)
+        consumers.sort(key=lambda x: x.username)  # type: ignore # username is Optional
 
         expected = [
             Consumer(consumer_name_a),

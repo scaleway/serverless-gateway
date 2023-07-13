@@ -1,13 +1,12 @@
 import contextlib
 import json
 import time
+from typing import Optional
 
 import pytest
 import requests
 from loguru import logger
-from scaleway import Client
 
-from cli import client
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
 from cli.model import Route
@@ -15,19 +14,22 @@ from tests.integration.environment import IntegrationEnvironment
 
 
 class GatewayTest:
+    """Base class for integration tests."""
+
     env: IntegrationEnvironment
+
+    # Optional because it's not available in docker-compose
+    infra: Optional[InfraManager]
     manager: GatewayManager
-    infra: InfraManager
-    scw_client: Client
 
     @pytest.fixture(autouse=True, scope="class")
     @staticmethod
     def setup(integration_env: IntegrationEnvironment):
         cls = GatewayTest
         cls.env = integration_env
-        cls.manager = GatewayManager()
-        cls.scw_client = client.get_scaleway_client()
-        cls.infra = InfraManager(GatewayTest.scw_client)
+        cls.infra = integration_env.infra_manager
+        # Do not load the configuration from a file to avoid side effects
+        cls.manager = integration_env.gateway_manager
 
     @contextlib.contextmanager
     def add_route_to_fixture(
@@ -60,11 +62,12 @@ class GatewayTest:
 
     @staticmethod
     def call_endpoint_until_response_code(url, code, method: str = "GET", headers=None):
+        """Call an endpoint until we get a specific response code."""
         max_retries = 10
         sleep_time = 2
 
         for _ in range(max_retries):
-            resp = requests.request(method=method, url=url, headers=headers)
+            resp = requests.request(method=method, url=url, headers=headers, timeout=5)
             if resp.status_code == code:
                 logger.info(f"Got {resp.status_code} from {url}")
                 return resp

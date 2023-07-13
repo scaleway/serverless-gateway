@@ -19,4 +19,8 @@ def get_scaleway_client(profile_name: t.Optional[str] = None) -> Client:
     scw_client = Client.from_config_file_and_env(profile_name=profile_name)
     if not scw_client.default_region:
         scw_client.default_region = DEFAULT_API_REGION
+
+    # Validate the client
+    scw_client.validate()
+
     return scw_client
