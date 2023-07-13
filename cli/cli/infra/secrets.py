@@ -37,7 +37,8 @@ def generate_database_password() -> str:
 def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
     """Store the password to Secret Manager."""
 
-    delete_db_password_secret(api)
+    # Delete password if already exists
+    delete_db_password_secret_if_exists(api)
 
     logger.debug("Creating secret for database password")
     secret = api.create_secret(
@@ -54,7 +55,7 @@ def create_db_password_secret(api: sdk.SecretV1Alpha1API, db_password: str):
     )
 
 
-def delete_db_password_secret(api: sdk.SecretV1Alpha1API):
+def delete_db_password_secret_if_exists(api: sdk.SecretV1Alpha1API):
     """Delete the password from Secret Manager."""
     try:
         # Delete password if already exists

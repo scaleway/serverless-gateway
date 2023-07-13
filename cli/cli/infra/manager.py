@@ -203,12 +203,15 @@ class InfraManager:
     def delete_db(self) -> None:
         """Delete the database instance."""
         # Delete the secret
-        infra.secrets.delete_db_password_secret(self.secrets)
+        infra.secrets.delete_db_password_secret_if_exists(self.secrets)
 
         # Delete the database
-        instance = self._get_database_instance_or_abort()
-        self.rdb.delete_instance(instance_id=instance.id)
-        console.print("Kong database deleted")
+        try:
+            instance = self._get_database_instance_or_abort()
+            self.rdb.delete_instance(instance_id=instance.id)
+            console.print("Kong database deleted")
+        except click.Abort:
+            logger.info("Database not found, skipping")
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -256,9 +259,12 @@ class InfraManager:
 
     def delete_namespace(self):
         """Delete the namespace."""
-        namespace = self._get_namespace_or_abort()
-        self.containers.delete_namespace(namespace_id=namespace.id)
-        console.print("Kong container namespace deleted")
+        try:
+            namespace = self._get_namespace_or_abort()
+            self.containers.delete_namespace(namespace_id=namespace.id)
+            console.print("Kong container namespace deleted")
+        except click.Abort:
+            logger.info("Namespace not found, skipping")
 
     def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
@@ -382,14 +388,19 @@ class InfraManager:
 
     def delete_containers(self):
         """Delete the containers."""
-        admin_container = self._get_admin_container_or_abort()
-        container = self._get_container_or_abort()
+        try:
+            admin_container = self._get_admin_container_or_abort()
+            self.containers.delete_container(container_id=admin_container.id)
+            console.print("Kong Admin API container deleted")
+        except click.Abort:
+            logger.info("Admin container not found, skipping")
 
-        self.containers.delete_container(container_id=admin_container.id)
-        console.print("Kong Admin API container deleted")
-
-        self.containers.delete_container(container_id=container.id)
-        console.print("Kong Gateway container deleted")
+        try:
+            container = self._get_container_or_abort()
+            self.containers.delete_container(container_id=container.id)
+            console.print("Kong Gateway container deleted")
+        except click.Abort:
+            logger.info("Gateway container not found, skipping")
 
     def get_function_endpoint(
         self, namespace_name: str, function_name: str
