@@ -211,7 +211,7 @@ class InfraManager:
             self.rdb.delete_instance(instance_id=instance.id)
             console.print("Kong database deleted")
         except click.Abort:
-            logger.info("Database not found, skipping")
+            logger.debug("Database not found, skipping")
 
     def create_namespace(self):
         """Create the namespace for the gateway."""
@@ -264,7 +264,7 @@ class InfraManager:
             self.containers.delete_namespace(namespace_id=namespace.id)
             console.print("Kong container namespace deleted")
         except click.Abort:
-            logger.info("Namespace not found, skipping")
+            logger.debug("Namespace not found, skipping")
 
     def create_containers(self) -> None:
         """Create containers for Kong and Kong Admin."""
@@ -393,14 +393,14 @@ class InfraManager:
             self.containers.delete_container(container_id=admin_container.id)
             console.print("Kong Admin API container deleted")
         except click.Abort:
-            logger.info("Admin container not found, skipping")
+            logger.debug("Admin container not found, skipping")
 
         try:
             container = self._get_container_or_abort()
             self.containers.delete_container(container_id=container.id)
             console.print("Kong Gateway container deleted")
         except click.Abort:
-            logger.info("Gateway container not found, skipping")
+            logger.debug("Gateway container not found, skipping")
 
     def get_function_endpoint(
         self, namespace_name: str, function_name: str
