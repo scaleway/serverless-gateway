@@ -124,8 +124,8 @@ class GatewayManager:
 
         table = Table("Relative url", "Target", "HTTP methods", "JWT", "CORS")
         for route in routes:
-            jwt = "On" if route.jwt else "Off"
-            cors = "On" if route.cors else "Off"
+            jwt = "On" if route.jwt else "-"
+            cors = "On" if route.cors else "-"
             http_methods = " ".join(route.http_methods) if route.http_methods else "All"
             table.add_row(route.relative_url, route.target, http_methods, jwt, cors)
 
@@ -149,8 +149,9 @@ class GatewayManager:
         route_plugins = defaultdict(list)
         for p in plugins_json:
             plugin_route = p.get("route")
-            if plugin_route and plugin_route.get("id"):
-                route_plugins[plugin_route.get("id")].append(p)
+            plugin_id = plugin_route.get("id") if plugin_route else None
+            if plugin_id:
+                route_plugins[plugin_id].append(p)
 
         routes = []
         for _, route_json in route_data.items():
@@ -175,12 +176,12 @@ class GatewayManager:
             )
 
             # Check if route has plugins installed
-            if route_id in route_plugins:
-                for p in route_plugins[route_id]:
-                    if p.get("name") == "jwt":
-                        r.jwt = True
-                    elif p.get("name") == "cors":
-                        r.cors = True
+            # There will be an entry per route per plugin
+            for p in route_plugins.get(route_id) or []:
+                if p.get("name") == "jwt":
+                    r.jwt = True
+                elif p.get("name") == "cors":
+                    r.cors = True
 
             routes.append(r)
 
