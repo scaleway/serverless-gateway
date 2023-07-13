@@ -13,15 +13,17 @@ if [ ! -z "$IS_ADMIN_CONTAINER" ]; then
     echo "Starting Kong admin"
     kong start -v -c /kong-conf/kong-admin.conf
 else
-    echo "Starting Kong"
-    # Reference: https://docs.docker.com/config/containers/multi-service_container/
-    kong start -v -c /kong-conf/kong.conf &
-
     if [ ! -z "$FORWARD_METRICS" ]; then
-        echo "Starting Grafana Agent"
-        /scripts/run-grafana-agent.sh
+        echo "Starting Grafana Agent in background"
+        /scripts/run-grafana-agent.sh &
     fi
 
-    fg %1
+    echo "Starting Kong"
+
+    # Reference: https://docs.docker.com/config/containers/multi-service_container/
+    # We need to retry here to give the admin container time to apply database migrations
+    for i in {1..30}; do
+        kong start -v -c /kong-conf/kong.conf && break || sleep 15;
+    done
 fi
 
