@@ -22,9 +22,7 @@ class GatewayTest:
 
     # Optional because it's not available in docker-compose
     infra: Optional[InfraManager]
-
-    scw_client: Client
-
+    
     @pytest.fixture(autouse=True, scope="class")
     @staticmethod
     def setup(integration_env: IntegrationEnvironment):
