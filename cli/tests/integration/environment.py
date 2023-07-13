@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from cli.client import get_scaleway_client
 from cli.infra import InfraManager
@@ -10,6 +11,8 @@ FUNC_FIXTURE_NAMESPACE = "function-fixtures"
 @dataclass
 class IntegrationEnvironment:
     """Environment for integration tests."""
+
+    infra_manager: Optional[InfraManager]
 
     gw_admin_url: str
     gw_routes_url: str
@@ -28,6 +31,7 @@ class IntegrationEnvironment:
         gw_url = "http://localhost:8080"
 
         return IntegrationEnvironment(
+            infra_manager=None,
             gw_admin_url=gw_admin_url,
             gw_routes_url=gw_admin_url + "/routes",
             gw_url=gw_url,
@@ -53,6 +57,7 @@ class IntegrationEnvironment:
         gw_url = f"https://{gw_endpoint}:443"
 
         return IntegrationEnvironment(
+            infra_manager=manager,
             gw_admin_url=gw_admin_url,
             gw_routes_url=gw_admin_url + "/routes",
             gw_url=gw_url,

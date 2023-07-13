@@ -1,13 +1,13 @@
 import contextlib
 import json
 import time
+from typing import Optional
 
 import pytest
 import requests
 from loguru import logger
 from scaleway import Client
 
-from cli import client
 from cli.gateway import GatewayManager
 from cli.infra import InfraManager
 from cli.model import Route
@@ -15,9 +15,14 @@ from tests.integration.environment import IntegrationEnvironment
 
 
 class GatewayTest:
+    """Base class for integration tests."""
+
     env: IntegrationEnvironment
     manager: GatewayManager
-    infra: InfraManager
+
+    # Optional because it's not available in docker-compose
+    infra: Optional[InfraManager]
+
     scw_client: Client
 
     @pytest.fixture(autouse=True, scope="class")
@@ -26,8 +31,7 @@ class GatewayTest:
         cls = GatewayTest
         cls.env = integration_env
         cls.manager = GatewayManager()
-        cls.scw_client = client.get_scaleway_client()
-        cls.infra = InfraManager(GatewayTest.scw_client)
+        cls.infra = integration_env.infra_manager
 
     @contextlib.contextmanager
     def add_route_to_fixture(
