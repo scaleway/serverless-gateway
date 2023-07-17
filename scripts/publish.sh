@@ -40,17 +40,17 @@ sed -i '/<!-- no toc -->/,/<!-- no toc -->/d' README.md
 
 poetry build
 
-# Restore the README abd CHANGELOG if git is installed
-if command -v git &> /dev/null
-then
-    git checkout -- README.md
-    git checkout -- CHANGELOG.md
-fi
-
 if [ "$DRY_RUN" = true ]; then
     poetry publish -r testpypi
 else
     poetry publish
+fi
+
+# Restore the README if git is installed
+# This is for convenience when developing
+if command -v git &> /dev/null
+then
+    git checkout -- README.md
 fi
 
 popd >> /dev/null
