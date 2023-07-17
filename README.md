@@ -1,4 +1,4 @@
-# <img src="logo.png" height="32"/> Scaleway Serverless Gateway
+# <img src="https://raw.githubusercontent.com/scaleway/serverless-gateway/main/logo.png" height="32"/> Scaleway Serverless Gateway
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
@@ -14,20 +14,21 @@ You can read all about it in [this blog post](https://www.scaleway.com/en/blog/a
 
 If you would like to join in the discussion on how we continue developing the project, or give us feedback, then join us on the [#api-gateway-beta](https://app.slack.com/client/T7YEXCR7X/C05H07VBKJ4) channel on the Scaleway Community Slack.
 
-## :page_with_curl: Contents
+## 📃 Contents
 
+<!-- no toc -->
 - [ Scaleway Serverless Gateway](#-scaleway-serverless-gateway)
-  - [:page\_with\_curl: Contents](#page_with_curl-contents)
-  - [:computer: Quick-start](#computer-quick-start)
+  - [📃 Contents](#%9F%93%83-contents)
+  - [⚙️ Quickstart](#%EF%B8%8F-quickstart)
     - [Deploy your gateway](#deploy-your-gateway)
     - [Add a route](#add-a-route)
     - [Delete your gateway](#delete-your-gateway)
-  - [:mortar\_board: Contributing](#mortar_board-contributing)
-  - [:mailbox: Reach us](#mailbox-reach-us)
+  - [🎓 Contributing](#%9F%8E%93-contributing)
+  - [📬 Reach us](#%9F%93%AC-reach-us)
 
 Please see [the docs](https://serverless-gateway.readthedocs.io) for full documentation and features.
 
-## :computer: Quick-start
+## ⚙️ Quickstart
 
 To deploy your gateway you need to install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli), and the [Gateway CLI](https://pypi.org/project/scw-gateway/) via [`pip`](https://pip.pypa.io/en/stable/index.html):
 
@@ -80,13 +81,13 @@ To delete your gateway, you can run:
 scwgw infra delete
 ```
 
-## :mortar_board: Contributing
+## 🎓 Contributing
 
 We welcome all contributions to our open-source projects, please see our [contributing guidelines](./.github/CONTRIBUTING.md).
 
 Do not hesitate to raise issues and pull requests we will have a look at them.
 
-## :mailbox: Reach us
+## 📬 Reach us
 
 We love feedback. Feel free to:
 
