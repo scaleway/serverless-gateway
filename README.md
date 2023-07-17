@@ -8,7 +8,7 @@ The Scaleway Serverless Gateway is a self-hosted API gateway that runs on Scalew
 
 It lets you manage routing from a single base URL, as well as handle transversal concerns such as CORS and authentication.
 
-It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your own deployments.
+It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your deployments.
 
 You can read all about it in [this blog post](https://www.scaleway.com/en/blog/api-gateway-early-access/).
 
@@ -17,18 +17,18 @@ If you would like to join in the discussion on how we continue developing the pr
 ## 📃 Contents
 
 <!-- no toc -->
-- [ Scaleway Serverless Gateway](#-scaleway-serverless-gateway)
-  - [📃 Contents](#%9F%93%83-contents)
-  - [⚙️ Quickstart](#%EF%B8%8F-quickstart)
+- [Scaleway Serverless Gateway](#-scaleway-serverless-gateway)
+  - [📃 Contents](#-contents)
+  - [💻 Quickstart](#-quickstart)
     - [Deploy your gateway](#deploy-your-gateway)
     - [Add a route](#add-a-route)
     - [Delete your gateway](#delete-your-gateway)
-  - [🎓 Contributing](#%9F%8E%93-contributing)
-  - [📬 Reach us](#%9F%93%AC-reach-us)
+  - [🎓 Contributing](#-contributing)
+  - [📬 Reach us](#-reach-us)
 
 Please see [the docs](https://serverless-gateway.readthedocs.io) for full documentation and features.
 
-## ⚙️ Quickstart
+## 💻 Quickstart
 
 To deploy your gateway you need to install and configure the [Scaleway CLI](https://github.com/scaleway/scaleway-cli), and the [Gateway CLI](https://pypi.org/project/scw-gateway/) via [`pip`](https://pip.pypa.io/en/stable/index.html):
 
