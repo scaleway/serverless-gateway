@@ -25,6 +25,7 @@ If you would like to join in the discussion on how we continue developing the pr
     - [Delete your gateway](#delete-your-gateway)
   - [🎓 Contributing](#-contributing)
   - [📬 Reach us](#-reach-us)
+<!-- no toc -->
 
 Please see [the docs](https://serverless-gateway.readthedocs.io) for full documentation and features.
 
