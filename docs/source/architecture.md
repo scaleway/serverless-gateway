@@ -13,8 +13,8 @@ The following services are used to run the gateway:
 
 The Kong plugins used are:
 
-- [`jwt`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add JWT auth to routes (see [the auth docs](https://serverless-gateway.readthedocs.io/en/latest/auth.html))
-- [`cors`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add CORS headers to responses from routes (see [the CORS docs](https://serverless-gateway.readthedocs.io/en/latest/cors.html))
+- [`jwt`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add JWT auth to routes (see [](./auth.md))
+- [`cors`](https://docs.konghq.com/hub/kong-inc/jwt/) - used to add CORS headers to responses from routes (see [](./cors.md))
 - [`statsd`](https://docs.konghq.com/hub/kong-inc/statsd/) - used to export metrics from gateway nodes to the Scaleway Cockpit
 
 You can see an architecture diagram with more explanation in our [blog post](https://www.scaleway.com/en/blog/api-gateway-early-access/).
