@@ -1,4 +1,4 @@
-# Using Scaleway IAM
+# IAM
 
 To deploy the gateway using Scaleway IAM, we recommend the following setup:
 
