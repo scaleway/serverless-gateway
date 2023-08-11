@@ -64,6 +64,7 @@ Once the setup process has finished, you can then manage routes as follows:
    deployment
    development
    domains
+   iam
    kong
    observability
    serverless
