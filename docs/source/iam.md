@@ -13,7 +13,7 @@ To deploy the gateway using Scaleway IAM, we recommend the following setup:
 5. Create an API key for the application
 6. Use this API key's secret key and access key when deploying your gateway (see below)
 
-Note that by scoping the API key to the new project, you limit the privileges of the key to resources within that project.
+By scoping the API key to the new project, you limit the privileges of the key to resources within that project.
 
 ## Using an API key
 
