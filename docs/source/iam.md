@@ -13,6 +13,8 @@ To deploy the gateway using Scaleway IAM, we recommend the following setup:
 5. Create an API key for the application
 6. Use this API key's secret key and access key when deploying your gateway (see below)
 
+Note that by scoping the API key to the new project, you limit the privileges of the key to resources within that project.
+
 ## Using an API key
 
 The easiest ways to use an API key are via:
@@ -20,4 +22,4 @@ The easiest ways to use an API key are via:
 1. A profile in your Scaleway CLI config file (either set as the default, or using the `--profile` argument for the gateway CLI)
 2. Environment variables, setting `SCW_ACCESS_KEY` and `SCW_SECRET_KEY` in the environment where you run `scwgw`
 
-See the [deployment docs](https://serverless-gateway.readthedocs.io/en/latest/deployment.html) for more information on how to use both approaches to configure your Scaleway CLI.
+See [](./deployment.md) for more information on how to use both approaches to configure your Scaleway CLI.
