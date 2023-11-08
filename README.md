@@ -6,7 +6,7 @@
 
 The Scaleway Serverless Gateway is a self-hosted API gateway that runs on Scaleway [Serverless Containers](https://www.scaleway.com/en/serverless-containers/).
 
-It lets you manage routing from a single base URL, as well as handle transversal concerns such as CORS and authentication.
+It lets you manage routing from a single base URL, as well as handling transversal concerns such as CORS and authentication.
 
 It is built on [Kong Gateway](https://docs.konghq.com/gateway/latest/), giving you access to the [Kong plugin ecosystem](https://docs.konghq.com/hub/) to customize your deployments.
 
