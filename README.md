@@ -4,6 +4,15 @@
 [![Documentation Status](https://readthedocs.org/projects/serverless-gateway/badge/?version=latest)](https://serverless-gateway.readthedocs.io/en/latest/?badge=latest)
 [![Build status](https://github.com/scaleway/serverless-gateway/actions/workflows/build.yml/badge.svg)](https://github.com/scaleway/serverless-gateway/actions/workflows/build.yml/badge.svg)
 
+> [!WARNING]
+> **Project Deprecated**
+>
+> This project is deprecated and will soon be replaced by Scaleway Edge Services, a fully managed API gateway solution.
+>
+> Scaleway Edge Services will provide enhanced features, better performance, and seamless integration with the Scaleway ecosystem. The product is expected to be released soon.
+>
+> We recommend preparing for this transition. For any questions or assistance with migration, please contact our support team.
+
 The Scaleway Serverless Gateway is a self-hosted API gateway that runs on Scaleway [Serverless Containers](https://www.scaleway.com/en/serverless-containers/).
 
 It lets you manage routing from a single base URL, as well as handling transversal concerns such as CORS and authentication.
