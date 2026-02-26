@@ -1,3 +1,10 @@
+> [!WARNING]
+> **Project Deprecated**
+>
+> This project is deprecated and will soon be replaced by **Scaleway Edge Services**, a fully managed API gateway solution compatible with Serverless Functions and Serverless Containers.
+>
+> Scaleway Edge Services will provide enhanced features, better performances, and seamless integration with the Scaleway ecosystem. The product is expected to be released soon.
+
 # <img src="https://raw.githubusercontent.com/scaleway/serverless-gateway/main/logo.png" height="32"/> Scaleway Serverless Gateway
 
 [![PyPI version](https://badge.fury.io/py/scw-gateway.svg)](https://badge.fury.io/py/scw-gateway)
